@@ -531,12 +531,13 @@ button.dhr{cursor:pointer}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .admt.wa{color:#5BD08E}}
 :root[data-theme="dark"] .admt.wa{color:#5BD08E}
 @media (max-width:560px){.foot .adm{flex:1 1 100%;order:10}}
-/* tela de PIN */
+/* tela de usuário e senha */
 .lock{position:fixed;inset:0;z-index:80;background:#14181D;color:#F2F4F6;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px));overflow:auto}
 .lockbox{width:100%;max-width:360px;display:grid;gap:14px;text-align:center}
 .lockbox h2{margin:0;font-family:var(--display);font-size:34px;letter-spacing:.02em;text-transform:uppercase}.lockbox h2 span{color:#F5B800}
 .lockbox p{margin:0;color:#B9C2CC;font-size:15px}
 .lockbox input{height:60px;border-radius:12px;border:2px solid #39424C;background:#0F1317;color:#fff;font-family:var(--mono);font-size:28px;letter-spacing:.3em;text-align:center;width:100%}
+.lockbox input.lu{font-family:var(--body);font-size:22px;letter-spacing:0;height:56px}.lockbox label{display:grid;gap:6px;text-align:left;font-weight:700;color:#B9C2CC;font-size:14px}
 .lockbox input:focus{border-color:#F5B800;outline:none}
 .lockbox .go{height:56px;border-radius:12px;border:0;background:#F5B800;color:#14171C;font-weight:800;font-size:18px}
 .lockbox .go:disabled{opacity:.6}
@@ -710,11 +711,12 @@ button.dhr{cursor:pointer}
 
 <div class="lock" id="lock" hidden><form class="lockbox" id="lockF" autocomplete="off">
   <h2>Leitor <span>Miniload</span></h2>
-  <p id="lockMsg">Digite o seu PIN para entrar.</p>
-  <input id="lockPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" aria-label="PIN" autocomplete="off">
+  <p id="lockMsg">Digite o seu usuário e a sua senha.</p>
+  <label>Usuário<input id="lockUser" class="lu" type="text" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="username"></label>
+  <label>Senha<input id="lockPin" type="password" maxlength="40" autocomplete="current-password"></label>
   <button class="go" type="submit" id="lockGo">Entrar</button>
   <p class="err" id="lockErr"></p>
-  <p>Não tem PIN? <a href="https://wa.me/5511952612966" target="_blank" rel="noopener">Fale com o administrador</a></p>
+  <p>Não tem usuário? <a href="https://wa.me/5511952612966" target="_blank" rel="noopener">Fale com o administrador</a></p>
   <button type="button" class="x" id="lockX" hidden>Agora não</button>
 </form></div>
 <footer class="foot">
@@ -1732,7 +1734,8 @@ const GS_URL="https://script.google.com/macros/s/AKfycbxyNngtdPIkt2tlkmxa3kIpgp_
 const ADMIN_EMAIL="thiagodp3@gmail.com",ADMIN_WA="5511952612966";
 const GSQ_LS="leitor-miniload-fila-planilha";
 let gsMarks={},gsOk=null,gsAt=0,gsBusy=false,gsLocal={},gsIds=new Set();
-/* acesso por PIN: a planilha confere o PIN e devolve uma sessão deste celular */
+/* acesso por usuário e senha: a planilha confere e devolve uma sessão deste celular */
+const USR_LS="leitor-miniload-usuario";
 const SES_LS="leitor-miniload-sessao";
 let ses=null;try{ses=JSON.parse(localStorage.getItem(SES_LS)||"null")}catch(e){}
 const sesSave=()=>{try{ses?localStorage.setItem(SES_LS,JSON.stringify(ses)):localStorage.removeItem(SES_LS)}catch(e){}};
@@ -1744,8 +1747,9 @@ async function gsCall(body){ // pedido curto vai na URL (GET): dentro do Claude 
   const r=await fetch(GS_URL+"?d="+encodeURIComponent(JSON.stringify(body))+"&z="+Date.now(),{cache:"no-store"});return await r.json()}
 const soConsulta=()=>!!(ses&&ses.perfil==="consulta");
 function lockShow(msg){
-  $("lock").hidden=false;$("lockMsg").textContent=msg||"Digite o seu PIN para entrar.";$("lockErr").textContent="";$("lockPin").value="";
-  $("lockX").hidden=IS_TEAM;setTimeout(()=>$("lockPin").focus(),80);
+  $("lock").hidden=false;$("lockMsg").textContent=msg||"Digite o seu usuário e a sua senha.";$("lockErr").textContent="";$("lockPin").value="";
+  let u="";try{u=localStorage.getItem(USR_LS)||""}catch(e){}if(!$("lockUser").value)$("lockUser").value=u;
+  $("lockX").hidden=IS_TEAM;setTimeout(()=>($("lockUser").value?$("lockPin"):$("lockUser")).focus(),80);
 }
 function logout(msg){
   ses=null;sesSave();gsMarks={};gsLocal={};gsIds=new Set();
@@ -1761,7 +1765,7 @@ async function gsPull(){
   try{
     if(!ses)throw new Error("sem sessão");
     const r=await fetch(GS_URL+"?a=ret&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"});
-    const j=await r.json();if(j&&j.erro==="sessao"){logout("Seu acesso expirou ou o PIN foi bloqueado. Digite o PIN de novo.");return}if(!j||!j.ok)throw new Error("resposta");
+    const j=await r.json();if(j&&j.erro==="sessao"){logout("Seu acesso expirou ou foi bloqueado. Entre de novo com usuário e senha.");return}if(!j||!j.ok)throw new Error("resposta");
     const M={},LOC={},IDS=new Set();
     for(const l of j.linhas||[]){if(l.id)IDS.add(l.id);if(l.lista==="LOCAL"){LOC[String(l.pal||"")]=String(l.sit||"").replace(/^LOCAL:\s*/,"");continue}
       const k=(l.lista||"26")+"|"+(l.pal||"")+"|"+(l.item||"")+"|"+String(l.pack||"").replace(/^'/,"");
@@ -1785,12 +1789,12 @@ async function gsFlush(){
       const q=gsQueue[0];let j=null;
       try{j=await gsCall({a:"mov",t:ses.t,mov:q.mov})}catch(e){j=null}
       if(!j){await gsPull();if(gsIds.has(q.mov.id)){gsQueue.shift();gsSaveQ();continue}gsOk=false;break} // sem resposta: só tira da fila se a planilha mostrar o código
-      if(j.erro==="sessao"){logout("Seu acesso expirou ou o PIN foi bloqueado. Digite o PIN de novo.");break}
+      if(j.erro==="sessao"){logout("Seu acesso expirou ou foi bloqueado. Entre de novo com usuário e senha.");break}
       gsQueue.shift();gsSaveQ();
-      if(!j.ok&&q.mov.tipo==="RETIRADO"&&j.erro==="so_consulta"){delete retMarks[q.key];retSave();toast("Acesso de consulta não grava retirada. Entre com o seu PIN pessoal.")}
+      if(!j.ok&&q.mov.tipo==="RETIRADO"&&j.erro==="so_consulta"){delete retMarks[q.key];retSave();toast("Acesso de consulta não grava retirada. Entre com o seu usuário pessoal.")}
       else if(!j.ok&&q.mov.tipo==="RETIRADO"){delete retMarks[q.key];retSave();beep(false);
         toast("Não gravado: essa caixa já tinha sido retirada"+(j.quem?" por "+j.quem:"")+(j.quando?" em "+j.quando:"")+".")}
-      else if(!j.ok)toast(j.erro==="so_consulta"?"Acesso de consulta não grava nada. Entre com o seu PIN pessoal.":"A planilha recusou: "+(j.erro||"erro"));
+      else if(!j.ok)toast(j.erro==="so_consulta"?"Acesso de consulta não grava nada. Entre com o seu usuário pessoal.":"A planilha recusou: "+(j.erro||"erro"));
     }
   }finally{gsBusy=false}
   await gsPull();
@@ -1801,7 +1805,7 @@ function gsSend(key,r,m,sit){
   gsSaveQ();gsFlush();
 }
 function gsStatus(){
-  if(!ses)return '<span class="gs warn">🔒 Entre com o seu PIN para usar a planilha: toque em ⋯ e em Entrar</span>';
+  if(!ses)return '<span class="gs warn">🔒 Entre com usuário e senha para usar a planilha: toque em ⋯ e em Entrar</span>';
   if(gsQueue.length)return '<span class="gs warn">⏳ '+gsQueue.length+' baixa(s) esperando internet para subir na planilha</span>';
   if(gsOk===true){const d=new Date(gsAt),pd=n=>String(n).padStart(2,"0");return '<span class="gs ok">☁ Planilha sincronizada às '+pd(d.getHours())+":"+pd(d.getMinutes())+'</span>'}
   if(gsOk===false)return '<span class="gs warn">⚠ Sem conexão com a planilha. As baixas ficam guardadas neste celular e sobem quando voltar a internet.</span>';
@@ -1827,7 +1831,7 @@ async function gsPullMtc(){
   gsPushLista();
   if(!IS_TEAM)return;
   if(!ses)return;
-  try{const r=await fetch(GS_URL+"?a=mtc&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"});const j=await r.json();if(j&&j.erro==="sessao"){logout("Seu acesso expirou ou o PIN foi bloqueado. Digite o PIN de novo.");return}
+  try{const r=await fetch(GS_URL+"?a=mtc&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"});const j=await r.json();if(j&&j.erro==="sessao"){logout("Seu acesso expirou ou foi bloqueado. Entre de novo com usuário e senha.");return}
     const d=j&&j.mtc;const somaOk=x=>{if(!x||!x.soma)return true;const t=JSON.stringify(x.rows);let k=0x811c9dc5;for(let i=0;i<t.length;i++){k^=t.charCodeAt(i);k=Math.imul(k,0x01000193)>>>0}return k.toString(16).padStart(8,"0")===x.soma};if(d&&Array.isArray(d.rows)&&d.rows.length&&somaOk(d)&&(d.importadoEm||"")>=((mtcNewRaw&&mtcNewRaw.importadoEm)||"")){const m=mtcFrom(d);if(m){mtcNewRaw=d;mtcNew=m;if(mtcSel==="new")mtc=m;try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}render()}}}catch(e){}
 }
 setTimeout(gsPullMtc,800);setInterval(()=>{if(!document.hidden)gsPullMtc()},300000);
@@ -1842,20 +1846,20 @@ function retToggle(r){
     devolver(r);
     return;
   }
-  // retirar material: quem retirou (pelo PIN) e quem autorizou
-  if(!ses){lockShow("Entre com o seu PIN para fazer a retirada.");return}
-  if(soConsulta()){lockShow("Acesso de consulta: só olhar. Para retirar, entre com o seu PIN pessoal.");return}
+  // retirar material: quem retirou (pelo login) e quem autorizou
+  if(!ses){lockShow("Entre com usuário e senha para fazer a retirada.");return}
+  if(soConsulta()){lockShow("Acesso de consulta: só olhar. Para retirar, entre com o seu usuário pessoal.");return}
   if(gsMarks[k]){toast("Essa caixa já foi retirada por "+(gsMarks[k].quem||"outra pessoa")+".");return}
   let last={};try{last=JSON.parse(localStorage.getItem(RET_LS+"-nomes")||"{}")||{}}catch(e){}
   openSheet('<h3>Retirar material</h3><p><b>'+esc(r.item)+'</b> · qtd '+esc(r.qtd)+' · pack '+esc(r.pack||"—")+' · <b>pallet '+esc(r.pal||"—")+'</b></p>'+
-    '<form class="manf" id="rtF" autocomplete="off"><p style="margin:0">Retirada por: <b>'+esc(ses?ses.nome:"—")+'</b> <small>(pelo seu PIN)</small></p>'+
+    '<form class="manf" id="rtF" autocomplete="off"><p style="margin:0">Retirada por: <b>'+esc(ses?ses.nome:"—")+'</b> <small>(pelo seu usuário)</small></p>'+
     '<label>Quem autorizou<input id="rtLib" autocapitalize="words" style="text-transform:none" value="'+esc(last.lib||"")+'" enterkeyhint="next"></label><label>Observação <small>(se quiser)</small><input id="rtObs" maxlength="80" style="text-transform:none" placeholder="Ex.: foi para a linha 3" enterkeyhint="done"></label>'+
     '<p class="err" id="rtErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1;background:#E5243B;border-color:#E5243B">Confirmar retirada</button><button class="btn" type="button" id="rtCancel">Cancelar</button></div></form>',()=>{
     $("rtCancel").onclick=closeSheet;
     setTimeout(()=>$("rtLib").focus(),50);$("rtLib").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("rtObs").focus()}});
     $("rtF").addEventListener("submit",e=>{
       e.preventDefault();
-      if(!ses){closeSheet();lockShow("Entre com o seu PIN para fazer a retirada.");return}
+      if(!ses){closeSheet();lockShow("Entre com usuário e senha para fazer a retirada.");return}
       if(gsMarks[k]){$("rtErr").textContent="Essa caixa já foi retirada por "+(gsMarks[k].quem||"outra pessoa")+".";return}
       const quem=ses.nome,lib=$("rtLib").value.trim();
       if(!lib){$("rtErr").textContent="Escreva quem autorizou.";$("rtLib").focus();return}
@@ -1872,19 +1876,19 @@ const retWho=r=>{const m=retMark(r);return m&&(m.quem||m.lib)?"Retirou: "+(m.que
 function devolver(r){
   const k=retKey(r),had=retMark(r);
   if(/RETIRAD/i.test(r.st||"")&&!had){toast("Essa baixa já está na lista oficial. Fale com o administrador para desfazer.");return}
-  if(!ses){lockShow("Entre com o seu PIN.");return}
+  if(!ses){lockShow("Entre com usuário e senha.");return}
   const adm=ses.perfil==="admin";
   openSheet('<h3>Devolver a caixa ao pallet</h3><p><b>'+esc(r.item)+'</b> · qtd '+esc(r.qtd)+' · pack '+esc(r.pack||"—")+' · <b>pallet '+esc(r.pal||"—")+'</b></p>'+
-    '<form class="manf" id="dvF" autocomplete="off">'+(adm?'<p style="margin:0">Você é administrador: pode devolver.</p>':'<label>PIN do administrador<small>Só o administrador pode devolver uma caixa ao pallet.</small><input id="dvPin" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="8" autocomplete="off"></label>')+
+    '<form class="manf" id="dvF" autocomplete="off">'+(adm?'<p style="margin:0">Você é administrador: pode devolver.</p>':'<p style="margin:0"><small>Só o administrador pode devolver uma caixa ao pallet.</small></p><label>Usuário do administrador<input id="dvUser" type="text" maxlength="40" autocapitalize="none" autocorrect="off" spellcheck="false" autocomplete="off"></label><label>Senha do administrador<input id="dvPin" type="password" maxlength="40" autocomplete="off"></label>')+
     '<p class="err" id="dvErr"></p><div class="row-acts"><button class="btn primary" type="submit" id="dvYes" style="flex:1">Devolver ao pallet</button><button class="btn" type="button" id="dvNo" style="flex:1">Cancelar</button></div></form>',()=>{
-    $("dvNo").onclick=closeSheet;if($("dvPin"))setTimeout(()=>$("dvPin").focus(),60);
+    $("dvNo").onclick=closeSheet;if($("dvUser"))setTimeout(()=>$("dvUser").focus(),60);
     $("dvF").addEventListener("submit",async e=>{
       e.preventDefault();
-      const pin=adm?"":String($("dvPin").value||"").trim();if(!adm&&!pin){$("dvErr").textContent="Digite o PIN do administrador.";return}
+      const au=adm?"":String($("dvUser").value||"").trim(),pin=adm?"":String($("dvPin").value||"").trim();if(!adm&&(!au||!pin)){$("dvErr").textContent="Digite o usuário e a senha do administrador.";return}
       $("dvYes").disabled=true;$("dvErr").textContent="Conferindo com a planilha…";
-      let j=null;try{j=await gsCall({a:"mov",t:ses.t,pinAdmin:pin,mov:{id:uid(),tipo:"DESFEITO",lista:k.split("|")[0],pal:r.pal||"",item:r.item,qtd:r.qtd,pack:r.pack||"",quando:gsWhen(Date.now())}})}catch(x){j=null}
+      let j=null;try{j=await gsCall({a:"mov",t:ses.t,adm:adm?null:{usuario:au,senha:pin},mov:{id:uid(),tipo:"DESFEITO",lista:k.split("|")[0],pal:r.pal||"",item:r.item,qtd:r.qtd,pack:r.pack||"",quando:gsWhen(Date.now())}})}catch(x){j=null}
       if(!j){$("dvErr").textContent="Sem internet. A devolução precisa de internet para conferir a senha.";$("dvYes").disabled=false;return}
-      if(!j.ok){$("dvErr").textContent=j.erro==="sem_permissao"?"PIN de administrador errado.":j.erro==="sessao"?"Seu acesso expirou. Entre de novo.":"A planilha recusou ("+(j.erro||"erro")+").";$("dvYes").disabled=false;if(j.erro==="sessao"){closeSheet();logout()}return}
+      if(!j.ok){$("dvErr").textContent=j.erro==="sem_permissao"?"Usuário ou senha de administrador errados.":j.erro==="sessao"?"Seu acesso expirou. Entre de novo.":"A planilha recusou ("+(j.erro||"erro")+").";$("dvYes").disabled=false;if(j.erro==="sessao"){closeSheet();logout()}return}
       const qi=gsQueue.findIndex(q=>q.key===k&&q.mov&&q.mov.tipo==="RETIRADO");if(qi>=0){gsQueue.splice(qi,1);gsSaveQ()}
       delete retMarks[k];delete gsMarks[k];retSave();closeSheet();render();beep(true);toast("A caixa voltou para o pallet "+(r.pal||"—"));gsPull();
     });
@@ -2030,7 +2034,7 @@ async function palObsSet(p,v){
   renderMtc();
 }
 function openObs(p){
-  if(soConsulta()){lockShow("Acesso de consulta: só olhar. Para informar o local, entre com o seu PIN pessoal.");return}
+  if(soConsulta()){lockShow("Acesso de consulta: só olhar. Para informar o local, entre com o seu usuário pessoal.");return}
   openSheet('<h3>📍 Onde está o Pallet '+esc(p)+'?</h3><p>Escreva o lugar. Ex.: Recebimento, Decon, dentro do Miniload.</p><form class="manf" id="obF" autocomplete="off"><label>Local do pallet<input id="obIn" maxlength="60" style="text-transform:none" value="'+esc(palObs(p))+'" enterkeyhint="done"></label><p class="err" id="obErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Confirmar</button><button class="btn" type="button" id="obCancel">Voltar</button></div>'+(palObs(p)?'<div class="row-acts" style="margin-top:8px"><button class="btn" type="button" id="obDel" style="flex:1">Apagar o local</button></div>':'')+'</form>',()=>{
     $("obCancel").onclick=closeSheet;setTimeout(()=>$("obIn").focus(),50);
     const save=async v=>{v=String(v||"").trim();const antes=palObs(p);if(v===antes){closeSheet();return}
@@ -2048,7 +2052,7 @@ function renderMtc(){
   $("mOldBar").hidden=mtcSel!=="old";
   $("gsMtc").innerHTML=gsStatus();
   $("mtcNewEmpty").hidden=!(mtcSel==="new"&&mtc&&!mtc.rows.length);$("mtcLoad").hidden=mtcSel==="old";
-  $("mtcEmpty").hidden=!!mtc;if(IS_TEAM&&!mtc){$("mtcEmpty").innerHTML=ses?"<b>Carregando a lista da planilha…</b><span>Precisa de internet só na primeira vez.</span>":"<b>Entre com o seu PIN</b><span>A lista só aparece depois do PIN.</span>";$("mtcLoad").hidden=true}$("mtcSend").hidden=!mtc;$("mtcForm").hidden=!mtc;$("mtcMode").hidden=!mtc;
+  $("mtcEmpty").hidden=!!mtc;if(IS_TEAM&&!mtc){$("mtcEmpty").innerHTML=ses?"<b>Carregando a lista da planilha…</b><span>Precisa de internet só na primeira vez.</span>":"<b>Entre com usuário e senha</b><span>A lista só aparece depois do login.</span>";$("mtcLoad").hidden=true}$("mtcSend").hidden=!mtc;$("mtcForm").hidden=!mtc;$("mtcMode").hidden=!mtc;
   if(!mtc){$("mtcInfo").textContent="Carregue o Excel de peças para pesquisar.";$("mtcPals").innerHTML="";$("mtcSum").innerHTML="";$("mtcWrap").hidden=true;return}
   const pals={};let sem=0;const vivos=mtc.rows.filter(r=>!isRet(r));vivos.forEach(r=>{if(r.pal)pals[r.pal]=(pals[r.pal]||0)+1;else sem++});
   $("mtcInfo").textContent=mtc.nome+" · "+vivos.length+" no estoque"+(mtc.rows.length-vivos.length?" · "+(mtc.rows.length-vivos.length)+" retiradas":"")+" · "+mtc.rows.length+" linhas · "+Object.keys(pals).length+" pallets"+(mtc.em?" · atualizada em "+fmtDay(mtc.em):"");
@@ -2459,10 +2463,10 @@ function openCols(){
 $("colsBtn").addEventListener("click",openCols);
 
 function openMore(){
-  openSheet('<h3>Mais opções</h3>'+(ses?'<p class="hint" style="margin:0">Conectado como <b>'+esc(ses.nome)+'</b>'+(ses.perfil==="admin"?" (administrador)":ses.perfil==="consulta"?" (só consulta)":"")+'</p><div class="row-acts"><button class="btn" id="mSair" style="flex:1">Sair (pedir o PIN de novo)</button></div>':'<div class="row-acts"><button class="btn primary" id="mEntrar" style="flex:1">Entrar com PIN</button></div>')+(IS_TEAM?'':'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1;background:#25D366;border-color:#1DA851;color:#0B2E17;font-weight:800">Colar mensagens do WhatsApp (pallets e retiradas)</button></div>')+'<div class="row-acts"><button class="btn" id="mOld" style="flex:1">Ver lista antiga (25/10) · oculta</button></div>'+'<div class="row-acts"><button class="btn primary" id="mPaste">Colar paletes recebidos</button></div><p class="hint">Cole o texto que a equipe mandou pelo WhatsApp (ou copiado para o Excel). Cada palete entra como salvo e vira uma aba no Excel.</p><div class="row-acts"><button class="btn" id="mGal">Ler fotos da galeria</button></div><p class="hint">Escolha várias fotos de etiquetas de uma vez. Cada uma vira uma linha (ou confere a linha do mesmo pack).</p><div class="row-acts"><button class="btn" id="mImport">Importar Excel</button></div><p class="hint">A importação lê a primeira aba. Cabeçalhos como Item, Quantidade e Pack Number caem nas colunas certas; linhas "palet 2" marcam o palete dos itens seguintes.</p><div class="row-acts"><button class="btn" id="mReset">Zerar conferência</button></div><p class="hint">Volta todos os itens para Pendente e apaga as linhas novas. Use antes de uma recontagem.</p><div class="row-acts"><button class="btn danger" id="mWipe">Apagar a lista inteira</button></div><div class="row-acts"><button class="btn" id="mClose">Fechar</button></div>',
+  openSheet('<h3>Mais opções</h3>'+(ses?'<p class="hint" style="margin:0">Conectado como <b>'+esc(ses.nome)+'</b>'+(ses.perfil==="admin"?" (administrador)":ses.perfil==="consulta"?" (só consulta)":"")+'</p><div class="row-acts"><button class="btn" id="mSair" style="flex:1">Sair (pedir a senha de novo)</button></div>':'<div class="row-acts"><button class="btn primary" id="mEntrar" style="flex:1">Entrar com usuário e senha</button></div>')+(IS_TEAM?'':'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1;background:#25D366;border-color:#1DA851;color:#0B2E17;font-weight:800">Colar mensagens do WhatsApp (pallets e retiradas)</button></div>')+'<div class="row-acts"><button class="btn" id="mOld" style="flex:1">Ver lista antiga (25/10) · oculta</button></div>'+'<div class="row-acts"><button class="btn primary" id="mPaste">Colar paletes recebidos</button></div><p class="hint">Cole o texto que a equipe mandou pelo WhatsApp (ou copiado para o Excel). Cada palete entra como salvo e vira uma aba no Excel.</p><div class="row-acts"><button class="btn" id="mGal">Ler fotos da galeria</button></div><p class="hint">Escolha várias fotos de etiquetas de uma vez. Cada uma vira uma linha (ou confere a linha do mesmo pack).</p><div class="row-acts"><button class="btn" id="mImport">Importar Excel</button></div><p class="hint">A importação lê a primeira aba. Cabeçalhos como Item, Quantidade e Pack Number caem nas colunas certas; linhas "palet 2" marcam o palete dos itens seguintes.</p><div class="row-acts"><button class="btn" id="mReset">Zerar conferência</button></div><p class="hint">Volta todos os itens para Pendente e apaga as linhas novas. Use antes de uma recontagem.</p><div class="row-acts"><button class="btn danger" id="mWipe">Apagar a lista inteira</button></div><div class="row-acts"><button class="btn" id="mClose">Fechar</button></div>',
   ()=>{
     $("mClose").onclick=closeSheet;
-    if($("mSair"))$("mSair").onclick=()=>{closeSheet();confirmDel("Sair deste celular? Vai pedir o PIN de novo.",()=>logout("Você saiu. Digite o PIN para entrar."),"Sim, sair")};
+    if($("mSair"))$("mSair").onclick=()=>{closeSheet();confirmDel("Sair deste celular? Vai pedir usuário e senha de novo.",()=>logout("Você saiu. Digite usuário e senha para entrar."),"Sim, sair")};
     if($("mEntrar"))$("mEntrar").onclick=()=>{closeSheet();lockShow()};
     if(!mtcOld&&$("mOld"))$("mOld").hidden=true;
     if($("mZap"))$("mZap").onclick=()=>{closeSheet();openZapSheet()};
@@ -2796,13 +2800,13 @@ $("mtcBody").addEventListener("click",e=>{if(!e.target.closest("td.ck"))return;e
 $("mSelNew").onclick=()=>setMtcSel("new");
 $("lockX").onclick=()=>{$("lock").hidden=true};
 $("lockF").addEventListener("submit",async e=>{
-  e.preventDefault();const pin=String($("lockPin").value||"").trim();if(!pin){$("lockErr").textContent="Digite o PIN.";return}
+  e.preventDefault();const usuario=String($("lockUser").value||"").trim(),senha=String($("lockPin").value||"").trim();if(!usuario){$("lockErr").textContent="Digite o usuário.";$("lockUser").focus();return}if(!senha){$("lockErr").textContent="Digite a senha.";$("lockPin").focus();return}
   $("lockGo").disabled=true;$("lockErr").textContent="Conferindo…";
-  let j=null,motivo="";try{j=await gsCall({a:"login",pin})}catch(x){j=null;motivo=String(x&&x.message||x).slice(0,80)}
+  let j=null,motivo="";try{j=await gsCall({a:"login",usuario,senha})}catch(x){j=null;motivo=String(x&&x.message||x).slice(0,80)}
   $("lockGo").disabled=false;
-  if(!j){$("lockErr").textContent=(/claude/i.test(location.hostname)||/claude/i.test(document.referrer||""))&&/rede/.test(motivo)?"Dentro do Claude o app não consegue falar com a planilha. Abra o link do app no Safari para entrar com o PIN.":"Sem internet ou a planilha não respondeu. Tente de novo."+(motivo?" ("+motivo+")":"");return}
-  if(!j.ok){$("lockErr").textContent=j.erro==="bloqueado"?"Muitas tentativas erradas. Espere 10 minutos.":j.erro==="pin"?"PIN não encontrado. Confira com o administrador.":"A planilha ainda não foi atualizada para PIN. Fale com o administrador.";$("lockPin").select();return}
-  ses={t:j.t,nome:j.nome,perfil:j.perfil};sesSave();$("lock").hidden=true;beep(true);toast("Olá, "+j.nome+"!"+(j.perfil==="consulta"?" (só consulta)":""));
+  if(!j){$("lockErr").textContent=(/claude/i.test(location.hostname)||/claude/i.test(document.referrer||""))&&/rede/.test(motivo)?"Dentro do Claude o app não consegue falar com a planilha. Abra o link do app no Safari para entrar.":"Sem internet ou a planilha não respondeu. Tente de novo."+(motivo?" ("+motivo+")":"");return}
+  if(!j.ok){$("lockErr").textContent=j.erro==="bloqueado"?"Muitas tentativas erradas. Espere 10 minutos.":j.erro==="login"?"Usuário ou senha errados. Confira com o administrador.":j.erro==="pin"?"A planilha ainda está na versão do PIN. Fale com o administrador.":"A planilha ainda não foi atualizada. Fale com o administrador.";$("lockPin").select();return}
+  ses={t:j.t,nome:j.nome,perfil:j.perfil};sesSave();try{localStorage.setItem(USR_LS,usuario)}catch(e){}$("lock").hidden=true;beep(true);toast("Olá, "+j.nome+"!"+(j.perfil==="consulta"?" (só consulta)":""));
   render();gsPullMtc();gsFlush();gsPull();
 });
 if(IS_TEAM&&!ses)lockShow();
