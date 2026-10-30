@@ -176,6 +176,7 @@ td.editcol{width:1%;padding:4px 8px}
 .pstep span{display:inline-flex;width:26px;height:26px;border-radius:50%;background:#F5B800;color:#14171C;align-items:center;justify-content:center;font-size:14px}
 .pcards{display:grid;grid-template-columns:minmax(0,1fr);gap:8px;max-height:44vh;overflow:auto}
 .pcard,.psend{box-sizing:border-box;max-width:100%}
+.empick{display:grid;gap:8px}.emlist{display:flex;flex-wrap:wrap;gap:6px}.emchip{display:inline-flex;align-items:center;gap:6px;padding:6px 8px 6px 10px;border:2px solid var(--line);border-radius:999px;background:var(--surface);font-size:14px;max-width:100%}.emchip input{width:18px;height:18px;margin:0}.emchip span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.emchip button{border:0;background:none;color:var(--muted);font-size:18px;line-height:1;padding:0 2px;cursor:pointer}.emadd{display:flex;gap:6px}.emadd input{flex:1;min-width:0;height:44px;border:2px solid var(--line);border-radius:10px;padding:0 10px;font-size:15px;background:var(--bg);color:var(--ink)}
 .pcard{display:flex;align-items:center;gap:12px;padding:12px;border:2px solid var(--line);border-radius:10px;background:var(--surface);cursor:pointer}
 .pcard input{position:absolute;opacity:0;width:1px;height:1px}
 .pcard .pbox{width:28px;height:28px;flex:none;border:2.5px solid #8A939E;border-radius:7px;position:relative;background:#fff}
@@ -1713,7 +1714,9 @@ function whereOf(r){
 }
 /* ===== Lista MTC: pesquisa por peça, pack ou pallet ===== */
 const MTC_EMBED=null;
-const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importadoEm||"",rows:d.rows.map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6]}))}:null;
+/* caixas sem pack de verdade (vazio, 0, 000…) na mesma peça e pallet ganham #2, #3… para cada caixa ser única: retirar uma não some com as outras */
+const packUnico=rows=>{const c={};for(const r of rows){if(/\d{6,}/.test(r.pack))continue;const k=r.pal+"|"+r.item+"|"+r.pack;c[k]=(c[k]||0)+1;if(c[k]>1)r.pack=(r.pack?r.pack+" ":"")+"#"+c[k]}return rows};
+const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importadoEm||"",rows:packUnico(d.rows.map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6]})))}:null;
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true; // o link da equipe troca para true
@@ -1732,6 +1735,24 @@ function retWhen(r){const m=retMark(r);if(!m)return "retirado";const d=new Date(
 /* planilha Google central: todas as retiradas de todos os celulares */
 const GS_URL="https://script.google.com/macros/s/AKfycbxyNngtdPIkt2tlkmxa3kIpgp_nx32i18yYo7RciPRb4mbsKeYZcWl-_jmyYEasHo6JDg/exec";
 const ADMIN_EMAIL="thiagodp3@gmail.com",ADMIN_WA="5511952612966";
+/* e-mails para envio: lista guardada neste aparelho, marque para quem vai */
+const EM_LS="leitor-miniload-emails";
+function emLoad(){try{const j=JSON.parse(localStorage.getItem(EM_LS)||"null");if(j&&Array.isArray(j.list)&&Array.isArray(j.sel))return j}catch(e){}return {list:[ADMIN_EMAIL],sel:[ADMIN_EMAIL]}}
+function emSave(o){try{localStorage.setItem(EM_LS,JSON.stringify(o))}catch(e){}}
+function emTo(){const o=emLoad();return o.sel.filter(x=>o.list.includes(x))}
+function emPickerHtml(id){return '<div class="empick" id="'+id+'"></div>'}
+function emWire(id,onChange){
+  const box=$(id);if(!box)return;
+  const draw=()=>{const o=emLoad();
+    box.innerHTML='<div class="emlist">'+(o.list.length?o.list.map((m,i)=>'<label class="emchip"><input type="checkbox" data-em="'+i+'"'+(o.sel.includes(m)?" checked":"")+'><span>'+esc(m)+'</span><button type="button" data-emx="'+i+'" aria-label="Tirar '+esc(m)+' da lista">×</button></label>').join(""):'<small class="hint">Nenhum e-mail na lista. Adicione abaixo.</small>')+'</div>'+
+      '<div class="emadd"><input type="email" inputmode="email" autocapitalize="none" autocorrect="off" spellcheck="false" placeholder="Adicionar outro e-mail" aria-label="Adicionar e-mail"><button type="button" class="btn small">Adicionar</button></div>';
+    box.querySelectorAll("[data-em]").forEach(c=>c.onchange=()=>{const o=emLoad(),m=o.list[+c.dataset.em];o.sel=o.sel.filter(x=>x!==m);if(c.checked)o.sel.push(m);emSave(o);onChange&&onChange()});
+    box.querySelectorAll("[data-emx]").forEach(b=>b.onclick=e=>{e.preventDefault();const o=emLoad(),m=o.list[+b.dataset.emx];confirmDel("Tirar "+m+" da lista de e-mails?",()=>{const n=emLoad();n.list=n.list.filter(x=>x!==m);n.sel=n.sel.filter(x=>x!==m);emSave(n);draw();onChange&&onChange()},"Sim, tirar")});
+    const inp=box.querySelector(".emadd input"),add=()=>{const v=String(inp.value||"").trim().toLowerCase();if(!/^[^\s@,;]+@[^\s@,;]+\.[^\s@,;]+$/.test(v)){toast("E-mail inválido");inp.focus();return}const o=emLoad();if(!o.list.includes(v))o.list.push(v);if(!o.sel.includes(v))o.sel.push(v);emSave(o);draw();onChange&&onChange();toast("E-mail adicionado")};
+    box.querySelector(".emadd button").onclick=add;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add()}};
+  };draw();
+}
+const mailHref=(subj,body)=>"mailto:"+emTo().map(encodeURIComponent).join(",")+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body);
 const GSQ_LS="leitor-miniload-fila-planilha";
 let gsMarks={},gsOk=null,gsAt=0,gsBusy=false,gsLocal={},gsIds=new Set();
 /* acesso por usuário e senha: a planilha confere e devolve uma sessão deste celular */
@@ -1816,7 +1837,7 @@ function gsStatus(){
 const somaLista=rows=>{const t=JSON.stringify(rows);let k=0x811c9dc5;for(let i=0;i<t.length;i++){k^=t.charCodeAt(i);k=Math.imul(k,0x01000193)>>>0}return k.toString(16).padStart(8,"0")};
 let gsListaEnviada="";
 async function gsPushLista(){
-  if(IS_TEAM||!ses||ses.perfil!=="admin"||!mtcNewRaw||!Array.isArray(mtcNewRaw.rows)||!mtcNewRaw.rows.length)return;
+  if(!ses||ses.perfil!=="admin"||!mtcNewRaw||!Array.isArray(mtcNewRaw.rows)||!mtcNewRaw.rows.length)return;
   const em=String(mtcNewRaw.importadoEm||"");if(!em||gsListaEnviada===em)return;
   try{
     const v=await (await fetch(GS_URL+"?a=versao&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"})).json();
@@ -1928,7 +1949,7 @@ function mtcParse(wb,fileName){
     }
   }
   if(!out.length)return null;
-  return {nome:String(fileName||"Lista de peças").replace(/\.(xlsx|xls|csv)$/i,""),importadoEm:new Date().toISOString().slice(0,10),rows:out};
+  return {nome:String(fileName||"Lista de peças").replace(/\.(xlsx|xls|csv)$/i,""),importadoEm:(()=>{const d=new Date(),p=n=>String(n).padStart(2,"0");return d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+" "+p(d.getHours())+":"+p(d.getMinutes())})(),rows:out};
 }
 async function mtcLoadFile(f){
   if(!f)return;
@@ -1939,7 +1960,7 @@ async function mtcLoadFile(f){
     if(!d){toast("Não achei as colunas de peça e pallet nessa planilha");return}
     try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}
     if(db){try{await db.doc("listas/mtc").set(d)}catch(e){}}
-    mtcNew=mtcFrom(d);mtcSel="new";mtc=mtcNew;$("mtcIn").value="";render();
+    mtcNew=mtcFrom(d);mtcNewRaw=d;mtcSel="new";mtc=mtcNew;$("mtcIn").value="";render();gsPushLista();
     const np=new Set(d.rows.map(r=>r[3]).filter(Boolean)).size;
     toast("Lista atualizada: "+d.rows.length+" linhas em "+np+" pallets");
   }catch(e){toast("Não consegui ler esse arquivo")}
@@ -1978,6 +1999,9 @@ function mtcAllBook(){
   add(res,"Resumo",[24,12,10]);
   add(all,"Todos",[16,22,12,16,8,34,14,18,18]);
   for(const [nm,m,lk] of L)add([head,...m.rows.filter(r=>!rm(lk,r).at&&!/RETIRAD/i.test(r.st||"")).map(r=>[r.item,num(r.qtd),r.pack,num(r.pal),stDisp(r.st),rk(lk,r),rm(lk,r).quem||"",rm(lk,r).lib||""]),[],[CREDITO]],nm,[22,12,16,8,34,14,18,18]);
+  {const [nm0,m0,lk0]=L[0],ps=[...new Set(m0.rows.map(r=>String(r.pal||"")).filter(Boolean))].sort(palSort),usados=new Set(wb.SheetNames.map(x=>x.toLowerCase()));
+   for(const pl of ps){let t=("Pallet "+pl).replace(/[\\\/?*\[\]:]/g,"-").slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
+     add([head,...m0.rows.filter(r=>String(r.pal||"")===pl&&!rm(lk0,r).at&&!/RETIRAD/i.test(r.st||"")).map(r=>[r.item,num(r.qtd),r.pack,num(r.pal),stDisp(r.st),rk(lk0,r),rm(lk0,r).quem||"",rm(lk0,r).lib||""]),[],[CREDITO]],t,[22,12,16,8,34,14,18,18])}}
   const ret=[];for(const [nm,m,lk] of L)for(const r of m.rows){const x=rm(lk,r);if(x.at){const d=new Date(x.at),pd=n=>String(n).padStart(2,"0");ret.push([pd(d.getDate())+"/"+pd(d.getMonth()+1)+"/"+d.getFullYear()+" "+pd(d.getHours())+":"+pd(d.getMinutes()),num(r.pal),r.item,num(r.qtd),r.pack,x.quem||"",x.lib||"",x.obs||""])}}
   add([["Data e hora","Pallet","Item","Quantidade","Pack Number","Quem retirou","Quem autorizou","Observação"],...ret.sort((a,b)=>a[0]<b[0]?-1:1),[],[CREDITO]],"Retirar material",[17,8,22,11,16,20,20,30]);
   return {wb,all,name:"Itens_MTC_todos_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx"};
@@ -2051,8 +2075,8 @@ function renderMtc(){
   $("dash").hidden=true;
   $("mOldBar").hidden=mtcSel!=="old";
   $("gsMtc").innerHTML=gsStatus();
-  $("mtcNewEmpty").hidden=!(mtcSel==="new"&&mtc&&!mtc.rows.length);$("mtcLoad").hidden=mtcSel==="old";
-  $("mtcEmpty").hidden=!!mtc;if(IS_TEAM&&!mtc){$("mtcEmpty").innerHTML=ses?"<b>Carregando a lista da planilha…</b><span>Precisa de internet só na primeira vez.</span>":"<b>Entre com usuário e senha</b><span>A lista só aparece depois do login.</span>";$("mtcLoad").hidden=true}$("mtcSend").hidden=!mtc;$("mtcForm").hidden=!mtc;$("mtcMode").hidden=!mtc;
+  $("mtcNewEmpty").hidden=!(mtcSel==="new"&&mtc&&!mtc.rows.length);$("mtcLoad").hidden=mtcSel==="old"||(IS_TEAM&&!(ses&&ses.perfil==="admin"));
+  $("mtcEmpty").hidden=!!mtc;if(IS_TEAM&&!mtc){$("mtcEmpty").innerHTML=ses?"<b>Carregando a lista da planilha…</b><span>Precisa de internet só na primeira vez.</span>":"<b>Entre com usuário e senha</b><span>A lista só aparece depois do login.</span>";if(ses&&ses.perfil==="admin")$("mtcEmpty").innerHTML="<b>Ainda não tem lista na planilha</b><span>Você é administrador: toque em Carregar lista (Excel). Ela vai para a planilha e todos recebem.</span>";$("mtcLoad").hidden=!(ses&&ses.perfil==="admin")}$("mtcSend").hidden=!mtc;$("mtcForm").hidden=!mtc;$("mtcMode").hidden=!mtc;
   if(!mtc){$("mtcInfo").textContent="Carregue o Excel de peças para pesquisar.";$("mtcPals").innerHTML="";$("mtcSum").innerHTML="";$("mtcWrap").hidden=true;return}
   const pals={};let sem=0;const vivos=mtc.rows.filter(r=>!isRet(r));vivos.forEach(r=>{if(r.pal)pals[r.pal]=(pals[r.pal]||0)+1;else sem++});
   $("mtcInfo").textContent=mtc.nome+" · "+vivos.length+" no estoque"+(mtc.rows.length-vivos.length?" · "+(mtc.rows.length-vivos.length)+" retiradas":"")+" · "+mtc.rows.length+" linhas · "+Object.keys(pals).length+" pallets"+(mtc.em?" · atualizada em "+fmtDay(mtc.em):"");
@@ -2157,7 +2181,7 @@ function renderRet(){
   $("gsRet").innerHTML=gsStatus();
   {const RL=retList().filter(r=>retMarks[retKey(r)]);const w=$("retWa"),ml=$("retMail");w.hidden=ml.hidden=!IS_TEAM||!RL.length||gsOk!==false;
    if(RL.length){const txt="*Retiradas · "+(mtc?mtc.nome:"")+"*\n"+RL.map(r=>"Pallet "+(r.pal||"—")+" | "+r.item+" | "+r.qtd+" | "+(r.pack||"—")+" | "+retWhen(r)+(retWho(r)?" | "+retWho(r):"")).join("\n")+"\n_"+CREDITO+"_";
-     w.href="https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(txt);ml.href="mailto:"+ADMIN_EMAIL+"?subject="+encodeURIComponent("Retiradas · "+(mtc?mtc.nome:""))+"&body="+encodeURIComponent(txt.replace(/[*_]/g,""))}}
+     w.href="https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(txt);ml.href=mailHref("Retiradas · "+(mtc?mtc.nome:""),txt.replace(/[*_]/g,""))}}
   const L=mtc?mtc.rows.filter(isRet):[];
   const pals={};L.forEach(r=>{pals[r.pal||"—"]=(pals[r.pal||"—"]||0)+1});
   $("retInfo").textContent=(mtc?mtc.nome+" · ":"")+L.length+" caixa"+(L.length===1?"":"s")+" retirada"+(L.length===1?"":"s");
@@ -2581,8 +2605,9 @@ function openCopySheet(lotes,done,tabName){
     '<p class="pstep"><span>1</span> Marque o pallet que você vai enviar</p>'+
     '<div class="pcards">'+L.map(card).join("")+'</div>'+
     (L.length>1?'<div class="row-acts" style="margin-top:4px"><button class="btn small" id="psAll">Marcar todos</button><button class="btn small" id="psNone">Desmarcar</button></div>':'')+
-    '<p class="pstep"><span>2</span> Envie</p>'+
-    '<a class="btn mail psend" id="psMail">Enviar ao administrador via e-mail</a>'+'<a class="btn wa psend" id="psWa" target="_blank" rel="noopener" style="min-height:44px;font-size:15px">ou via WhatsApp</a>'+
+    '<p class="pstep"><span>2</span> Para quem vai o e-mail</p>'+emPickerHtml("psEm")+
+    '<p class="pstep"><span>3</span> Envie</p>'+
+    '<a class="btn mail psend" id="psMail">Enviar por e-mail</a>'+'<a class="btn wa psend" id="psWa" target="_blank" rel="noopener" style="min-height:44px;font-size:15px">ou via WhatsApp</a>'+
     '<div class="row-acts"><button class="btn" id="psXls" style="flex:1">Baixar Excel</button><button class="btn" id="psCopy" style="flex:1">Copiar texto</button></div>'+
     '<p class="hint" id="cpMsg"></p>'+
     '<details class="pmore"><summary>Outras opções</summary><p class="hint">Copiar para colar no Excel (cada campo cai na sua coluna; toque na célula A1, segure e escolha Colar).</p><div class="row-acts"><button class="btn" id="psTsv">Copiar para o Excel</button></div></details>'+
@@ -2591,14 +2616,14 @@ function openCopySheet(lotes,done,tabName){
   ()=>{
     const ks=()=>L.filter(k=>sel.has(k));
     const upd=()=>{const K=ks(),n=K.reduce((t,k)=>t+rowsOf(k).length,0),a=$("psWa");
-      a.textContent=K.length?"ou via WhatsApp":"Marque um pallet acima";$("psMail").textContent=K.length?"Enviar ao administrador via e-mail ("+(K.length>1?K.length+" pallets · ":"")+n+" etiquetas)":"Marque um pallet acima";
+      a.textContent=K.length?"ou via WhatsApp":"Marque um pallet acima";const T=emTo();$("psMail").textContent=!K.length?"Marque um pallet acima":!T.length?"Marque ou adicione um e-mail acima":"Enviar por e-mail para "+(T.length>1?T.length+" pessoas":T[0])+" ("+n+" etiquetas)";
       if(K.length){a.href=waLink(K);a.classList.remove("off")}else{a.removeAttribute("href");a.classList.add("off")}
-      {const ml=$("psMail");if(K.length){ml.href="mailto:"+ADMIN_EMAIL+"?subject="+encodeURIComponent("Pallets Miniload")+"&body="+encodeURIComponent(wa(K).replace(/[*_]/g,""));ml.classList.remove("off")}else{ml.removeAttribute("href");ml.classList.add("off")}}
+      {const ml=$("psMail");if(K.length&&emTo().length){ml.href=mailHref("Pallets Miniload",wa(K).replace(/[*_]/g,""));ml.classList.remove("off")}else{ml.removeAttribute("href");ml.classList.add("off")}}
       ["psXls","psCopy","psTsv"].forEach(id=>{$(id).disabled=!K.length});};
     document.querySelectorAll("[data-pk]").forEach(c=>c.onchange=()=>{c.checked?sel.add(c.dataset.pk):sel.delete(c.dataset.pk);upd()});
     if($("psAll"))$("psAll").onclick=()=>{L.forEach(k=>sel.add(k));document.querySelectorAll("[data-pk]").forEach(c=>c.checked=true);upd()};
     if($("psNone"))$("psNone").onclick=()=>{sel.clear();document.querySelectorAll("[data-pk]").forEach(c=>c.checked=false);upd()};
-    $("cpClose").onclick=closeSheet;
+    $("cpClose").onclick=closeSheet;emWire("psEm",upd);
     const copy=async(txt,onde)=>{try{await navigator.clipboard.writeText(txt);$("cpMsg").textContent="Copiado. "+onde;toast("Copiado")}
       catch(e){const t=$("cpTxt");t.hidden=false;t.value=txt;t.focus();t.select();$("cpMsg").textContent="Não consegui copiar sozinho. O texto está selecionado: segure em cima dele e escolha Copiar. "+onde}};
     $("psCopy").onclick=()=>copy(wa(ks()),"Abra o WhatsApp, segure no campo de mensagem e escolha Colar.");
