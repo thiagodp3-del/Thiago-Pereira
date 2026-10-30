@@ -485,6 +485,19 @@ body[data-view="mtc"] #sForm,body[data-view="mtc"] #sRes{display:none!important}
 .dash{display:grid;gap:12px;margin-top:10px}
 .dash>h2{margin:0;font-family:var(--display);font-size:24px;letter-spacing:.03em;text-transform:uppercase;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .dash>h2 small{font-family:var(--body);font-size:13px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:500}
+.kbt{height:48px;min-width:56px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:13px;color:var(--muted)}
+.jgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:42vh;overflow:auto}
+.jgrid label{display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border:2px solid var(--line);border-radius:10px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer}
+.jgrid input{width:18px;height:18px;margin:0}.jgrid label:has(input:checked){border-color:var(--accent);background:rgba(245,184,0,.16)}
+.joinbtn{justify-self:start}
+.dhero{display:grid;grid-template-columns:132px 1fr;gap:14px;align-items:center}
+.dhero svg{width:132px;height:132px;display:block}
+.dhero .dleg{display:grid;gap:6px}
+.dmap{display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:6px}
+.dmap button{border:0;border-radius:10px;padding:8px 4px;min-height:58px;display:grid;place-items:center;gap:0;font-family:var(--body);cursor:pointer;color:#fff;line-height:1.1}
+.dmap button b{font-family:var(--display);font-size:20px;font-variant-numeric:tabular-nums}
+.dmap button small{font-size:10px;opacity:.9;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 2px}
+.dmap button.vazio{background:var(--surface)!important;color:var(--muted);border:1px dashed var(--line)}
 .dkpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
 .dkpi div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;min-width:0}
 .dkpi b{display:block;font-family:var(--display);font-size:32px;line-height:1.05;font-variant-numeric:tabular-nums;color:var(--ink)}
@@ -639,7 +652,7 @@ button.dhr{cursor:pointer}
     <button type="button" class="btn primary mtcall" id="retXls" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Exportar Excel das retiradas</button>
     <a class="btn wa" id="retWa" target="_blank" rel="noopener" style="text-decoration:none;height:48px;font-size:16px" hidden>Enviar retiradas ao administrador · WhatsApp</a>
     <a class="btn mail" id="retMail" style="text-decoration:none;height:48px;font-size:16px" hidden>Enviar retiradas ao administrador · E-mail</a>
-    <form class="msearch" id="retForm" autocomplete="off" role="search" hidden><input id="retIn" type="search" placeholder="Peça, pack ou nome" aria-label="Buscar nas retiradas" enterkeyhint="search"><button type="button" id="retClear">Limpar</button></form>
+    <form class="msearch" id="retForm" autocomplete="off" role="search" hidden><input id="retIn" type="search" inputmode="numeric" placeholder="Peça, pack ou nome" aria-label="Buscar nas retiradas" enterkeyhint="search"><button type="button" id="retClear">Limpar</button></form>
     <div class="palchips" id="retPals"></div>
     <div class="empty" id="retEmpty"><b>Nenhuma retirada ainda</b><span>Em <b>Itens MTC</b>, abra o pallet e marque o quadradinho da caixa que saiu.</span></div>
     <div class="rlist" id="retWrap" hidden><div id="retBody"></div></div>
@@ -665,7 +678,7 @@ button.dhr{cursor:pointer}
     <div class="mhead"><h2>Itens MTC</h2><span id="mtcInfo">Carregando a lista…</span></div><div id="gsMtc"></div>
     <div class="moldbar" id="mOldBar" hidden><span><b>Lista antiga 25/10</b> (oculta · só consulta)</span><button type="button" class="btn small" id="mSelNew">‹ Voltar para a lista atual</button></div>
     <div class="mmode" id="mtcMode" role="group" aria-label="Procurar por"><span>Procurar por:</span><button type="button" data-mm="peca" aria-pressed="true">Peça</button><button type="button" data-mm="pack" aria-pressed="false">Pack number</button></div>
-    <form class="msearch" id="mtcForm" autocomplete="off" role="search"><input id="mtcIn" type="search" placeholder="Número da peça ou pallet (ex.: 60)" aria-label="Pesquisar na lista MTC" enterkeyhint="search"><button type="button" id="mtcClear">Limpar</button></form>
+    <form class="msearch" id="mtcForm" autocomplete="off" role="search"><input id="mtcIn" type="search" inputmode="numeric" placeholder="Número da peça ou pallet (ex.: 60)" aria-label="Pesquisar na lista MTC" enterkeyhint="search"><button type="button" class="kbt" data-kb="mtcIn" aria-label="Trocar o teclado">ABC</button><button type="button" id="mtcClear">Limpar</button></form>
     <button type="button" class="btn primary mtcall" id="mtcAll"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Exportar Excel · todos os itens MTC</button>
     <div class="empty" id="mtcNewEmpty" hidden><b>Lista nova ainda vazia</b><span>Os pallets entram aqui conforme forem conferidos, começando pelo pallet 1. </span></div>
     <div class="mload"><button type="button" class="btn small" id="mtcLoad">Carregar lista (Excel)</button><button type="button" class="btn small" id="mtcSend" hidden>Enviar lista</button></div>
@@ -674,7 +687,7 @@ button.dhr{cursor:pointer}
     
     <button type="button" class="btn mback" id="mtcBack" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Voltar para os pallets</button>
     <div class="msum" id="mtcSum"></div>
-    <form class="msearch" id="mtcPalForm" autocomplete="off" role="search" hidden><input id="mtcPalIn" type="search" placeholder="Buscar neste pallet: peça ou pack" aria-label="Buscar dentro do pallet" enterkeyhint="search"><button type="button" id="mtcPalClear">Limpar</button></form>
+    <form class="msearch" id="mtcPalForm" autocomplete="off" role="search" hidden><input id="mtcPalIn" type="search" inputmode="numeric" placeholder="Buscar neste pallet: peça ou pack" aria-label="Buscar dentro do pallet" enterkeyhint="search"><button type="button" class="kbt" data-kb="mtcPalIn" aria-label="Trocar o teclado">ABC</button><button type="button" id="mtcPalClear">Limpar</button></form>
     <div class="palchips" id="mtcPals"></div>
     <section class="dash" id="dash" hidden aria-label="Resumo"></section>
     <div class="tablewrap" id="mtcWrap" hidden><table class="mtable"><thead><tr><th class="ck" title="Retirado">Tirou</th><th>Item</th><th>Qtd</th><th>Pack Number</th><th>Pallet</th><th>Status</th><th>No app</th></tr></thead><tbody id="mtcBody"></tbody></table></div>
@@ -1076,7 +1089,7 @@ function openManual(pre,falta){
   pre=pre&&pre.peca!==undefined?pre:null;
   openSheet('<h3>Digitar à mão · Palete '+esc(currentPal())+'</h3>'+(pre?'<p class="err" style="color:#B42318;font-weight:700">A foto não leu tudo (faltou '+esc(falta||"")+'). Complete o que falta olhando a etiqueta, ou cancele e tire outra foto.</p>':'<p>Use quando a foto não funcionar. Copie o que está escrito na etiqueta.</p>')+
     '<form class="manf" id="manF" autocomplete="off">'+
-    '<label>Número do item <small>ex.: A0004211212</small><input id="manPeca" autocapitalize="characters" spellcheck="false" enterkeyhint="next"></label>'+
+    '<label>Número do item <small>ex.: A0004211212</small><input id="manPeca" inputmode="numeric" autocapitalize="characters" spellcheck="false" enterkeyhint="next"></label>'+
     '<label>Quantidade <small>só o número</small><input id="manQtd" inputmode="numeric" enterkeyhint="next"></label>'+
     '<label>Pack number <small>só os números, sem o S</small><input id="manPack" inputmode="numeric" enterkeyhint="done"></label>'+
     '<p class="err" id="manErr"></p>'+
@@ -2039,8 +2052,8 @@ function mtcQuery(raw){
 function mtcFind(raw){
   if(!mtc)return [];
   const Q=mtcQuery(raw);if(!Q)return [];
-  if(Q.pal!==undefined)return mtc.rows.filter(r=>r.pal===Q.pal&&!isRet(r));
-  return mtc.rows.filter(r=>!isRet(r)&&(mtcMode==="pack"?hit(r.pack,Q.qs)>=0:hit(r.item,Q.qs)>=0));
+  if(Q.pal!==undefined){const g=palGrp(Q.pal);return mtc.rows.filter(r=>g.includes(r.pal)&&!isRet(r))}
+  return mtc.rows.filter(r=>mtcMode==="pack"?hit(r.pack,Q.qs)>=0:hit(r.item,Q.qs)>=0); // inclui as já retiradas: aparecem em vermelho
 }
 function appWhere(pack){
   // pack lido no app (qualquer dia)? mostra onde
@@ -2049,6 +2062,44 @@ function appWhere(pack){
   return r?"✓ P"+(r.vals.palete||"?")+" · "+(r.dia===TODAY?"hoje":fmtDay(r.dia)):"";
 }
 function palObs(p){if(mtcSel==="new"&&Object.prototype.hasOwnProperty.call(gsLocal,p))return gsLocal[p]||"";const o=mtcSel==="new"&&mtcNewRaw&&mtcNewRaw.obs;return (o&&o[p])||""}
+/* pallets juntos no mesmo lugar: cada caixa continua no pallet dela; o grupo fica na planilha como LOCAL "G|pallet" */
+const podeAdmin=()=>!IS_TEAM||!!(ses&&ses.perfil==="admin");
+function palGrp(p){p=String(p||"");if(!p)return [""];const k="G|"+p;const v=Object.prototype.hasOwnProperty.call(gsLocal,k)?gsLocal[k]:((mtcNewRaw&&mtcNewRaw.grp&&mtcNewRaw.grp[p])||"");
+  const m=[...new Set(String(v||"").split("+").map(x=>x.trim()).filter(Boolean))];return m.length>1&&m.includes(p)?m.sort((a,b)=>(+a)-(+b)):[p]}
+const palLbl=p=>{if(!p)return "Sem pallet";const g=palGrp(p);return g.length>1?"Pallets "+g.join(" + "):"Pallet "+p};
+function palGrpSave(map){
+  if(mtcNewRaw)mtcNewRaw.grp=Object.assign({},mtcNewRaw.grp||{});
+  for(const [p,v] of Object.entries(map)){
+    if(mtcNewRaw){if(v)mtcNewRaw.grp[p]=v;else delete mtcNewRaw.grp[p]}
+    gsLocal["G|"+p]=v;
+    gsQueue.push({key:"LOCAL|G|"+p,mov:{id:uid(),tipo:"LOCAL",pal:"G|"+p,texto:v,quando:gsWhen(Date.now())}});
+  }
+  try{if(mtcNewRaw)localStorage.setItem(MTC_LS,JSON.stringify(mtcNewRaw))}catch(e){}
+  gsSaveQ();gsFlush();renderMtc();
+}
+function openJoin(p){
+  if(!podeAdmin()){toast("Só o administrador junta pallets.");return}
+  const all=[...new Set(mtc.rows.map(r=>r.pal).filter(Boolean))].sort((a,b)=>(+a)-(+b));
+  const g0=palGrp(p),sel=new Set(g0);
+  openSheet('<h3>🔗 Juntar pallets</h3><p style="margin:0">Marque os pallets que estão <b>no mesmo lugar</b>. As caixas continuam com o número do pallet delas; o app só mostra tudo junto.</p>'+
+    '<div class="jgrid">'+all.map(x=>'<label><input type="checkbox" data-j="'+esc(x)+'"'+(sel.has(x)?" checked":"")+'>'+esc(x)+'</label>').join("")+'</div>'+
+    '<form class="manf" id="jF" autocomplete="off"><label>Nome do lugar (opcional)<input id="jNome" maxlength="40" style="text-transform:none" placeholder="Ex.: Porão, Decon, Rua 3" value="'+esc(palObs(p))+'"></label>'+
+    '<p class="err" id="jErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Juntar</button><button class="btn" type="button" id="jNo" style="flex:1">Cancelar</button></div>'+
+    (g0.length>1?'<div class="row-acts"><button class="btn" type="button" id="jSep" style="flex:1">Separar '+esc(g0.join(" + "))+'</button></div>':'')+'</form>',()=>{
+    $("jNo").onclick=closeSheet;
+    if($("jSep"))$("jSep").onclick=()=>confirmDel("Separar os pallets "+esc(g0.join(" + "))+"? Nenhuma caixa muda.",()=>{const m={};g0.forEach(x=>m[x]="");closeSheet();palGrpSave(m);toast("Pallets separados")},"Sim, separar");
+    $("jF").addEventListener("submit",async e=>{e.preventDefault();
+      const S=[...document.querySelectorAll("[data-j]")].filter(c=>c.checked).map(c=>c.dataset.j).sort((a,b)=>(+a)-(+b));
+      if(S.length<2){$("jErr").textContent="Marque pelo menos 2 pallets.";return}
+      const m={},txt=S.join("+");
+      for(const x of S){for(const y of palGrp(x)){if(!S.includes(y)){const rest=palGrp(y).filter(z=>!S.includes(z));m[y]=rest.length>1?rest.join("+"):""}}}
+      for(const x of S)m[x]=txt;
+      const nome=String($("jNome").value||"").trim();closeSheet();palGrpSave(m);
+      if(nome)for(const x of S){if(palObs(x)!==nome)await palObsSet(x,nome)}
+      beep(true);toast("Pallets "+S.join(" + ")+" juntos"+(nome?" · "+nome:""));
+    });
+  });
+}
 async function palObsSet(p,v){
   if(mtcNewRaw){mtcNewRaw.obs=Object.assign({},mtcNewRaw.obs||{});if(v)mtcNewRaw.obs[p]=v;else delete mtcNewRaw.obs[p];
     try{localStorage.setItem(MTC_LS,JSON.stringify(mtcNewRaw))}catch(e){}
@@ -2088,20 +2139,22 @@ function renderMtc(){
   const shown=pqs?found.filter(r=>hit(r.item,pqs)>=0||hit(r.pack,pqs)>=0):found;
   $("mtcBack").hidden=!Q;
   // sem pesquisa: mostra os pallets para tocar
-  $("mtcPals").innerHTML=Q?"":Object.keys(pals).sort((a,b)=>a-b).map(p=>'<button type="button" data-mpal="'+esc(p)+'">Pallet '+esc(p)+" <small>("+pals[p]+")</small>"+(palObs(p)?'<small class="pobs">'+esc(palObs(p))+'</small>':"")+"</button>").join("")+(sem?'<button type="button" data-mpal="">Sem pallet <small>('+sem+")</small></button>":"");
+  $("mtcPals").innerHTML=Q?"":(()=>{const vist=new Set();return Object.keys(pals).sort((a,b)=>a-b).filter(p=>{if(vist.has(p))return false;palGrp(p).forEach(x=>vist.add(x));return true}).map(p=>{const g=palGrp(p),n=g.reduce((t,x)=>t+(pals[x]||0),0);return '<button type="button" data-mpal="'+esc(p)+'"'+(g.length>1?' style="grid-column:span 2"':'')+'>'+esc(palLbl(p))+" <small>("+n+")</small>"+(palObs(p)?'<small class="pobs">'+esc(palObs(p))+'</small>':"")+"</button>"}).join("")})()+(sem?'<button type="button" data-mpal="">Sem pallet <small>('+sem+")</small></button>":"");
   // resumo: por peça (total de peças, packs e em quais pallets) ou do pallet pesquisado
   let sum="";
   if(Q&&found.length){
     const fmt=n=>n.toLocaleString("pt-BR");
     if(Q.pal!==undefined){
       const tot=found.reduce((t,r)=>t+(+r.qtd||0),0),itens=new Set(found.map(r=>r.item)).size;
-      const nret=mtc.rows.filter(r=>r.pal===Q.pal&&isRet(r)).length;
-      sum='<div class="mcard"><span class="big">'+(Q.pal?"Pallet "+esc(Q.pal):"Sem pallet")+'</span>'+(Q.pal?'<span class="obsl">📍 Onde está: <b>'+(palObs(Q.pal)?esc(palObs(Q.pal)):'<i style="font-weight:400">não informado</i>')+'</b> <button type="button" class="btn obsbtn" data-obs="'+esc(Q.pal)+'">✏️ '+(palObs(Q.pal)?'Mudar':'Informar')+'</button></span>':'')+'<span class="sub">'+found.length+" linhas · "+itens+" peças diferentes · "+fmt(tot)+" peças no total"+(nret?' · <b style="color:#B42318">'+nret+" retirada"+(nret>1?"s":"")+' (veja na aba Retiradas)</b>':"")+'</span><span class="sub">Tirou uma caixa? Marque o <b>quadradinho</b> da linha e informe quem retirou e quem autorizou. A caixa sai da lista e vai para a aba <b>Retiradas</b>.</span></div>';
+      const nret=mtc.rows.filter(r=>palGrp(Q.pal).includes(r.pal)&&isRet(r)).length;
+      sum='<div class="mcard"><span class="big">'+esc(palLbl(Q.pal))+'</span>'+(Q.pal?'<span class="obsl">📍 Onde está: <b>'+(palObs(Q.pal)?esc(palObs(Q.pal)):'<i style="font-weight:400">não informado</i>')+'</b> <button type="button" class="btn obsbtn" data-obs="'+esc(Q.pal)+'">✏️ '+(palObs(Q.pal)?'Mudar':'Informar')+'</button></span>':'')+'<span class="sub">'+found.length+" linhas · "+itens+" peças diferentes · "+fmt(tot)+" peças no total"+(nret?' · <b style="color:#B42318">'+nret+" retirada"+(nret>1?"s":"")+' (veja na aba Retiradas)</b>':"")+'</span><span class="sub">Tirou uma caixa? Marque o <b>quadradinho</b> da linha e informe quem retirou e quem autorizou. A caixa sai da lista e vai para a aba <b>Retiradas</b>.</span></div>';
     }else{
       const by={};found.forEach(r=>{(by[r.item]=by[r.item]||[]).push(r)});
-      sum=Object.entries(by).slice(0,8).map(([it,l])=>{
-        const tot=l.reduce((t,r)=>t+(+r.qtd||0),0),ps=[...new Set(l.map(r=>r.pal||"sem pallet"))];
-        return '<div class="mcard"><b>'+hl(it,Q.qs)+'</b><span class="big">'+ps.map(p=>p==="sem pallet"?"Sem pallet":"Pallet "+esc(p)).join(" · ")+'</span><span class="sub">'+l.length+" pack"+(l.length>1?"s":"")+" · "+fmt(tot)+" peças</span></div>";
+      sum=Object.entries(by).slice(0,8).map(([it,L0])=>{
+        const l=L0.filter(r=>!isRet(r)),rt=L0.filter(isRet),tot=l.reduce((t,r)=>t+(+r.qtd||0),0),ps=[...new Set(l.map(r=>r.pal||"sem pallet"))];
+        const onde=p=>{if(p==="sem pallet")return "Sem pallet";const g=palGrp(p);return "Pallet "+esc(p)+(g.length>1?' <small>(junto com '+esc(g.filter(x=>x!==p).join(" + "))+')</small>':"")+(palObs(p)?' <small>📍 '+esc(palObs(p))+'</small>':"")};
+        return '<div class="mcard"><b>'+hl(it,Q.qs)+'</b>'+(l.length?'<span class="big">'+ps.map(onde).join(" · ")+'</span><span class="sub">'+l.length+" pack"+(l.length>1?"s":"")+" no estoque · "+fmt(tot)+" peças</span>":'<span class="big" style="color:var(--ds-r)">Nada no estoque</span>')+
+          (rt.length?'<span class="sub" style="color:var(--ds-r);font-weight:700">'+rt.length+" já retirada"+(rt.length>1?"s":"")+" (em vermelho na lista)</span>":"")+"</div>";
       }).join("");
     }
   }else if(Q){
@@ -2110,12 +2163,13 @@ function renderMtc(){
     sum='<div class="mempty">Nada exato para “'+esc(raw)+'” na lista MTC.'+(sug.length?" Você quis dizer:":"")+"</div>"+
       sug.map(v=>'<button type="button" class="mcard" data-sug="'+esc(v)+'" style="text-align:left;cursor:pointer"><b>'+esc(v)+'</b><span class="sub">tocar para ver</span></button>').join("");
   }
+  if(Q&&Q.pal&&podeAdmin())sum+='<button type="button" class="btn joinbtn" data-join="'+esc(Q.pal)+'">🔗 '+(palGrp(Q.pal).length>1?"Juntar / separar pallets":"Juntar com outro pallet")+'</button>';
   if(pqs)sum+='<div class="mempty">'+(shown.length?shown.length+" de "+found.length+" linhas deste pallet com “"+esc($("mtcPalIn").value.trim())+"”":"Nada com “"+esc($("mtcPalIn").value.trim())+"” neste pallet.")+"</div>";
   $("mtcSum").innerHTML=sum;
   $("mtcWrap").hidden=!shown.length;
   if(!Q){$("dash").hidden=false;renderDash()}
   const qs=pqs||(Q&&Q.qs)||[];
-  $("mtcBody").innerHTML=shown.slice(0,500).sort((a,b)=>(+a.pal||999)-(+b.pal||999)||a.item.localeCompare(b.item)).map(r=>{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(r.verde?"verde":""))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}).join("");
+  $("mtcBody").innerHTML=shown.slice(0,500).sort((a,b)=>isRet(a)-isRet(b)||(+a.pal||999)-(+b.pal||999)||a.item.localeCompare(b.item)).map(r=>{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(r.verde?"verde":""))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}).join("");
 }
 /* ===== painel de resumo: estoque, retiradas, conferências, pallets e pessoas ===== */
 function renderDash(){
@@ -2133,10 +2187,13 @@ function renderDash(){
      '<div><small>Peças no estoque</small><b>'+fmt(viv.reduce((t,r)=>t+qn(r),0))+'</b><span>soma das quantidades</span></div>'+
      '<div><small>Pallets com caixas</small><b>'+fmt(nPalViv)+'</b><span>de '+fmt(nPal)+' pallets'+(nPal-nPalViv?' · '+(nPal-nPalViv)+' vazio'+(nPal-nPalViv>1?'s':''):'')+'</span></div>'+
      '<div><small>Retiradas</small><b>'+fmt(ret.length)+'</b><span>'+(retHoje?retHoje+' hoje':'nenhuma hoje')+'</span></div></div>';
-  // estoque x retiradas
-  h+='<div class="dcard"><h3>Estoque x Retiradas</h3><div class="dstack" role="img" aria-label="'+pctV+'% no estoque, '+(100-pctV)+'% retiradas">'+
-     '<i style="flex:'+viv.length+';background:var(--ds-a)" data-tip="No estoque: '+fmt(viv.length)+' caixas ('+pctV+'%)"></i>'+(ret.length?'<i style="flex:'+ret.length+';background:var(--ds-r)" data-tip="Retiradas: '+fmt(ret.length)+' caixas ('+(100-pctV)+'%)"></i>':'')+'</div>'+
-     '<div class="dleg"><span><i style="background:var(--ds-a)"></i>No estoque · <b>'+fmt(viv.length)+'</b> ('+pctV+'%)</span><span><i style="background:var(--ds-r)"></i>Retiradas · <b>'+fmt(ret.length)+'</b> ('+(100-pctV)+'%)</span></div></div>';
+  // estoque x retiradas: rosca com o percentual no meio
+  {const C=2*Math.PI*52,fv=R.length?viv.length/R.length:1,dv=C*fv;
+   h+='<div class="dcard"><h3>Estoque x Retiradas</h3><div class="dhero"><svg viewBox="0 0 132 132" role="img" aria-label="'+pctV+'% no estoque, '+(100-pctV)+'% retiradas">'+
+     '<circle cx="66" cy="66" r="52" fill="none" stroke="var(--ds-r)" stroke-width="18" data-tip="Retiradas: '+fmt(ret.length)+' caixas ('+(100-pctV)+'%)"/>'+
+     '<circle cx="66" cy="66" r="52" fill="none" stroke="var(--ds-a)" stroke-width="18" stroke-dasharray="'+dv.toFixed(1)+' '+(C-dv+0.01).toFixed(1)+'" transform="rotate(-90 66 66)" data-tip="No estoque: '+fmt(viv.length)+' caixas ('+pctV+'%)"/>'+
+     '<text x="66" y="66" text-anchor="middle" font-family="var(--display)" font-size="30" font-weight="700" fill="var(--ink)">'+pctV+'%</text><text x="66" y="86" text-anchor="middle" font-size="11" fill="var(--muted)">no estoque</text></svg>'+
+     '<div class="dleg"><span><i style="background:var(--ds-a)"></i>No estoque · <b>'+fmt(viv.length)+'</b> caixas</span><span><i style="background:var(--ds-r)"></i>Retiradas · <b>'+fmt(ret.length)+'</b> caixas</span><span style="color:var(--muted)">'+fmt(viv.reduce((t,r)=>t+qn(r),0))+' peças no estoque</span></div></div></div>'}
   // colunas por dia
   const cols=(title,sub,data,cor,unid)=>{const mx=Math.max(1,...data.map(d=>d[1]));
     return '<div class="dcard"><h3>'+title+'</h3><p class="dsub">'+sub+'</p><div class="dcols">'+data.map(([l,v])=>'<button type="button" class="dcol'+(v?'':' zero')+'" data-tip="'+esc(l)+': '+fmt(v)+' '+unid+'" aria-label="'+esc(l)+': '+v+' '+unid+'"><em>'+fmt(v)+'</em><i style="height:'+(v?Math.max(3,Math.round(v*100/mx)):0)+'%;background:'+cor+'"></i></button>').join("")+'</div><div class="dxl">'+data.map(([l])=>'<span>'+esc(l)+'</span>').join("")+'</div></div>'};
@@ -2151,7 +2208,10 @@ function renderDash(){
   const hbar=(title,sub,data,cor,unid,attr)=>{const mx=Math.max(1,...data.map(d=>d[1]));
     return '<div class="dcard"><h3>'+title+'</h3>'+(sub?'<p class="dsub">'+sub+'</p>':'')+(data.length?'<div class="dhb">'+data.map(([l,v,sm,key])=>'<'+(attr?'button type="button" '+attr+'="'+esc(key)+'"':'div')+' class="dhr" data-tip="'+esc(l)+': '+fmt(v)+' '+unid+'"><span class="lb">'+esc(l)+(sm?'<small>'+esc(sm)+'</small>':'')+'</span><span class="tr"><i style="width:'+Math.round(v*100/mx)+'%;background:'+cor+'"></i></span><span class="v">'+fmt(v)+'</span></'+(attr?'button':'div')+'>').join("")+'</div>':'<p class="dempty">Nada ainda.</p>')+'</div>'};
   const topP=Object.entries(palsViv).sort((a,b)=>b[1]-a[1]||(+a[0])-(+b[0])).slice(0,8).map(([p,n])=>["Pallet "+p,n,palObs(p)||"",p]);
-  h+=hbar("Pallets com mais caixas",'Toque para abrir o pallet · '+nPalViv+' pallets com caixas',topP,"var(--ds-a)","caixas","data-dpal");
+  {const vist=new Set(),tiles=[];Object.keys(pals).sort((a,b)=>(+a)-(+b)).forEach(p=>{if(vist.has(p))return;const g=palGrp(p);g.forEach(x=>vist.add(x));tiles.push([p,g,g.reduce((t,x)=>t+(palsViv[x]||0),0)])});
+   const mx=Math.max(1,...tiles.map(t=>t[2]));
+   h+='<div class="dcard"><h3>Mapa dos pallets</h3><p class="dsub">Caixas no estoque em cada pallet · quanto mais escuro, mais cheio · toque para abrir</p><div class="dmap">'+tiles.map(([p,g,n])=>{const a=n?0.55+0.45*n/mx:0;
+     return '<button type="button" data-dpal="'+esc(p)+'" class="'+(n?"":"vazio")+'"'+(g.length>1?' style="grid-column:span 2;background:rgba(31,95,175,'+a.toFixed(2)+')"':' style="background:rgba(31,95,175,'+a.toFixed(2)+')"')+' data-tip="'+esc(palLbl(p))+': '+fmt(n)+' caixas'+(palObs(p)?" · "+esc(palObs(p)):"")+'"><b>'+esc(g.join("+"))+'</b><small>'+(n?fmt(n)+" cx":"vazio")+'</small>'+(palObs(p)?'<small>'+esc(palObs(p))+'</small>':'')+'</button>'}).join("")+'</div></div>'}
   const cnt=key=>{const o={};ret.forEach(r=>{const v=String(mk(r)[key]||"").trim();if(!v)return;const k=v.toLowerCase();o[k]=o[k]||[v,0];o[k][1]++});return Object.values(o).sort((a,b)=>b[1]-a[1]).slice(0,5)};
   h+='<div class="dtwo">'+hbar("Quem mais retirou","",cnt("quem"),"var(--ds-r)","retiradas")+hbar("Quem mais autorizou","",cnt("lib"),"var(--ds-a)","retiradas")+'</div>';
   // onde estão os pallets
@@ -2206,7 +2266,7 @@ function mtcSimilar(q){
   const vals=[...new Set(mtc.rows.map(r=>mtcMode==="pack"?r.pack:r.item).filter(Boolean))];
   return vals.map(v=>{const k=skey(v);return {v,d:Math.min(lev(q,k),k.startsWith("A")||k.startsWith("N")?lev(q,k.slice(0)):9)}}).filter(x=>x.d<=2).sort((a,b)=>a.d-b.d).slice(0,5).map(x=>x.v);
 }
-$("mtcSum").addEventListener("click",e=>{const o=e.target.closest("[data-obs]");if(o){openObs(o.dataset.obs);return}const b=e.target.closest("[data-sug]");if(b){$("mtcIn").value=b.dataset.sug;renderMtc()}});
+$("mtcSum").addEventListener("click",e=>{const jb=e.target.closest("[data-join]");if(jb){openJoin(jb.dataset.join);return}const o=e.target.closest("[data-obs]");if(o){openObs(o.dataset.obs);return}const b=e.target.closest("[data-sug]");if(b){$("mtcIn").value=b.dataset.sug;renderMtc()}});
 let mT;
 $("mtcIn").addEventListener("input",()=>{clearTimeout(mT);mT=setTimeout(renderMtc,150)});
 $("mtcForm").addEventListener("submit",e=>{e.preventDefault();renderMtc();$("mtcIn").blur()});
@@ -2789,6 +2849,11 @@ async function doExport(soWhats){
 }
 
 document.body.dataset.view=view;
+document.querySelectorAll("[data-kb]").forEach(b=>{const inp=$(b.dataset.kb);let pref="numeric";try{pref=localStorage.getItem("leitor-miniload-teclado")||"numeric"}catch(e){}
+  const apply=m=>{inp.setAttribute("inputmode",m);b.textContent=m==="numeric"?"ABC":"123";b.setAttribute("aria-label",m==="numeric"?"Usar teclado com letras":"Usar teclado de números")};apply(pref);
+  b.addEventListener("pointerdown",e=>e.preventDefault());
+  b.addEventListener("click",()=>{const m=inp.getAttribute("inputmode")==="numeric"?"text":"numeric";document.querySelectorAll("[data-kb]").forEach(x=>{const i2=$(x.dataset.kb);i2.setAttribute("inputmode",m);x.textContent=m==="numeric"?"ABC":"123"});try{localStorage.setItem("leitor-miniload-teclado",m)}catch(e){}inp.blur();setTimeout(()=>inp.focus(),30)});
+});
 $("mtcLoad").onclick=()=>{$("mtcFile").value="";$("mtcFile").click()};
 $("mtcFile").addEventListener("change",e=>mtcLoadFile(e.target.files&&e.target.files[0]));
 $("mtcSend").onclick=mtcSendFile;
