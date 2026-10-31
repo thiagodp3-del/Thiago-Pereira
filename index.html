@@ -1755,7 +1755,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261031073030"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261031073431"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2299,6 +2299,29 @@ function renderMtc(){
 }
 function mtcRow(r,qs){{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(r.verde?"verde":""))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(r.box?'<span class="btag">BOX</span>':'')+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}
 }
+function boxExport(viv){
+  if(!window.XLSX){toast("Gerador de Excel não carregou");return}
+  const num=v=>/^\d+$/.test(String(v||""))?Number(v):(v||"");
+  const pals=[...new Set(viv.map(r=>r.pal||""))].sort((a,b)=>(+a||9999)-(+b||9999));
+  const d=new Date(),pd=n=>String(n).padStart(2,"0"),hoje=pd(d.getDate())+"/"+pd(d.getMonth()+1)+"/"+d.getFullYear();
+  // aba 1: tudo numa folha só, separado por pallet (para imprimir)
+  const A=[["BOX POR PALLET · "+hoje],[viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens · "+pals.length+" pallets"],[]];
+  for(const p of pals){const l=viv.filter(r=>(r.pal||"")===p).sort((a,b)=>a.item.localeCompare(b.item)||String(a.pack).localeCompare(String(b.pack)));
+    const g=p?palGrp(p):[];const tit=(p?"PALLET "+p:"SEM PALLET")+(g.length>1?" (junto com "+g.filter(x=>x!==p).join(" + ")+")":"")+(p&&palObs(p)?" · "+palObs(p):"")+" · "+l.length+" caixa"+(l.length>1?"s":"");
+    A.push([tit]);A.push(["✓","Item","Quantidade","Pack Number","Pallet"]);
+    l.forEach(r=>A.push(["",r.item,num(r.qtd),r.pack||"",num(r.pal)]));A.push([]);}
+  A.push([CREDITO]);
+  const wb=XLSX.utils.book_new();wb.Props={Title:"BOX por pallet",Author:AUTORIA.autor,Company:AUTORIA.area,Comments:CREDITO};
+  const ws=XLSX.utils.aoa_to_sheet(A);ws["!cols"]=[{wch:4},{wch:20},{wch:11},{wch:16},{wch:7}];
+  ws["!merges"]=A.map((r,i)=>r.length===1&&i<A.length?{s:{r:i,c:0},e:{r:i,c:4}}:null).filter(Boolean);
+  XLSX.utils.book_append_sheet(wb,ws,"BOX por pallet");
+  // uma aba por pallet também
+  const usados=new Set(["box por pallet"]);
+  for(const p of pals){const t=(p?"Pallet "+p:"Sem pallet").slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
+    const l=viv.filter(r=>(r.pal||"")===p).sort((a,b)=>a.item.localeCompare(b.item));
+    const w=XLSX.utils.aoa_to_sheet([["Item","Quantidade","Pack Number","Pallet"],...l.map(r=>[r.item,num(r.qtd),r.pack||"",num(r.pal)])]);w["!cols"]=[{wch:20},{wch:11},{wch:16},{wch:7}];XLSX.utils.book_append_sheet(wb,w,t)}
+  saveXlsx(wb,"BOX_por_pallet_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx");
+}
 function renderBox(){
   const raw=$("mtcIn").value,q=skey(raw),qs=q.length>=2?qVariants(q):null;
   $("mtcPalForm").hidden=true;$("mtcBack").hidden=!qs;$("dash").hidden=true;$("mtcPals").innerHTML="";
@@ -2309,8 +2332,10 @@ function renderBox(){
   let sum="";
   if(!B.length)sum='<div class="mempty"><b>Nenhum item marcado como BOX ainda.</b>'+(podeAdmin()?' Toque em <b>Carregar lista de box (Excel)</b> logo abaixo.':' Peça ao administrador para carregar a lista de box.')+'</div>';
   else sum='<div class="mempty">Toque no <b>quadrado</b> da caixa para dar baixa. A observação já vem como <b>Decante</b>.</div>';
+  if(viv.length)sum+='<button type="button" class="btn primary" id="boxXls">🖨️ Exportar BOX por pallet (Excel para imprimir)</button>';
   if(podeAdmin())sum+='<button type="button" class="btn" id="boxLoad">📦 Carregar lista de box (Excel)</button><input type="file" id="boxFile" accept=".xlsx,.xls,.csv" hidden>';
   $("mtcSum").innerHTML=sum;
+  if($("boxXls"))$("boxXls").onclick=()=>boxExport(viv);
   if($("boxLoad")){$("boxLoad").onclick=()=>{$("boxFile").value="";$("boxFile").click()};$("boxFile").onchange=e=>boxCarregar(e.target.files&&e.target.files[0])}
   $("mtcWrap").hidden=!lst.length;
   $("mtcBody").innerHTML=lst.slice(0,800).sort((a,b)=>isRet(a)-isRet(b)||a.item.localeCompare(b.item)||(+a.pal||999)-(+b.pal||999)).map(r=>mtcRow(r,qs||[])).join("");
