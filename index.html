@@ -833,6 +833,17 @@ function beep(ok){
   try{navigator.vibrate&&navigator.vibrate(ok?60:[300,120,300,120,500])}catch(e){}
   if(!ok){try{const f=document.createElement("div");f.className="errflash";document.body.appendChild(f);setTimeout(()=>f.remove(),1300)}catch(e){}}
 }
+/* aviso de versão nova: compara o carimbo do arquivo publicado com o deste aparelho */
+async function checaVersao(){
+  if(!/^\d+$/.test(APP_BUILD)||location.protocol!=="https:"||document.getElementById("verBar"))return;
+  try{const t=await (await fetch(location.pathname+"?v="+Date.now(),{cache:"no-store"})).text();const m=/const APP_BUILD="(\d+)"/.exec(t);
+    if(m&&m[1]>APP_BUILD){const b=document.createElement("div");b.id="verBar";b.setAttribute("role","status");
+      b.style.cssText="position:fixed;left:12px;right:12px;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:90;background:#F5B800;color:#14171C;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:center;font-weight:700;box-shadow:0 6px 24px rgba(0,0,0,.35)";
+      b.innerHTML='<span style="flex:1">Versão nova do app disponível</span><button type="button" style="height:40px;border:0;border-radius:10px;padding:0 14px;background:#14171C;color:#fff;font-weight:800">Atualizar</button>';
+      b.querySelector("button").onclick=()=>location.reload();document.body.appendChild(b)}}catch(e){}
+}
+setTimeout(checaVersao,4000);setInterval(()=>{if(!document.hidden)checaVersao()},300000);
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)checaVersao()});
 function toast(msg){
   const t=document.createElement("div");t.className="toast";t.textContent=msg;
   $("toastHost").replaceChildren(t);setTimeout(()=>{if(t.parentNode)t.remove()},2600);
@@ -1739,7 +1750,8 @@ const packUnico=rows=>{const c={};for(const r of rows){if(/\d{6,}/.test(r.pack))
 const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importadoEm||"",rows:packUnico(d.rows.map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6]})))}:null;
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
-const IS_TEAM=true; // o link da equipe troca para true
+const IS_TEAM=true;
+const APP_BUILD="20261030220557"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -1784,9 +1796,9 @@ let ses=null;try{ses=JSON.parse(localStorage.getItem(SES_LS)||"null")}catch(e){}
 const sesSave=()=>{try{ses?localStorage.setItem(SES_LS,JSON.stringify(ses)):localStorage.removeItem(SES_LS)}catch(e){}};
 const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,10);
 async function gsCall(body){ // pedido curto vai na URL (GET): dentro do Claude só a resposta de GET pode ser lida
-  if(body.a!=="lista"){let r;try{r=await fetch(GS_URL+"?d="+encodeURIComponent(JSON.stringify(body))+"&z="+Date.now(),{cache:"no-store"})}catch(e){throw new Error("rede: "+(e&&e.message||e))}
+  if(body.a!=="lista"&&body.a!=="mail"){let r;try{r=await fetch(GS_URL+"?d="+encodeURIComponent(JSON.stringify(body))+"&z="+Date.now(),{cache:"no-store"})}catch(e){throw new Error("rede: "+(e&&e.message||e))}
     const tx=await r.text();try{return JSON.parse(tx)}catch(e){throw new Error("resposta "+r.status+": "+tx.replace(/<[^>]*>/g," ").replace(/\s+/g," ").trim().slice(0,60))}}
-  if(body.a==="lista"){const r=await fetch(GS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});return await r.json()}
+  if(body.a==="lista"||body.a==="mail"){const r=await fetch(GS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});return await r.json()}
   const r=await fetch(GS_URL+"?d="+encodeURIComponent(JSON.stringify(body))+"&z="+Date.now(),{cache:"no-store"});return await r.json()}
 const soConsulta=()=>!!(ses&&ses.perfil==="consulta");
 function lockShow(msg){
@@ -2060,6 +2072,18 @@ function openMailXls(){
       const to=emTo(),buf=XLSX.write(B.wb,{bookType:"xlsx",type:"array"});
       const file=new File([buf],B.name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
       const texto="Segue em anexo o Excel do Leitor Miniload ("+B.name+").\n\n"+CREDITO;
+      // 1º: a planilha envia sozinha (código da planilha versão 5); se não der, usa o Compartilhar
+      if(GS_URL&&ses&&!soConsulta()&&to.length){
+        $("mxSend").disabled=true;$("mxMsg").textContent="Enviando pela planilha…";
+        let j=null;try{const u8=new Uint8Array(buf);let bin="";for(let i=0;i<u8.length;i+=32768)bin+=String.fromCharCode.apply(null,u8.subarray(i,i+32768));
+          j=await gsCall({a:"mail",t:ses.t,to,assunto,texto,nome:B.name,b64:btoa(bin)})}catch(e){j=null}
+        $("mxSend").disabled=false;
+        if(j&&j.ok){closeSheet();beep(true);toast("E-mail enviado para "+(to.length>1?to.length+" pessoas":to[0])+" com o Excel");return}
+        if(j&&j.erro==="sessao"){closeSheet();logout("Seu acesso expirou. Entre de novo.");return}
+        const sh=navigator.canShare&&navigator.canShare({files:[file]});
+        $("mxMsg").innerHTML=(j&&j.erro&&j.erro!=="acao"?"A planilha não enviou ("+esc(j.erro)+"). ":"")+(sh?'Envie pelo Compartilhar: <button type="button" class="btn primary" id="mxShare" style="margin-top:6px;width:100%">📎 Abrir o Compartilhar</button>':"");
+        if(sh){$("mxShare").onclick=async()=>{if(navigator.clipboard)navigator.clipboard.writeText(to.join(", ")).catch(()=>{});try{await navigator.share({files:[file],title:assunto,text:texto});closeSheet();toast("Excel enviado para o app de e-mail")}catch(e){}};return}
+      }
       if(to.length&&navigator.clipboard)navigator.clipboard.writeText(to.join(", ")).catch(()=>{});
       if(navigator.canShare&&navigator.canShare({files:[file]})){
         try{await navigator.share({files:[file],title:assunto,text:texto});closeSheet();toast("Excel enviado para o app de e-mail");beep(true)}catch(e){if(!(e&&e.name==="AbortError"))$("mxMsg").textContent="Não consegui abrir o Compartilhar ("+(e&&e.name||"erro")+")."}
