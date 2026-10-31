@@ -555,6 +555,35 @@ button.dhr{cursor:pointer}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .admt.wa{color:#5BD08E}}
 :root[data-theme="dark"] .admt.wa{color:#5BD08E}
 @media (max-width:560px){.foot .adm{flex:1 1 100%;order:10}}
+/* barra do usuário conectado + Sair */
+.sesbar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#0F1317;border:1px solid #39424C;border-radius:10px;padding:6px 6px 6px 12px;font-size:14px;color:#C9D1D9}
+.sesbar span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sesbar b{color:#fff}
+.sesbar .pf{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:#F5B800;margin-left:6px}
+.sesout{flex:none;display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 14px;border-radius:8px;border:2px solid #E5243B;background:#E5243B;color:#fff;font-weight:800;font-size:15px}
+/* seleção de vários itens para retirar */
+.multibar{position:sticky;top:env(safe-area-inset-top,0px);z-index:4;display:grid;gap:8px}
+.multibar .mon{width:100%;height:48px;font-size:16px;font-weight:800;border:2px solid #E5243B;color:#B42318;background:var(--surface)}
+.mact{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;border:2px solid #E5243B;border-radius:10px;background:var(--surface);box-shadow:0 4px 12px rgba(0,0,0,.12)}
+.mact span{flex:1 1 100%;font-weight:700;color:#B42318}
+.mact .mgo{flex:1;height:46px;background:#E5243B;border-color:#E5243B;color:#fff;font-weight:800;font-size:16px}
+.mact .btn:not(.mgo){height:46px}
+.mtable tr.msel td{background:rgba(245,184,0,.28)!important}
+.mtable tr.msel .rck span{background:#F5B800;border-color:#C99700}
+.mtable tr.msel .rck span::after{content:"";position:absolute;left:8px;top:3px;width:6px;height:12px;border:solid #14171C;border-width:0 3px 3px 0;transform:rotate(45deg)}
+body.multi .mtable tbody tr{cursor:pointer}
+.mlist{display:grid;gap:4px;max-height:34vh;overflow:auto;font-family:var(--mono);font-size:13px}
+.mlist div{padding:6px 8px;border-radius:6px;background:var(--bg);border-left:4px solid #E5243B}
+/* ordenar tocando no título da coluna */
+.mtable th[data-sort]{cursor:pointer;user-select:none;-webkit-user-select:none}
+.mtable th[data-sort]::after{content:" ⇅";opacity:.45;font-size:12px}
+.mtable th[data-sort].asc::after{content:" ▲";opacity:1;color:var(--ink)}
+.mtable th[data-sort].desc::after{content:" ▼";opacity:1;color:var(--ink)}
+.mtable th[data-sort].asc,.mtable th[data-sort].desc{color:var(--ink);background:color-mix(in srgb,var(--accent) 22%,var(--surface))}
+.sortchips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.sortchips span{font-size:14px;color:var(--muted);font-weight:600}
+.sortchips button{height:38px;padding:0 12px;border-radius:999px;border:2px solid var(--line);background:var(--surface);color:var(--ink);font-weight:700;font-size:14px}
+.sortchips button[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
 /* tela de usuário e senha */
 .lock{position:fixed;inset:0;z-index:80;background:#14181D;color:#F2F4F6;display:grid;place-items:center;padding:24px max(16px,env(safe-area-inset-left,0px));overflow:auto}
 .lockbox{width:100%;max-width:360px;display:grid;gap:14px;text-align:center}
@@ -578,6 +607,7 @@ button.dhr{cursor:pointer}
     <div class="cover-bot"><div class="by">Desenvolvido por <b>Thiago Pereira</b> · Miniload</div><div class="mode" id="mode">Carregando…</div></div>
   </div>
   <div class="top-in gut">
+    <div class="sesbar" id="sesBar" hidden><span id="sesWho"></span><button type="button" class="sesout" id="sesOut"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></svg>Sair</button></div>
     <nav class="tabs" role="tablist">
       <button type="button" role="tab" data-v="hoje" aria-selected="false" class="tab-new">Nova tarefa <span class="chev" aria-hidden="true">›</span></button>
       <button type="button" role="tab" data-v="feitos" aria-selected="false">Feitos <small id="feitosN"></small></button>
@@ -663,6 +693,7 @@ button.dhr{cursor:pointer}
     <button type="button" class="btn primary mtcall" id="retXls" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Exportar Excel das retiradas</button>
     <a class="btn wa" id="retWa" target="_blank" rel="noopener" style="text-decoration:none;height:48px;font-size:16px" hidden>Enviar retiradas ao administrador · WhatsApp</a>
     <a class="btn mail" id="retMail" style="text-decoration:none;height:48px;font-size:16px" hidden>Enviar retiradas ao administrador · E-mail</a>
+    <div class="sortchips" id="retSort" hidden><span>Ordenar:</span><button type="button" data-rs="at">Data</button><button type="button" data-rs="item">Item</button><button type="button" data-rs="pal">Pallet</button><button type="button" data-rs="quem">Quem retirou</button></div>
     <form class="msearch" id="retForm" autocomplete="off" role="search" hidden><input id="retIn" type="search" inputmode="numeric" placeholder="Peça, pack ou nome" aria-label="Buscar nas retiradas" enterkeyhint="search"><button type="button" id="retClear">Limpar</button></form>
     <div class="palchips" id="retPals"></div>
     <div class="empty" id="retEmpty"><b>Nenhuma retirada ainda</b><span>Em <b>Itens MTC</b>, abra o pallet e marque o quadradinho da caixa que saiu.</span></div>
@@ -701,7 +732,8 @@ button.dhr{cursor:pointer}
     <form class="msearch" id="mtcPalForm" autocomplete="off" role="search" hidden><input id="mtcPalIn" type="search" inputmode="numeric" placeholder="Buscar neste pallet: peça ou pack" aria-label="Buscar dentro do pallet" enterkeyhint="search"><button type="button" class="kbt" data-kb="mtcPalIn" aria-label="Trocar o teclado">ABC</button><button type="button" id="mtcPalClear">Limpar</button></form>
     <div class="palchips" id="mtcPals"></div><div class="selbar" id="mtcSelBar" hidden></div>
     <section class="dash" id="dash" hidden aria-label="Resumo"></section>
-    <div class="tablewrap" id="mtcWrap" hidden><table class="mtable"><thead><tr><th class="ck" title="Retirado">Tirou</th><th>Item</th><th>Qtd</th><th>Pack Number</th><th>Pallet</th><th>Status</th><th>No app</th></tr></thead><tbody id="mtcBody"></tbody></table></div>
+    <div class="multibar" id="multiBar" hidden><button type="button" class="btn mon" id="multiOn">☑ Selecionar vários para retirar</button><div class="mact" id="multiAct" hidden><span id="multiN">Toque nos itens para marcar</span><button type="button" class="btn mgo" id="multiGo" disabled>Retirar</button><button type="button" class="btn" id="multiOff">Cancelar</button></div></div>
+    <div class="tablewrap" id="mtcWrap" hidden><table class="mtable"><thead id="mtcHead"><tr><th class="ck" title="Retirado">Tirou</th><th data-sort="item" title="Ordenar por item">Item</th><th data-sort="qtd" title="Ordenar por quantidade">Qtd</th><th data-sort="pack" title="Ordenar por pack">Pack Number</th><th data-sort="pal" title="Ordenar por pallet">Pallet</th><th data-sort="st" title="Ordenar por status">Status</th><th>No app</th></tr></thead><tbody id="mtcBody"></tbody></table></div>
   </section>
   <section id="feitos">
   <section class="draft" id="draft" hidden>
@@ -1755,7 +1787,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261031073431"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261031163405"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -1805,6 +1837,7 @@ async function gsCall(body){ // pedido curto vai na URL (GET): dentro do Claude 
   if(body.a==="lista"||body.a==="mail"){const r=await fetch(GS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(body)});return await r.json()}
   const r=await fetch(GS_URL+"?d="+encodeURIComponent(JSON.stringify(body))+"&z="+Date.now(),{cache:"no-store"});return await r.json()}
 const soConsulta=()=>!!(ses&&ses.perfil==="consulta");
+function semPermissao(){try{beep(false)}catch(e){}openSheet('<h3>Sem permissão</h3><p style="font-size:16px;color:var(--ink)">Você não tem permissão. Favor contatar o administrador.</p><p>Seu acesso é só de consulta: você pode olhar e pesquisar, mas não pode alterar nada.</p><div class="row-acts"><a class="btn wa" href="https://wa.me/'+ADMIN_WA+'" target="_blank" rel="noopener" style="text-decoration:none">Contatar o administrador</a><button class="btn" type="button" id="spOk">Entendi</button></div>');$("spOk").onclick=closeSheet}
 function lockShow(msg){
   $("lock").hidden=false;$("lockMsg").textContent=msg||"Digite o seu usuário e a sua senha.";$("lockErr").textContent="";$("lockPin").value="";
   let u="";try{u=localStorage.getItem(USR_LS)||""}catch(e){}if(!$("lockUser").value)$("lockUser").value=u;
@@ -1813,7 +1846,7 @@ function lockShow(msg){
 function logout(msg){
   ses=null;sesSave();gsMarks={};gsLocal={};gsIds=new Set();
   if(IS_TEAM){try{localStorage.removeItem(MTC_LS)}catch(e){}mtcNew=null;mtcNewRaw=null;if(mtcSel==="new")mtc=null}
-  try{render()}catch(e){}lockShow(msg);
+  try{render()}catch(e){}try{sesBarUpd()}catch(e){}if(multiOn)multiStop();lockShow(msg);
 }
 let gsQueue=[];try{gsQueue=JSON.parse(localStorage.getItem(GSQ_LS)||"[]")||[]}catch(e){}
 gsQueue=gsQueue.map(q=>q.mov?q:(q.body?{key:q.key,mov:q.key.startsWith("LOCAL|")?{id:uid(),tipo:"LOCAL",pal:q.body.pal,texto:String(q.body.sit||"").replace(/^LOCAL:\s*/,""),quando:q.body.quando}:{id:uid(),tipo:/DESFEIT/.test(q.body.sit||"")?"DESFEITO":"RETIRADO",lista:q.body.lista,pal:q.body.pal,item:q.body.item,qtd:q.body.qtd,pack:q.body.pack,lib:q.body.lib,obs:((/Obs:\s*(.*)$/.exec(q.body.sit||"")||[])[1]||""),quando:q.body.quando}}:null)).filter(q=>q&&q.mov.tipo!=="DESFEITO");
@@ -1850,10 +1883,10 @@ async function gsFlush(){
       if(!j){await gsPull();if(gsIds.has(q.mov.id)){gsQueue.shift();gsSaveQ();continue}gsOk=false;break} // sem resposta: só tira da fila se a planilha mostrar o código
       if(j.erro==="sessao"){logout("Seu acesso expirou ou foi bloqueado. Entre de novo com usuário e senha.");break}
       gsQueue.shift();gsSaveQ();
-      if(!j.ok&&q.mov.tipo==="RETIRADO"&&j.erro==="so_consulta"){delete retMarks[q.key];retSave();toast("Acesso de consulta não grava retirada. Entre com o seu usuário pessoal.")}
+      if(!j.ok&&q.mov.tipo==="RETIRADO"&&j.erro==="so_consulta"){delete retMarks[q.key];retSave();toast("Você não tem permissão. Favor contatar o administrador.")}
       else if(!j.ok&&q.mov.tipo==="RETIRADO"){delete retMarks[q.key];retSave();beep(false);
         toast("Não gravado: essa caixa já tinha sido retirada"+(j.quem?" por "+j.quem:"")+(j.quando?" em "+j.quando:"")+".")}
-      else if(!j.ok)toast(j.erro==="so_consulta"?"Acesso de consulta não grava nada. Entre com o seu usuário pessoal.":"A planilha recusou: "+(j.erro||"erro"));
+      else if(!j.ok)toast(j.erro==="so_consulta"?"Você não tem permissão. Favor contatar o administrador.":"A planilha recusou: "+(j.erro||"erro"));
     }
   }finally{gsBusy=false}
   await gsPull();
@@ -1898,6 +1931,57 @@ setInterval(()=>{if(!document.hidden){gsFlush();gsPull()}},20000);
 document.addEventListener("visibilitychange",()=>{if(!document.hidden){gsFlush();gsPull()}});
 setTimeout(()=>{gsFlush();gsPull()},300);
 async function retSave(){try{localStorage.setItem(RET_LS,JSON.stringify(retMarks))}catch(e){}if(db){try{await db.doc("meta/retiradas").set({marks:retMarks})}catch(e){}}}
+/* ===== ordenar tabelas tocando no título da coluna ===== */
+const sortNat=(a,b)=>String(a??"").localeCompare(String(b??""),"pt-BR",{numeric:true,sensitivity:"base"});
+const sortNum=v=>{const n=parseFloat(String(v??"").replace(",","."));return isNaN(n)?Infinity:n};
+let mtcSortK={k:"",d:1};try{mtcSortK=JSON.parse(localStorage.getItem("leitor-miniload-ordem")||"null")||mtcSortK}catch(e){}
+function mtcCmp(padrao){
+  const k=mtcSortK.k,d=mtcSortK.d||1;if(!k)return padrao;
+  const val={item:r=>r.item,qtd:r=>r.qtd,pack:r=>r.pack,pal:r=>r.pal,st:r=>isRet(r)?"retirado "+retWhen(r):stDisp(r.st)}[k];if(!val)return padrao;
+  const num=k==="qtd"||k==="pal";
+  return (a,b)=>isRet(a)-isRet(b)||(num?(sortNum(val(a))-sortNum(val(b)))*d:sortNat(val(a),val(b))*d)||padrao(a,b);
+}
+function sortHeadUpd(){document.querySelectorAll("#mtcHead th[data-sort]").forEach(th=>{th.classList.toggle("asc",th.dataset.sort===mtcSortK.k&&mtcSortK.d>0);th.classList.toggle("desc",th.dataset.sort===mtcSortK.k&&mtcSortK.d<0);
+  th.setAttribute("aria-sort",th.dataset.sort===mtcSortK.k?(mtcSortK.d>0?"ascending":"descending"):"none")})}
+let retSortK={k:"at",d:-1};
+const retCmp=(a,b)=>{const ma=retMark(a)||offRet(a)||{},mb=retMark(b)||offRet(b)||{},d=retSortK.d,k=retSortK.k,at=((ma.at||0)-(mb.at||0));
+  if(k==="item")return sortNat(a.item,b.item)*d||-at;
+  if(k==="pal")return (sortNum(a.pal)-sortNum(b.pal))*d||sortNat(a.item,b.item);
+  if(k==="quem")return sortNat(ma.quem,mb.quem)*d||-at;
+  return at*d};
+/* ===== retirar vários itens de uma vez (mesma pessoa, mesma autorização) ===== */
+let multiOn=false;const multiSel=new Map();
+function multiUpd(show){const b=$("multiBar");if(!b)return;if(show!==undefined)b.hidden=!show&&!multiOn;$("multiOn").hidden=multiOn;$("multiAct").hidden=!multiOn;document.body.classList.toggle("multi",multiOn);
+  const n=multiSel.size;$("multiN").textContent=n?n+" ite"+(n>1?"ns selecionados":"m selecionado")+" · pode trocar de pallet ou pesquisar outro item":"Toque nos itens para marcar";$("multiGo").disabled=!n;$("multiGo").textContent=n?"Retirar "+n+" ite"+(n>1?"ns":"m"):"Retirar"}
+function multiStop(){multiOn=false;multiSel.clear();multiUpd();try{renderMtc()}catch(e){}}
+function multiStart(){
+  if(!ses){lockShow("Entre com usuário e senha para fazer a retirada.");return}
+  if(soConsulta()){semPermissao();return}
+  multiOn=true;multiSel.clear();multiUpd(true);toast("Toque em cada item que vai retirar")}
+function multiRetirar(){
+  if(!ses){lockShow("Entre com usuário e senha para fazer a retirada.");return}
+  if(soConsulta()){semPermissao();return}
+  const L=[...multiSel.entries()].filter(([k,r])=>!isRet(r));if(!L.length){toast("Nenhum item para retirar.");return}
+  let last={};try{last=JSON.parse(localStorage.getItem(RET_LS+"-nomes")||"{}")||{}}catch(e){}
+  const obs0=(typeof mtcBox!=="undefined"&&mtcBox&&view==="mtc")?"Decante":"";
+  openSheet('<h3>Retirar '+L.length+' ite'+(L.length>1?'ns':'m')+'</h3><div class="mlist">'+L.map(([k,r])=>'<div><b>'+esc(r.item)+'</b> · qtd '+esc(r.qtd)+' · pack '+esc(r.pack||"—")+' · pallet '+esc(r.pal||"—")+'</div>').join("")+'</div>'+
+    '<form class="manf" id="rmF" autocomplete="off"><p style="margin:0">Retirada por: <b>'+esc(ses.nome)+'</b> <small>(pelo seu usuário)</small></p>'+
+    '<label>Quem autorizou<input id="rmLib" autocapitalize="words" style="text-transform:none" value="'+esc(last.lib||"")+'" enterkeyhint="next"></label><label>Observação <small>(se quiser, vale para todos)</small><input id="rmObs" maxlength="80" style="text-transform:none" placeholder="Ex.: foi para a linha 3" enterkeyhint="done" value="'+obs0+'"></label>'+
+    '<p class="err" id="rmErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1;background:#E5243B;border-color:#E5243B">Confirmar retirada de '+L.length+'</button><button class="btn" type="button" id="rmCancel">Voltar</button></div></form>',()=>{
+    $("rmCancel").onclick=closeSheet;setTimeout(()=>$("rmLib").focus(),50);
+    $("rmLib").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("rmObs").focus()}});
+    $("rmF").addEventListener("submit",e=>{
+      e.preventDefault();if(!ses){closeSheet();lockShow("Entre com usuário e senha para fazer a retirada.");return}
+      const quem=ses.nome,lib=$("rmLib").value.trim();if(!lib){$("rmErr").textContent="Escreva quem autorizou.";$("rmLib").focus();return}
+      try{localStorage.setItem(RET_LS+"-nomes",JSON.stringify({quem,lib}))}catch(x){}
+      const obs=($("rmObs").value||"").trim();let feitos=0,pulou=0;const at=Date.now();
+      for(const [k,r] of L){const kk=retKey(r);if(gsMarks[kk]||retMarks[kk]){pulou++;continue}
+        retMarks[kk]={at,quem,lib,obs};gsSend(kk,r,retMarks[kk],"RETIRADO"+(obs?" · Obs: "+obs:""));feitos++;undoPush("baixa do pack "+(r.pack||r.item),()=>devolver(r))}
+      retSave();closeSheet();multiOn=false;multiSel.clear();multiUpd();renderMtc();beep(true);
+      toast("Baixa feita: "+feitos+" ite"+(feitos>1?"ns foram":"m foi")+" para a aba Retiradas"+(pulou?" ("+pulou+" já tinham sido retirados por outra pessoa)":""));
+    });
+  });
+}
 function retToggle(r){
   const k=retKey(r);
   if(retMarks[k]||/RETIRAD/i.test(r.st||"")){
@@ -1907,7 +1991,7 @@ function retToggle(r){
   }
   // retirar material: quem retirou (pelo login) e quem autorizou
   if(!ses){lockShow("Entre com usuário e senha para fazer a retirada.");return}
-  if(soConsulta()){lockShow("Acesso de consulta: só olhar. Para retirar, entre com o seu usuário pessoal.");return}
+  if(soConsulta()){semPermissao();return}
   if(gsMarks[k]){toast("Essa caixa já foi retirada por "+(gsMarks[k].quem||"outra pessoa")+".");return}
   let last={};try{last=JSON.parse(localStorage.getItem(RET_LS+"-nomes")||"{}")||{}}catch(e){}
   openSheet('<h3>Retirar material</h3><p><b>'+esc(r.item)+'</b> · qtd '+esc(r.qtd)+' · pack '+esc(r.pack||"—")+' · <b>pallet '+esc(r.pal||"—")+'</b></p>'+
@@ -2231,7 +2315,7 @@ async function palObsSet(p,v){
   renderMtc();
 }
 function openObs(p){
-  if(soConsulta()){lockShow("Acesso de consulta: só olhar. Para informar o local, entre com o seu usuário pessoal.");return}
+  if(soConsulta()){semPermissao();return}
   openSheet('<h3>📍 Onde está o Pallet '+esc(p)+'?</h3><p>Escreva o lugar. Ex.: Recebimento, Decon, dentro do Miniload.</p><form class="manf" id="obF" autocomplete="off"><label>Local do pallet<input id="obIn" maxlength="60" style="text-transform:none" value="'+esc(palObs(p))+'" enterkeyhint="done"></label><p class="err" id="obErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Confirmar</button><button class="btn" type="button" id="obCancel">Voltar</button></div>'+(palObs(p)?'<div class="row-acts" style="margin-top:8px"><button class="btn" type="button" id="obDel" style="flex:1">Apagar o local</button></div>':'')+'</form>',()=>{
     $("obCancel").onclick=closeSheet;setTimeout(()=>$("obIn").focus(),50);
     const save=async v=>{v=String(v||"").trim();const antes=palObs(p);if(v===antes){closeSheet();return}
@@ -2292,12 +2376,12 @@ function renderMtc(){
   if(Q&&Q.pal&&podeAdmin())sum+='<button type="button" class="btn joinbtn" data-join="'+esc(Q.pal)+'">🔗 '+(palGrp(Q.pal).length>1?"Juntar / separar pallets":"Juntar com outro pallet")+'</button>';
   if(pqs)sum+='<div class="mempty">'+(shown.length?shown.length+" de "+found.length+" linhas deste pallet com “"+esc($("mtcPalIn").value.trim())+"”":"Nada com “"+esc($("mtcPalIn").value.trim())+"” neste pallet.")+"</div>";
   $("mtcSum").innerHTML=sum;
-  $("mtcWrap").hidden=!shown.length;
+  $("mtcWrap").hidden=!shown.length;multiUpd(!!shown.length);
   if(!Q){$("dash").hidden=false;renderDash()}
   const qs=pqs||(Q&&Q.qs)||[];
-  $("mtcBody").innerHTML=shown.slice(0,500).sort((a,b)=>isRet(a)-isRet(b)||(+a.pal||999)-(+b.pal||999)||a.item.localeCompare(b.item)).map(r=>mtcRow(r,qs)).join("");
+  $("mtcBody").innerHTML=shown.slice().sort(mtcCmp((a,b)=>isRet(a)-isRet(b)||(+a.pal||999)-(+b.pal||999)||a.item.localeCompare(b.item))).slice(0,500).map(r=>mtcRow(r,qs)).join("");sortHeadUpd();
 }
-function mtcRow(r,qs){{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(r.verde?"verde":""))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(r.box?'<span class="btag">BOX</span>':'')+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}
+function mtcRow(r,qs){{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(multiSel.has(retKey(r))?"msel":(r.verde?"verde":"")))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(r.box?'<span class="btag">BOX</span>':'')+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}
 }
 function boxExport(viv){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
@@ -2337,8 +2421,8 @@ function renderBox(){
   $("mtcSum").innerHTML=sum;
   if($("boxXls"))$("boxXls").onclick=()=>boxExport(viv);
   if($("boxLoad")){$("boxLoad").onclick=()=>{$("boxFile").value="";$("boxFile").click()};$("boxFile").onchange=e=>boxCarregar(e.target.files&&e.target.files[0])}
-  $("mtcWrap").hidden=!lst.length;
-  $("mtcBody").innerHTML=lst.slice(0,800).sort((a,b)=>isRet(a)-isRet(b)||a.item.localeCompare(b.item)||(+a.pal||999)-(+b.pal||999)).map(r=>mtcRow(r,qs||[])).join("");
+  $("mtcWrap").hidden=!lst.length;multiUpd(!!lst.length);
+  $("mtcBody").innerHTML=lst.slice().sort(mtcCmp((a,b)=>isRet(a)-isRet(b)||a.item.localeCompare(b.item)||(+a.pal||999)-(+b.pal||999))).slice(0,800).map(r=>mtcRow(r,qs||[])).join("");sortHeadUpd();
 }
 /* ===== painel de resumo: estoque, retiradas, conferências, pallets e pessoas ===== */
 function renderDash(){
@@ -2420,7 +2504,7 @@ function renderRet(){
   const pd=n=>String(n).padStart(2,"0");
   const when=r=>{const m=retMark(r)||offRet(r);if(!m)return "";const d=new Date(m.at);return pd(d.getDate())+"/"+pd(d.getMonth()+1)+" "+pd(d.getHours())+":"+pd(d.getMinutes())};
   $("retXls").hidden=$("retForm").hidden=!L.length;const rq=norm($("retIn").value||"").replace(/\s/g,"");
-  const show=L.filter(r=>!retPalSel||(r.pal||"—")===retPalSel).filter(r=>{if(!rq)return true;const m=retMark(r)||offRet(r)||{};return norm([r.pal,r.item,r.pack,m.quem,m.lib,m.obs].join(" ")).replace(/\s/g,"").includes(rq)}).sort((a,b)=>((retMark(b)||offRet(b)||{}).at||0)-((retMark(a)||offRet(a)||{}).at||0));
+  const show=L.filter(r=>!retPalSel||(r.pal||"—")===retPalSel).filter(r=>{if(!rq)return true;const m=retMark(r)||offRet(r)||{};return norm([r.pal,r.item,r.pack,m.quem,m.lib,m.obs].join(" ")).replace(/\s/g,"").includes(rq)}).sort(retCmp);$("retSort").hidden=!L.length;document.querySelectorAll("#retSort [data-rs]").forEach(b=>{const on=b.dataset.rs===retSortK.k;b.setAttribute("aria-pressed",on?"true":"false");b.textContent=b.textContent.replace(/ [▲▼]$/,"")+(on?(retSortK.d>0?" ▲":" ▼"):"")});
   $("retBody").innerHTML=show.map(r=>{const m=retMark(r)||offRet(r)||{};return '<div class="rcard"><div class="rtop"><span class="rpal">Pallet '+esc(r.pal||"—")+'</span><span class="rwhen">'+esc(when(r))+'</span></div><div class="ritem">'+esc(r.item)+'</div><div class="rmeta">Qtd <b>'+esc(r.qtd)+'</b> · Pack <b>'+esc(r.pack||"—")+'</b></div><div class="rwho2">Retirou: <b>'+esc(m.quem||"—")+'</b> · Autorizou: <b>'+esc(m.lib||"—")+'</b></div>'+(m.obs?'<div class="rwho2">Obs: <b>'+esc(m.obs)+'</b></div>':'')+(retMark(r)?'<button type="button" class="rundo" data-rundo="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'">↩ Voltar ao pallet</button>':'<small class="rwhen">✔ baixa registrada na lista oficial</small>')+"</div>"}).join("");
   if(!show.length&&L.length)$("retBody").innerHTML='<div class="mempty">Nada encontrado nas retiradas'+(rq?" para “"+esc($("retIn").value.trim())+"”":"")+".</div>";
 }
@@ -2532,7 +2616,9 @@ function openSavePal(){
 }
 function openCamera(){$("camFile").value="";$("camFile").click()}
 let editing=null,pendingRender=false;
+function sesBarUpd(){const b=$("sesBar");if(!b)return;b.hidden=!ses;if(ses)$("sesWho").innerHTML="Conectado: <b>"+esc(ses.nome)+"</b>"+(ses.perfil==="admin"?'<span class="pf">administrador</span>':ses.perfil==="consulta"?'<span class="pf">só consulta</span>':"")}
 function render(){
+  try{sesBarUpd()}catch(e){}
   if(editing){pendingRender=true;return}
   const dups=dupKeys(),pc=packCol();
   const isDup=r=>pc&&dups.has(norm(r.vals[pc.id]).replace(/ /g,""));
@@ -3057,10 +3143,18 @@ $("retBody").addEventListener("click",e=>{const b=e.target.closest("[data-rundo]
   devolver(r);
 });
 $("mtcBack").onclick=()=>{$("mtcIn").value="";renderMtc();window.scrollTo({top:0,behavior:"smooth"})};
-$("mtcBody").addEventListener("click",e=>{if(!e.target.closest("td.ck"))return;e.preventDefault();const tr=e.target.closest("tr[data-ret]");if(!tr||!mtc)return;let k;try{k=JSON.parse(tr.dataset.ret)}catch(x){return}
+$("mtcBody").addEventListener("click",e=>{if(multiOn){const tr=e.target.closest("tr[data-ret]");if(!tr||!mtc)return;e.preventDefault();let k;try{k=JSON.parse(tr.dataset.ret)}catch(x){return}const r=mtc.rows.find(x=>(x.pal||"")===(k[0]||"")&&x.item===k[1]&&(x.pack||"")===(k[2]||""));if(!r)return;if(isRet(r)){toast("Esse item já foi retirado.");return}const key=retKey(r);if(multiSel.has(key))multiSel.delete(key);else multiSel.set(key,r);tr.classList.toggle("msel",multiSel.has(key));tr.classList.remove("verde");multiUpd(true);return}if(!e.target.closest("td.ck"))return;e.preventDefault();const tr=e.target.closest("tr[data-ret]");if(!tr||!mtc)return;let k;try{k=JSON.parse(tr.dataset.ret)}catch(x){return}
   const r=mtc.rows.find(x=>(x.pal||"")===(k[0]||"")&&x.item===k[1]&&(x.pack||"")===(k[2]||""));if(r)retToggle(r)});
 $("mSelNew").onclick=()=>setMtcSel("new");
 $("lockX").onclick=()=>{$("lock").hidden=true};
+$("sesOut").onclick=()=>confirmDel("Sair do login de "+(ses?ses.nome:"")+"? Vai pedir usuário e senha de novo.",()=>logout("Você saiu. Digite usuário e senha para entrar."),"Sim, sair");
+$("multiOn").onclick=multiStart;$("multiOff").onclick=multiStop;$("multiGo").onclick=multiRetirar;
+$("mtcHead").addEventListener("click",e=>{const th=e.target.closest("th[data-sort]");if(!th)return;const k=th.dataset.sort;
+  if(mtcSortK.k===k){if(mtcSortK.d>0)mtcSortK.d=-1;else mtcSortK={k:"",d:1}}else mtcSortK={k,d:1};
+  try{localStorage.setItem("leitor-miniload-ordem",JSON.stringify(mtcSortK))}catch(x){}
+  renderMtc();toast(mtcSortK.k?"Ordem: "+th.textContent+(mtcSortK.d>0?(k==="qtd"||k==="pal"?" (menor → maior)":" (A → Z)"):(k==="qtd"||k==="pal"?" (maior → menor)":" (Z → A)")):"Ordem normal da lista")});
+$("retSort").addEventListener("click",e=>{const b=e.target.closest("[data-rs]");if(!b)return;const k=b.dataset.rs;
+  if(retSortK.k===k)retSortK.d=-retSortK.d;else retSortK={k,d:k==="at"?-1:1};renderRet()});
 $("lockF").addEventListener("submit",async e=>{
   e.preventDefault();const usuario=String($("lockUser").value||"").trim(),senha=String($("lockPin").value||"").trim();if(!usuario){$("lockErr").textContent="Digite o usuário.";$("lockUser").focus();return}if(!senha){$("lockErr").textContent="Digite a senha.";$("lockPin").focus();return}
   $("lockGo").disabled=true;$("lockErr").textContent="Conferindo…";
