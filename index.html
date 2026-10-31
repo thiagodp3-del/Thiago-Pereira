@@ -1128,7 +1128,7 @@ function openManual(pre,falta){
 $("manBtn").addEventListener("click",()=>openManual());
 $("shootBtn").addEventListener("click",()=>{if(!currentPal()){toast("Escolha o palete primeiro");return}openCamera()});
 $("xlsHoje").addEventListener("click",()=>doExport());
-$("waBtn").addEventListener("click",()=>doExport(true));
+$("waBtn").addEventListener("click",()=>openMailXls());
 $("savePal").addEventListener("click",openSavePal);
 $("undoBtn").addEventListener("click",undo);
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"&&!(e.target.closest&&e.target.closest("input,select,textarea"))){e.preventDefault();undo()}});
@@ -2027,6 +2027,49 @@ function mtcAllBook(){
   const ret=[];for(const [nm,m,lk] of L)for(const r of m.rows){const x=rm(lk,r);if(x.at){const d=new Date(x.at),pd=n=>String(n).padStart(2,"0");ret.push([pd(d.getDate())+"/"+pd(d.getMonth()+1)+"/"+d.getFullYear()+" "+pd(d.getHours())+":"+pd(d.getMinutes()),num(r.pal),r.item,num(r.qtd),r.pack,x.quem||"",x.lib||"",x.obs||""])}}
   add([["Data e hora","Pallet","Item","Quantidade","Pack Number","Quem retirou","Quem autorizou","Observação"],...ret.sort((a,b)=>a[0]<b[0]?-1:1),[],[CREDITO]],"Retirar material",[17,8,22,11,16,20,20,30]);
   return {wb,all,name:"Itens_MTC_todos_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx"};
+}
+/* e-mail a qualquer hora, com o Excel completo anexado (pelo Compartilhar do celular / PC) */
+function openMailXls(){
+  if(!window.XLSX){toast("Gerador de Excel não carregou");return}
+  const temMtc=!!(mtc&&mtc.rows.length),done=rows.filter(r=>r.dia),nPal=new Set(done.map(r=>r.dia+"|"+(r.vals.palete||""))).size;
+  if(!temMtc&&!done.length){toast("Ainda não tem nada para enviar");return}
+  openSheet('<h3>📎 Enviar Excel por e-mail</h3>'+
+    '<p class="pstep"><span>1</span> O que vai no Excel</p>'+
+    (temMtc?'<label class="pcard"><input type="checkbox" id="mxMtc" checked><span class="pbox"></span><span class="pinfo"><b>Lista completa</b><small>Resumo, todos os itens, uma aba por pallet e as retiradas · '+mtc.rows.length+' etiquetas</small></span></label>':'')+
+    (done.length?'<label class="pcard"><input type="checkbox" id="mxFeitos"'+(temMtc?'':' checked')+'><span class="pbox"></span><span class="pinfo"><b>Pallets conferidos no app</b><small>'+nPal+' pallet'+(nPal>1?'s':'')+' · '+done.length+' etiqueta'+(done.length>1?'s':'')+'</small></span></label>':'')+
+    '<p class="pstep"><span>2</span> Para quem</p>'+emPickerHtml("mxEm")+
+    '<p class="pstep"><span>3</span> Envie</p>'+
+    '<button type="button" class="btn mail psend" id="mxSend">📎 Enviar Excel por e-mail</button>'+
+    '<p class="hint" id="mxMsg" style="margin:0">Abre o Compartilhar: escolha Gmail, Outlook ou Mail. O Excel já vai anexado e os e-mails marcados ficam copiados: no campo <b>Para</b>, segure e escolha <b>Colar</b>.</p>'+
+    '<div class="row-acts"><button class="btn" id="mxSave" style="flex:1">Só baixar o Excel</button><button class="btn" id="mxClose" style="flex:1">Fechar</button></div>',()=>{
+    emWire("mxEm");$("mxClose").onclick=closeSheet;
+    const book=()=>{const wb=XLSX.utils.book_new();wb.Props={Title:"Leitor Miniload",Author:AUTORIA.autor,Company:AUTORIA.area,Comments:CREDITO};
+      if($("mxMtc")&&$("mxMtc").checked){const B=mtcAllBook();if(B)B.wb.SheetNames.forEach(n=>XLSX.utils.book_append_sheet(wb,B.wb.Sheets[n],n))}
+      if($("mxFeitos")&&$("mxFeitos").checked){const lotes=[...new Set(done.map(r=>r.dia+"|"+(r.vals.palete||"")))].sort();const multi=new Set(lotes.map(k=>k.split("|")[0])).size>1;
+        const usados=new Set(wb.SheetNames.map(x=>x.toLowerCase()));
+        for(const k of lotes){const [d,pl]=k.split("|");let t=("Feito "+(multi?fmtDay(d).replace("/","-")+" ":"")+"P"+(pl||"?")).replace(/[\\\/?*\[\]:]/g,"-").slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
+          const l=done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
+          const ws=XLSX.utils.aoa_to_sheet([["Número da peça","Quantidade","Pack Number"],...l.map(r=>[r.vals.peca||"",/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),r.vals.pack?cleanPack(r.vals.pack):""]),[],[CREDITO]]);ws["!cols"]=[{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,t)}}
+      if(!wb.SheetNames.length)return null;
+      const d=new Date(),pd=n=>String(n).padStart(2,"0");
+      return {wb,name:"Miniload_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx"}};
+    const assunto="Leitor Miniload · "+new Date().toLocaleDateString("pt-BR");
+    $("mxSave").onclick=()=>{const B=book();if(!B){toast("Marque o que vai no Excel");return}try{XLSX.writeFile(B.wb,B.name);toast("Excel salvo")}catch(e){toast("Não consegui gerar o arquivo")}};
+    $("mxSend").onclick=async()=>{
+      const B=book();if(!B){$("mxMsg").textContent="Marque o que vai no Excel (passo 1).";return}
+      const to=emTo(),buf=XLSX.write(B.wb,{bookType:"xlsx",type:"array"});
+      const file=new File([buf],B.name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      const texto="Segue em anexo o Excel do Leitor Miniload ("+B.name+").\n\n"+CREDITO;
+      if(to.length&&navigator.clipboard)navigator.clipboard.writeText(to.join(", ")).catch(()=>{});
+      if(navigator.canShare&&navigator.canShare({files:[file]})){
+        try{await navigator.share({files:[file],title:assunto,text:texto});closeSheet();toast("Excel enviado para o app de e-mail");beep(true)}catch(e){if(!(e&&e.name==="AbortError"))$("mxMsg").textContent="Não consegui abrir o Compartilhar ("+(e&&e.name||"erro")+")."}
+        return}
+      // sem Compartilhar (alguns computadores): baixa o Excel e abre o e-mail para anexar
+      try{XLSX.writeFile(B.wb,B.name)}catch(e){}
+      if(to.length)location.href=mailHref(assunto,"Segue em anexo o Excel "+B.name+" (está na pasta Downloads).\n\n"+CREDITO);
+      $("mxMsg").innerHTML="O Excel <b>"+esc(B.name)+"</b> foi baixado. No e-mail que abriu, toque em <b>Anexar</b> e escolha esse arquivo.";
+    };
+  });
 }
 async function mtcExportAll(){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
