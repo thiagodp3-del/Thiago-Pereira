@@ -568,6 +568,7 @@ button.dhr{cursor:pointer}
 .mact span{flex:1 1 100%;font-weight:700;color:#B42318}
 .mact .mgo{flex:1;height:46px;background:#E5243B;border-color:#E5243B;color:#fff;font-weight:800;font-size:16px}
 .mact .btn:not(.mgo){height:46px}
+.mact .mall{flex:1 1 100%;border:2px solid #F5B800;background:#FFF6D6;color:#14171C;font-weight:800}
 .mtable tr.msel td{background:rgba(245,184,0,.28)!important}
 .mtable tr.msel .rck span{background:#F5B800;border-color:#C99700}
 .mtable tr.msel .rck span::after{content:"";position:absolute;left:8px;top:3px;width:6px;height:12px;border:solid #14171C;border-width:0 3px 3px 0;transform:rotate(45deg)}
@@ -732,7 +733,7 @@ body.multi .mtable tbody tr{cursor:pointer}
     <form class="msearch" id="mtcPalForm" autocomplete="off" role="search" hidden><input id="mtcPalIn" type="search" inputmode="numeric" placeholder="Buscar neste pallet: peça ou pack" aria-label="Buscar dentro do pallet" enterkeyhint="search"><button type="button" class="kbt" data-kb="mtcPalIn" aria-label="Trocar o teclado">ABC</button><button type="button" id="mtcPalClear">Limpar</button></form>
     <div class="palchips" id="mtcPals"></div><div class="selbar" id="mtcSelBar" hidden></div>
     <section class="dash" id="dash" hidden aria-label="Resumo"></section>
-    <div class="multibar" id="multiBar" hidden><button type="button" class="btn mon" id="multiOn">☑ Selecionar vários para retirar</button><div class="mact" id="multiAct" hidden><span id="multiN">Toque nos itens para marcar</span><button type="button" class="btn mgo" id="multiGo" disabled>Retirar</button><button type="button" class="btn" id="multiOff">Cancelar</button></div></div>
+    <div class="multibar" id="multiBar" hidden><button type="button" class="btn mon" id="multiOn">☑ Selecionar vários para retirar</button><div class="mact" id="multiAct" hidden><span id="multiN">Toque nos itens para marcar</span><button type="button" class="btn mall" id="multiAll">☑ Selecionar todos</button><button type="button" class="btn mgo" id="multiGo" disabled>Retirar</button><button type="button" class="btn" id="multiOff">Cancelar</button></div></div>
     <div class="tablewrap" id="mtcWrap" hidden><table class="mtable"><thead id="mtcHead"><tr><th class="ck" title="Retirado">Tirou</th><th data-sort="item" title="Ordenar por item">Item</th><th data-sort="qtd" title="Ordenar por quantidade">Qtd</th><th data-sort="pack" title="Ordenar por pack">Pack Number</th><th data-sort="pal" title="Ordenar por pallet">Pallet</th><th data-sort="st" title="Ordenar por status">Status</th><th>No app</th></tr></thead><tbody id="mtcBody"></tbody></table></div>
   </section>
   <section id="feitos">
@@ -1787,7 +1788,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261031163405"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261031171509"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -1952,7 +1953,12 @@ const retCmp=(a,b)=>{const ma=retMark(a)||offRet(a)||{},mb=retMark(b)||offRet(b)
 /* ===== retirar vários itens de uma vez (mesma pessoa, mesma autorização) ===== */
 let multiOn=false;const multiSel=new Map();
 function multiUpd(show){const b=$("multiBar");if(!b)return;if(show!==undefined)b.hidden=!show&&!multiOn;$("multiOn").hidden=multiOn;$("multiAct").hidden=!multiOn;document.body.classList.toggle("multi",multiOn);
-  const n=multiSel.size;$("multiN").textContent=n?n+" ite"+(n>1?"ns selecionados":"m selecionado")+" · pode trocar de pallet ou pesquisar outro item":"Toque nos itens para marcar";$("multiGo").disabled=!n;$("multiGo").textContent=n?"Retirar "+n+" ite"+(n>1?"ns":"m"):"Retirar"}
+  const n=multiSel.size;$("multiN").textContent=n?n+" ite"+(n>1?"ns selecionados":"m selecionado")+" · pode trocar de pallet ou pesquisar outro item":"Toque nos itens para marcar";$("multiGo").disabled=!n;{const vis=multiVis();const all=vis.length&&vis.every(r=>multiSel.has(retKey(r)));$("multiAll").textContent=all?"✕ Desmarcar todos":"☑ Selecionar todos ("+vis.length+")";$("multiAll").disabled=!vis.length}$("multiGo").textContent=n?"Retirar "+n+" ite"+(n>1?"ns":"m"):"Retirar"}
+function multiVis(){if(!mtc)return [];const out=[];document.querySelectorAll("#mtcBody tr[data-ret]").forEach(tr=>{let k;try{k=JSON.parse(tr.dataset.ret)}catch(x){return}const r=mtc.rows.find(x=>(x.pal||"")===(k[0]||"")&&x.item===k[1]&&(x.pack||"")===(k[2]||""));if(r&&!isRet(r))out.push(r)});return out}
+function multiAll(){const vis=multiVis();if(!vis.length)return;const all=vis.every(r=>multiSel.has(retKey(r)));
+  vis.forEach(r=>{const k=retKey(r);if(all)multiSel.delete(k);else multiSel.set(k,r)});
+  document.querySelectorAll("#mtcBody tr[data-ret]").forEach(tr=>{if(tr.classList.contains("ret"))return;tr.classList.toggle("msel",!all);if(!all)tr.classList.remove("verde")});
+  multiUpd(true);toast(all?"Seleção limpa":vis.length+" itens marcados")}
 function multiStop(){multiOn=false;multiSel.clear();multiUpd();try{renderMtc()}catch(e){}}
 function multiStart(){
   if(!ses){lockShow("Entre com usuário e senha para fazer a retirada.");return}
@@ -3148,7 +3154,7 @@ $("mtcBody").addEventListener("click",e=>{if(multiOn){const tr=e.target.closest(
 $("mSelNew").onclick=()=>setMtcSel("new");
 $("lockX").onclick=()=>{$("lock").hidden=true};
 $("sesOut").onclick=()=>confirmDel("Sair do login de "+(ses?ses.nome:"")+"? Vai pedir usuário e senha de novo.",()=>logout("Você saiu. Digite usuário e senha para entrar."),"Sim, sair");
-$("multiOn").onclick=multiStart;$("multiOff").onclick=multiStop;$("multiGo").onclick=multiRetirar;
+$("multiOn").onclick=multiStart;$("multiAll").onclick=multiAll;$("multiOff").onclick=multiStop;$("multiGo").onclick=multiRetirar;
 $("mtcHead").addEventListener("click",e=>{const th=e.target.closest("th[data-sort]");if(!th)return;const k=th.dataset.sort;
   if(mtcSortK.k===k){if(mtcSortK.d>0)mtcSortK.d=-1;else mtcSortK={k:"",d:1}}else mtcSortK={k,d:1};
   try{localStorage.setItem("leitor-miniload-ordem",JSON.stringify(mtcSortK))}catch(x){}
