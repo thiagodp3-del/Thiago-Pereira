@@ -494,6 +494,36 @@ body[data-view="mtc"] #sForm,body[data-view="mtc"] #sRes{display:none!important}
 .dash>h2 small{font-family:var(--body);font-size:13px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:500}
 .tabs .tab-box{border-color:#1F5FAF;color:#4F8AD9}.tabs .tab-box[aria-selected="true"]{background:#1F5FAF;color:#fff}
 .btag.dk{background:#E5243B;margin-left:4px}
+.bdays{display:grid;gap:8px;margin:2px 0 6px}
+.bdays h3{margin:0;font-family:var(--display);font-size:20px;text-transform:uppercase;letter-spacing:.03em}
+.bdays h3 small{font-family:var(--body);font-size:13px;text-transform:none;letter-spacing:0;color:var(--muted);font-weight:500}
+.bday{display:grid;gap:4px;text-align:left;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--surface);color:var(--ink);width:100%;font-family:inherit}
+.bday .bdt{font-weight:800;font-size:16px}
+.bday .bdn{font-size:13px;color:var(--muted)}.bday .bdn b{color:var(--ink)}.bday .bdn b.r{color:#E5243B}
+.bday .bdbar{height:6px;border-radius:3px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}.bday .bdbar i{display:block;height:100%;background:#E5243B}
+.bday.on{border-color:#1F5FAF;background:color-mix(in srgb,#1F5FAF 9%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,#1F5FAF 25%,transparent)}
+/* faixa Terra · Céu · Mar */
+.tcm{width:100%;max-width:1100px;margin:6px auto 0;border-radius:14px;overflow:hidden;position:relative;height:120px;background:#111317}
+.tcm .sc{position:absolute;inset:0 0 24px;opacity:0;animation:tcmFade 15s infinite}
+.tcm .sc.s2{animation-delay:5s}.tcm .sc.s3{animation-delay:10s}
+@keyframes tcmFade{0%{opacity:0}3%{opacity:1}30%{opacity:1}34%{opacity:0}100%{opacity:0}}
+.tcm .mv{position:absolute;left:0;animation:tcmMove 5s linear infinite}
+@keyframes tcmMove{from{transform:translateX(-150px)}to{transform:translateX(min(1100px,100vw))}}
+.tcm .s1 .mv{bottom:8px}.tcm .s2 .mv{top:22px;animation-name:tcmFly}.tcm .s3 .mv{bottom:2px}
+.tcm .s2 .mv{animation-delay:5s}.tcm .s3 .mv{animation-delay:10s}.tcm .s1 .mv{animation-delay:0s}
+@keyframes tcmFly{from{transform:translate(-150px,26px)}to{transform:translate(min(1100px,100vw),-6px)}}
+.tcm .road{position:absolute;left:0;right:0;bottom:0;height:16px;background:#464C54}
+.tcm .road i{position:absolute;left:0;top:7px;width:200%;height:3px;background:repeating-linear-gradient(90deg,#F5B800 0 30px,transparent 30px 70px);animation:tcmRoad 1.2s linear infinite}
+@keyframes tcmRoad{to{transform:translateX(-70px)}}
+.tcm .wv{position:absolute;left:0;right:0;bottom:0;height:22px;background:linear-gradient(#1F5FAF,#0F3264)}
+.tcm .wv i{position:absolute;left:0;top:-4px;width:200%;height:8px;background:radial-gradient(circle at 10px 8px,transparent 8px,#1F5FAF 9px) 0 0/20px 8px repeat-x;animation:tcmRoad 2s linear infinite}
+.tcm .shipbob{animation:tcmBob 1.6s ease-in-out infinite alternate}@keyframes tcmBob{to{transform:translateY(3px)}}
+.tcm .wheel{transform-box:fill-box;transform-origin:center;animation:tcmSpin .5s linear infinite}@keyframes tcmSpin{to{transform:rotate(360deg)}}
+.tcm .tbar2{position:absolute;left:0;right:0;bottom:0;height:24px;display:flex;align-items:center;gap:14px;padding:0 12px;font:800 12px/1 var(--body);letter-spacing:.08em;color:#7D8894;background:#111317}
+.tcm .tbar2 span{animation:tcmLbl 15s infinite}.tcm .tbar2 span.l2{animation-delay:5s}.tcm .tbar2 span.l3{animation-delay:10s}
+@keyframes tcmLbl{0%,33%{color:#F5B800}34%,100%{color:#7D8894}}
+.tcm .tbar2 b{margin-left:auto;color:#ECEFF2;display:flex;align-items:center;gap:6px;letter-spacing:.04em}
+@media (prefers-reduced-motion:reduce){.tcm .sc,.tcm .mv,.tcm .road i,.tcm .wv i,.tcm .wheel,.tcm .shipbob,.tcm .tbar2 span{animation:none}.tcm .s1{opacity:1}.tcm .s1 .mv{transform:translateX(40%)}}
 .boxseg{grid-template-columns:repeat(3,minmax(0,1fr))}
 .boxseg button{font-size:14px}
 .boxseg button[data-bf="deck"][aria-selected="true"]{border-color:#E5243B;background:#FDE7EA}
@@ -769,6 +799,15 @@ body.multi .mtable tbody tr{cursor:pointer}
     <div class="empty" id="empty" hidden></div>
   </div>
   </section>
+  <div class="tcm" aria-hidden="true">
+    <div class="sc s1" style="background:linear-gradient(#8CC4EE,#DDEFFB)"><div class="road"><i></i></div>
+      <svg class="mv" width="120" height="50" viewBox="0 0 120 50"><rect x="2" y="4" width="76" height="36" rx="4" fill="#ECEFF2" stroke="#14181D" stroke-width="2"/><text x="40" y="27" text-anchor="middle" font-size="11" font-weight="800" font-family="Barlow,sans-serif" fill="#14181D">MINILOAD</text><rect x="80" y="12" width="30" height="28" rx="5" fill="#1E2228"/><path d="M88 15h17l2 10H88z" fill="#8CBEE6"/><rect x="106" y="34" width="5" height="4" fill="#F5B800"/><g fill="#14181D"><circle class="wheel" cx="18" cy="42" r="7" stroke="#999" stroke-width="2" stroke-dasharray="4 3"/><circle class="wheel" cx="36" cy="42" r="7" stroke="#999" stroke-width="2" stroke-dasharray="4 3"/><circle class="wheel" cx="95" cy="42" r="7" stroke="#999" stroke-width="2" stroke-dasharray="4 3"/></g></svg></div>
+    <div class="sc s2" style="background:linear-gradient(#2A6EBE,#A9D3F2)"><svg style="position:absolute;left:12%;top:10px" width="70" height="28"><g fill="#fff"><circle cx="16" cy="16" r="12"/><circle cx="34" cy="12" r="14"/><circle cx="52" cy="17" r="11"/></g></svg><svg style="position:absolute;right:10%;top:40px" width="60" height="24"><g fill="#fff"><circle cx="14" cy="14" r="10"/><circle cx="30" cy="10" r="12"/><circle cx="45" cy="14" r="9"/></g></svg>
+      <svg class="mv" width="130" height="50" viewBox="0 0 130 50"><path d="M2 25h20" stroke="#fff" stroke-width="2" stroke-dasharray="3 4" opacity=".8"/><ellipse cx="72" cy="25" rx="45" ry="8" fill="#F5F7FA" stroke="#3C4650"/><path d="M62 25h20l-14 22h-10z" fill="#C8CED6"/><path d="M62 25h20l-12-21h-9z" fill="#D7DCE4"/><path d="M28 23h11l-6-17h-6z" fill="#F5B800"/><path d="M117 22l7 3-7 3z" fill="#F5F7FA"/><g fill="#5A78A0"><circle cx="86" cy="23" r="1.6"/><circle cx="92" cy="23" r="1.6"/><circle cx="98" cy="23" r="1.6"/><circle cx="104" cy="23" r="1.6"/></g></svg></div>
+    <div class="sc s3" style="background:linear-gradient(#FFBE78,#FAE1BE)"><svg style="position:absolute;left:46%;top:30px" width="60" height="40"><circle cx="30" cy="34" r="26" fill="#FF963C"/></svg><div class="wv"><i></i></div>
+      <svg class="mv" width="140" height="56" viewBox="0 0 140 56"><g class="shipbob"><path d="M4 36h126l-12 18H16z" fill="#1E2228"/><path d="M8 42h118" stroke="#C82832" stroke-width="2"/><g stroke="#14181D" stroke-width=".8"><rect x="12" y="24" width="14" height="12" fill="#E5243B"/><rect x="27" y="24" width="14" height="12" fill="#1F5FAF"/><rect x="42" y="24" width="14" height="12" fill="#F5B800"/><rect x="57" y="24" width="14" height="12" fill="#1C8648"/><rect x="72" y="24" width="14" height="12" fill="#ECEFF2"/><rect x="87" y="24" width="14" height="12" fill="#E5243B"/><rect x="19" y="12" width="14" height="12" fill="#F5B800"/><rect x="34" y="12" width="14" height="12" fill="#1C8648"/><rect x="49" y="12" width="14" height="12" fill="#E5243B"/><rect x="64" y="12" width="14" height="12" fill="#1F5FAF"/><rect x="79" y="12" width="14" height="12" fill="#F5B800"/></g><rect x="106" y="6" width="17" height="30" fill="#ECEFF2" stroke="#14181D"/><rect x="109" y="10" width="11" height="5" fill="#8CBEE6"/></g></svg></div>
+    <div class="tbar2"><span class="l1">TERRA</span><span class="l2">CÉU</span><span class="l3">MAR</span><b><svg width="16" height="16" viewBox="0 0 24 24" fill="#F5B800"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z"/></svg>Leitor Miniload · OPL</b></div>
+  </div>
 </main>
 
 <div class="lock" id="lock" hidden><form class="lockbox" id="lockF" autocomplete="off">
@@ -1788,11 +1827,12 @@ function whereOf(r){
 const MTC_EMBED=null;
 /* caixas sem pack de verdade (vazio, 0, 000…) na mesma peça e pallet ganham #2, #3… para cada caixa ser única: retirar uma não some com as outras */
 const packUnico=rows=>{const c={};for(const r of rows){if(/\d{6,}/.test(r.pack))continue;const k=r.pal+"|"+r.item+"|"+r.pack;c[k]=(c[k]||0)+1;if(c[k]>1)r.pack=(r.pack?r.pack+" ":"")+"#"+c[k]}return rows};
-const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importadoEm||"",rows:packUnico(d.rows.map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6],box:!!r[7]})))}:null;
+const boxDiasDe=v=>!v?[]:(v===1||v===true||v==="1")?["anterior"]:String(v).split(",").map(x=>x.trim()).filter(Boolean);
+const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importadoEm||"",rows:packUnico(d.rows.map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6],box:!!r[7],boxd:boxDiasDe(r[7])})))}:null;
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261031173727"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261031174846"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -1918,7 +1958,7 @@ async function gsPushLista(){
   try{
     const v=await (await fetch(GS_URL+"?a=versao&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"})).json();
     if(!v||!v.ok)return;if(String(v.importadoEm||"")>=em){gsListaEnviada=em;return}
-    const rows=mtcNewRaw.rows.map(r=>r[7]?[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||""),"","",1]:[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||"")]);
+    const rows=mtcNewRaw.rows.map(r=>r[7]?[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||""),"","",(r[7]===1||r[7]===true||r[7]==="1")?1:String(r[7])]:[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||"")]);
     let j=null;try{j=await gsCall({a:"lista",t:ses.t,lista:{nome:mtcNewRaw.nome||"Itens MTC",importadoEm:em,n:rows.length,soma:somaLista(rows),rows}})}catch(x){j=null}
     if(!j){const v2=await (await fetch(GS_URL+"?a=versao&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"})).json();if(v2&&v2.ok&&String(v2.importadoEm||"")>=em)j={ok:true}}
     if(j&&j.ok){gsListaEnviada=em;if(!j.igual)toast("Lista MTC enviada para a equipe: "+rows.length+" linhas")}
@@ -2092,7 +2132,7 @@ async function mtcLoadFile(f){
     if(!d){toast("Não achei as colunas de peça e pallet nessa planilha");return}
     try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}
     if(db){try{await db.doc("listas/mtc").set(d)}catch(e){}}
-    try{const bx=JSON.parse(localStorage.getItem(BOX_LS)||"[]");if(bx.length)boxAplica(d,new Set(bx))}catch(e){}
+    try{const bo=boxGuardado();Object.keys(bo).forEach(k=>{if(bo[k]&&bo[k].length)boxAplica(d,new Set(bo[k]),k)})}catch(e){}
     mtcNew=mtcFrom(d);mtcNewRaw=d;mtcSel="new";mtc=mtcNew;$("mtcIn").value="";render();gsPushLista();
     const np=new Set(d.rows.map(r=>r[3]).filter(Boolean)).size;
     toast("Lista atualizada: "+d.rows.length+" linhas em "+np+" pallets");
@@ -2220,12 +2260,24 @@ async function mtcExportAll(){
 let mtcBox=false;const BOX_LS="leitor-miniload-box";
 let boxFiltro="todas";try{boxFiltro=localStorage.getItem("leitor-miniload-boxfiltro")||"todas"}catch(e){}
 const boxBase=v=>String(v||"").toUpperCase().trim().split(/\s+/)[0];
-function boxAplica(raw,set){if(!raw||!Array.isArray(raw.rows))return 0;let n=0;raw.rows.forEach(r=>{const b=set.has(boxBase(r[0]));if(b){r[7]=1;n++}else if(r.length>7)r[7]=0});return n}
+function boxAplica(raw,set,dia){if(!raw||!Array.isArray(raw.rows))return 0;dia=dia||"anterior";let n=0;raw.rows.forEach(r=>{if(!set.has(boxBase(r[0])))return;const L=boxDiasDe(r[7]);if(!L.includes(dia))L.push(dia);while(r.length<7)r.push("");r[7]=L.join(",");n++});return n}
+function boxGuardado(){let o={};try{o=JSON.parse(localStorage.getItem(BOX_LS)||"{}")||{}}catch(e){}if(Array.isArray(o))o=o.length?{anterior:o}:{};return o}
+const boxDiaTxt=d=>d==="anterior"?"carregado antes (sem data)":/^\d{4}-\d\d-\d\d$/.test(d)?d.split("-").reverse().join("/"):d;
+let boxDia="";try{boxDia=localStorage.getItem("leitor-miniload-boxdia")||""}catch(e){}
+function boxApagarDia(dia){
+  if(!mtcNewRaw){toast("Só o aparelho que carregou a lista MTC pode apagar");return}
+  confirmDel("Apagar o BOX do dia "+boxDiaTxt(dia)+"? As caixas continuam na lista MTC, só deixam de ser BOX desse dia.",()=>{
+    mtcNewRaw.rows.forEach(r=>{const L=boxDiasDe(r[7]).filter(x=>x!==dia);if(r.length>7)r[7]=L.length?L.join(","):0});
+    const o=boxGuardado();delete o[dia];try{localStorage.setItem(BOX_LS,JSON.stringify(o))}catch(e){}
+    const d=new Date(),p2=x=>String(x).padStart(2,"0");mtcNewRaw.importadoEm=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes());
+    try{localStorage.setItem(MTC_LS,JSON.stringify(mtcNewRaw))}catch(e){}
+    mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew;boxDia="";render();gsPushLista();toast("BOX do dia "+boxDiaTxt(dia)+" apagado")},"Sim, apagar")}
 /* confronto: itens da lista de box x lista MTC (o que tem para criar box, o que já foi decantado, o que não está em nenhum pallet) */
 function boxConfronto(set,linhas){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
   if(!mtc||!mtc.rows.length){toast("Carregue a lista MTC primeiro");return}
-  if(!set){let bx=[];try{bx=JSON.parse(localStorage.getItem(BOX_LS)||"[]")}catch(e){}set=new Set(bx.length?bx:mtc.rows.filter(r=>r.box).map(r=>boxBase(r.item)))}
+  const diaC=boxDia&&boxDia!=="todos"?boxDia:"";
+  if(!set){const o=boxGuardado();const bx=diaC?(o[diaC]||[]):[].concat(...Object.values(o));set=new Set(bx.length?bx:mtc.rows.filter(r=>r.box&&(!diaC||r.boxd.includes(diaC))).map(r=>boxBase(r.item)))}
   const num=v=>/^\d+$/.test(String(v||""))?Number(v):(v||"");
   const R=mtc.rows.filter(r=>set.has(boxBase(r.item)));
   const viv=R.filter(r=>!isRet(r)).sort((a,b)=>(+a.pal||9999)-(+b.pal||9999)||a.item.localeCompare(b.item));
@@ -2236,7 +2288,7 @@ function boxConfronto(set,linhas){
   const d=new Date(),pd=n=>String(n).padStart(2,"0"),hoje=pd(d.getDate())+"/"+pd(d.getMonth()+1)+"/"+d.getFullYear();
   const wb=XLSX.utils.book_new();wb.Props={Title:"Confronto BOX",Author:AUTORIA.autor,Company:AUTORIA.area,Comments:CREDITO};
   const add=(rows,nome,w)=>{const ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,nome)};
-  add([["CONFRONTO · LISTA DE BOX x ESTOQUE · "+hoje],[],
+  add([["CONFRONTO · BOX "+(diaC?"DO DIA "+boxDiaTxt(diaC).toUpperCase():"(TODOS OS DIAS)")+" x ESTOQUE · gerado em "+hoje],[],
        ["Itens na lista de box",set.size],
        ["Caixas para criar box (no estoque)",viv.length],
        ["Itens diferentes para criar box",new Set(viv.map(r=>boxBase(r.item))).size],
@@ -2245,7 +2297,7 @@ function boxConfronto(set,linhas){
   add([["✓","Item","Quantidade","Pack Number","Pallet","Onde está"],...viv.map(r=>["",r.item,num(r.qtd),r.pack||"",num(r.pal),r.pal?palObs(r.pal)||"":""])],"Criar box",[4,20,11,16,7,26]);
   add([["Item","Quantidade","Pack Number","Pallet","Decantado em","Quem retirou","Obs"],...dec.map(r=>{const m=retMark(r)||offRet(r)||{};return [r.item,num(r.qtd),r.pack||"",num(r.pal),String(retWhen(r)||"").replace(/^RETIRAD[OA]\s*/i,""),m.quem||"",m.obs||""]})],"Já decantados",[20,11,16,7,16,22,20]);
   add([["Item","Outras colunas do Excel"],...(nao.length?nao.map(v=>[v,extra[v]||""]):[["Todos os itens da lista estão nos pallets",""]])],"Não encontrados",[20,40]);
-  saveXlsx(wb,"Confronto_BOX_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx");
+  saveXlsx(wb,"Confronto_BOX"+(diaC&&diaC!=="anterior"?"_dia_"+diaC.split("-").reverse().join("-"):"")+"_gerado_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx");
   toast("Confronto: "+viv.length+" caixas para criar box · "+dec.length+" já decantadas · "+nao.length+" itens não encontrados");
 }
 async function boxCarregar(f){
@@ -2253,13 +2305,17 @@ async function boxCarregar(f){
   try{const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];const A=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
     const set=new Set();A.forEach(l=>{const v=boxBase(l&&l[0]);if(/^[A-Z]\d{6,}/.test(v))set.add(v)});
     if(!set.size){toast("Não achei itens na primeira coluna");return}
-    try{localStorage.setItem(BOX_LS,JSON.stringify([...set]))}catch(e){}
     if(!mtcNewRaw){toast("Carregue a lista MTC primeiro");return}
-    const n=boxAplica(mtcNewRaw,set);const d=new Date(),p2=x=>String(x).padStart(2,"0");
+    const hj=new Date(),q2=x=>String(x).padStart(2,"0"),hjs=hj.getFullYear()+"-"+q2(hj.getMonth()+1)+"-"+q2(hj.getDate());
+    const dia=await new Promise(ok=>{openSheet('<h3>📦 BOX de qual dia?</h3><p>'+set.size+' itens nesta lista. Escolha o dia deste box.</p><form class="manf" id="bdF"><label>Dia do box<input id="bdIn" type="date" value="'+hjs+'" style="text-transform:none"></label><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Carregar box deste dia</button><button class="btn" type="button" id="bdNo">Cancelar</button></div></form>',()=>{
+      $("bdNo").onclick=()=>{closeSheet();ok(null)};$("bdF").addEventListener("submit",e=>{e.preventDefault();const v=$("bdIn").value||hjs;closeSheet();ok(v)})})});
+    if(!dia)return;
+    {const o=boxGuardado();o[dia]=[...set];try{localStorage.setItem(BOX_LS,JSON.stringify(o))}catch(e){}}
+    const n=boxAplica(mtcNewRaw,set,dia);boxDia=dia;try{localStorage.setItem("leitor-miniload-boxdia",dia)}catch(e){}const d=new Date(),p2=x=>String(x).padStart(2,"0");
     mtcNewRaw.importadoEm=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes());
     try{localStorage.setItem(MTC_LS,JSON.stringify(mtcNewRaw))}catch(e){}
     mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew;render();gsPushLista();beep(true);
-    toast("Lista de box: "+set.size+" itens · "+n+" caixas da lista MTC marcadas BOX · baixando o confronto…");
+    toast("BOX do dia "+boxDiaTxt(dia)+": "+set.size+" itens · "+n+" caixas marcadas · baixando o confronto…");
     setTimeout(()=>boxConfronto(set,A),400);
   }catch(e){toast("Não consegui ler esse arquivo")}
 }
@@ -2449,18 +2505,27 @@ function renderBox(){
   const raw=$("mtcIn").value,q=skey(raw),qs=q.length>=2?qVariants(q):null;
   $("mtcPalForm").hidden=true;$("mtcBack").hidden=!qs;$("dash").hidden=true;$("mtcPals").innerHTML="";
   $("mtcIn").placeholder="Peça ou pack do BOX";
-  const B=mtc.rows.filter(r=>r.box),viv=B.filter(r=>!isRet(r));
+  const BA=mtc.rows.filter(r=>r.box);
+  const dias=[...new Set([].concat(...BA.map(r=>r.boxd)))].sort((a,b)=>(a==="anterior")-(b==="anterior")||b.localeCompare(a));
+  if(boxDia!=="todos"&&!dias.includes(boxDia))boxDia=dias[0]||"todos";
+  const B=boxDia==="todos"?BA:BA.filter(r=>r.boxd.includes(boxDia)),viv=B.filter(r=>!isRet(r));
+  const diaCard=(d,L)=>{const v=L.filter(r=>!isRet(r)).length,dc=L.length-v,pc=L.length?Math.round(dc*100/L.length):0;
+    return '<button type="button" class="bday'+(d===boxDia?" on":"")+'" data-bdia="'+esc(d)+'"><span class="bdt">📦 '+(d==="todos"?"Todos os dias":d==="anterior"?"BOX carregado antes (sem data)":"BOX do dia "+esc(boxDiaTxt(d)))+'</span><span class="bdn">'+L.length+' caixas · <b>'+v+'</b> faltam · <b class="r">'+dc+' DEC</b></span><span class="bdbar"><i style="width:'+pc+'%"></i></span></button>'};
+  const diasHtml=dias.length?'<div class="bdays"><h3>Box por dia <small>toque para abrir</small></h3>'+dias.map(d=>diaCard(d,BA.filter(r=>r.boxd.includes(d)))).join("")+(dias.length>1?diaCard("todos",BA):"")+'</div>':"";
   const lst=(qs?B.filter(r=>hit(r.item,qs)>=0||hit(r.pack,qs)>=0):(boxFiltro==="falta"?viv:boxFiltro==="deck"?B.filter(isRet):B));
   $("mtcInfo").textContent="📦 BOX · "+viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens"+(B.length-viv.length?" · "+(B.length-viv.length)+" já decantadas (DEC, em vermelho)":"");
   let sum="";
-  if(!B.length)sum='<div class="mempty"><b>Nenhum item marcado como BOX ainda.</b>'+(podeAdmin()?' Toque em <b>Carregar lista de box (Excel)</b> logo abaixo.':' Peça ao administrador para carregar a lista de box.')+'</div>';
-  else sum='<div class="mempty">Toque no <b>quadrado</b> da caixa para dar baixa. A observação já vem como <b>Decante</b>.</div>'+(qs?'':'<div class="mseg boxseg"><button type="button" data-bf="falta" aria-selected="'+(boxFiltro==="falta")+'">Falta decantar<small>'+viv.length+' caixas</small></button><button type="button" data-bf="deck" aria-selected="'+(boxFiltro==="deck")+'"><span><span class="btag dk" style="margin:0">DEC</span> Decantadas</span><small>'+(B.length-viv.length)+' caixas</small></button><button type="button" data-bf="todas" aria-selected="'+(boxFiltro==="todas")+'">Todas<small>'+B.length+' caixas</small></button></div>');
+  if(!BA.length)sum='<div class="mempty"><b>Nenhum item marcado como BOX ainda.</b>'+(podeAdmin()?' Toque em <b>Carregar lista de box (Excel)</b> logo abaixo.':' Peça ao administrador para carregar a lista de box.')+'</div>';
+  else sum=diasHtml+'<div class="mempty">'+(boxDia&&boxDia!=="todos"?'<b>'+(boxDia==="anterior"?"BOX sem data":"BOX do dia "+esc(boxDiaTxt(boxDia)))+'</b> · ':'')+'Toque no <b>quadrado</b> da caixa para dar baixa. A observação já vem como <b>Decante</b>.</div>'+(qs?'':'<div class="mseg boxseg"><button type="button" data-bf="falta" aria-selected="'+(boxFiltro==="falta")+'">Falta decantar<small>'+viv.length+' caixas</small></button><button type="button" data-bf="deck" aria-selected="'+(boxFiltro==="deck")+'"><span><span class="btag dk" style="margin:0">DEC</span> Decantadas</span><small>'+(B.length-viv.length)+' caixas</small></button><button type="button" data-bf="todas" aria-selected="'+(boxFiltro==="todas")+'">Todas<small>'+B.length+' caixas</small></button></div>');
   if(viv.length)sum+='<button type="button" class="btn primary" id="boxXls">🖨️ Exportar BOX por pallet (Excel para imprimir)</button>';
   if(B.length)sum+='<button type="button" class="btn" id="boxCmp">📋 Confronto: lista de box x estoque (Excel)</button>';
+  if(podeAdmin()&&boxDia&&boxDia!=="todos"&&mtcNewRaw)sum+='<button type="button" class="btn danger" id="boxDel">🗑️ Apagar o BOX do dia '+esc(boxDiaTxt(boxDia))+'</button>';
   if(podeAdmin())sum+='<button type="button" class="btn" id="boxLoad">📦 Carregar lista de box (Excel)</button><input type="file" id="boxFile" accept=".xlsx,.xls,.csv" hidden>';
   $("mtcSum").innerHTML=sum;
   if($("boxXls"))$("boxXls").onclick=()=>boxExport(viv);
   if($("boxCmp"))$("boxCmp").onclick=()=>boxConfronto();
+  if($("boxDel"))$("boxDel").onclick=()=>boxApagarDia(boxDia);
+  document.querySelectorAll("#mtcSum [data-bdia]").forEach(b=>b.onclick=()=>{boxDia=b.dataset.bdia;try{localStorage.setItem("leitor-miniload-boxdia",boxDia)}catch(e){}renderMtc();setTimeout(()=>{const s=document.querySelector(".boxseg")||$("mtcWrap");if(s)s.scrollIntoView({behavior:"smooth",block:"start"})},60)});
   document.querySelectorAll("#mtcSum [data-bf]").forEach(b=>b.onclick=()=>{boxFiltro=b.dataset.bf;try{localStorage.setItem("leitor-miniload-boxfiltro",boxFiltro)}catch(e){}renderMtc()});
   if($("boxLoad")){$("boxLoad").onclick=()=>{$("boxFile").value="";$("boxFile").click()};$("boxFile").onchange=e=>boxCarregar(e.target.files&&e.target.files[0])}
   $("mtcWrap").hidden=!lst.length;multiUpd(!!lst.length);
