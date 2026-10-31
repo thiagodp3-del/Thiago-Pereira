@@ -494,6 +494,9 @@ body[data-view="mtc"] #sForm,body[data-view="mtc"] #sRes{display:none!important}
 .dash>h2 small{font-family:var(--body);font-size:13px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:500}
 .tabs .tab-box{border-color:#1F5FAF;color:#4F8AD9}.tabs .tab-box[aria-selected="true"]{background:#1F5FAF;color:#fff}
 .btag.dk{background:#E5243B;margin-left:4px}
+.boxseg{grid-template-columns:repeat(3,minmax(0,1fr))}
+.boxseg button{font-size:14px}
+.boxseg button[data-bf="deck"][aria-selected="true"]{border-color:#E5243B;background:#FDE7EA}
 .btag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#1F5FAF;color:#fff;font:700 11px/1.5 var(--body);letter-spacing:.04em;vertical-align:middle}
 body.boxmode .mload,body.boxmode #mtcPals,body.boxmode #mtcSelBar,body.boxmode #dash,body.boxmode #mtcAll,body.boxmode #mtcMode{display:none!important}
 .kbt{height:48px;min-width:56px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:13px;color:var(--muted)}
@@ -1789,7 +1792,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261031172725"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261031173727"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2215,6 +2218,7 @@ async function mtcExportAll(){
 }
 /* BOX: itens da lista de box (Excel) ganham a marca BOX; o número da cor no fim não importa */
 let mtcBox=false;const BOX_LS="leitor-miniload-box";
+let boxFiltro="todas";try{boxFiltro=localStorage.getItem("leitor-miniload-boxfiltro")||"todas"}catch(e){}
 const boxBase=v=>String(v||"").toUpperCase().trim().split(/\s+/)[0];
 function boxAplica(raw,set){if(!raw||!Array.isArray(raw.rows))return 0;let n=0;raw.rows.forEach(r=>{const b=set.has(boxBase(r[0]));if(b){r[7]=1;n++}else if(r.length>7)r[7]=0});return n}
 /* confronto: itens da lista de box x lista MTC (o que tem para criar box, o que já foi decantado, o que não está em nenhum pallet) */
@@ -2236,7 +2240,7 @@ function boxConfronto(set,linhas){
        ["Itens na lista de box",set.size],
        ["Caixas para criar box (no estoque)",viv.length],
        ["Itens diferentes para criar box",new Set(viv.map(r=>boxBase(r.item))).size],
-       ["Caixas já decantadas (DECK)",dec.length],
+       ["Caixas já decantadas (DEC)",dec.length],
        ["Itens da lista que não estão em nenhum pallet",nao.length],[],[CREDITO]],"Resumo",[46,12]);
   add([["✓","Item","Quantidade","Pack Number","Pallet","Onde está"],...viv.map(r=>["",r.item,num(r.qtd),r.pack||"",num(r.pal),r.pal?palObs(r.pal)||"":""])],"Criar box",[4,20,11,16,7,26]);
   add([["Item","Quantidade","Pack Number","Pallet","Decantado em","Quem retirou","Obs"],...dec.map(r=>{const m=retMark(r)||offRet(r)||{};return [r.item,num(r.qtd),r.pack||"",num(r.pal),String(retWhen(r)||"").replace(/^RETIRAD[OA]\s*/i,""),m.quem||"",m.obs||""]})],"Já decantados",[20,11,16,7,16,22,20]);
@@ -2412,11 +2416,11 @@ function renderMtc(){
   if(pqs)sum+='<div class="mempty">'+(shown.length?shown.length+" de "+found.length+" linhas deste pallet com “"+esc($("mtcPalIn").value.trim())+"”":"Nada com “"+esc($("mtcPalIn").value.trim())+"” neste pallet.")+"</div>";
   $("mtcSum").innerHTML=sum;
   $("mtcWrap").hidden=!shown.length;multiUpd(!!shown.length);
-  if(!Q){$("dash").hidden=false;renderDash();$("mtcSum").insertAdjacentHTML("afterbegin",'<button type="button" class="btn" id="goDash" style="width:100%;height:48px;font-weight:800;border:2px solid #1F5FAF;color:#1F5FAF">📊 Ver painel (resumo do estoque)</button>');$("goDash").onclick=()=>$("dash").scrollIntoView({behavior:"smooth",block:"start"})}
+  if(!Q){$("dash").hidden=false;renderDash()}
   const qs=pqs||(Q&&Q.qs)||[];
   $("mtcBody").innerHTML=shown.slice().sort(mtcCmp((a,b)=>isRet(a)-isRet(b)||(+a.pal||999)-(+b.pal||999)||a.item.localeCompare(b.item))).slice(0,500).map(r=>mtcRow(r,qs)).join("");sortHeadUpd();
 }
-function mtcRow(r,qs){{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(multiSel.has(retKey(r))?"msel":(r.verde?"verde":"")))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(r.box?'<span class="btag">BOX</span>'+(ret?'<span class="btag dk" title="Já decantado">DECK</span>':''):'')+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}
+function mtcRow(r,qs){{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(multiSel.has(retKey(r))?"msel":(r.verde?"verde":"")))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(r.box?'<span class="btag">BOX</span>'+(ret?'<span class="btag dk" title="Já decantado">DEC</span>':''):'')+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}
 }
 function boxExport(viv){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
@@ -2446,17 +2450,18 @@ function renderBox(){
   $("mtcPalForm").hidden=true;$("mtcBack").hidden=!qs;$("dash").hidden=true;$("mtcPals").innerHTML="";
   $("mtcIn").placeholder="Peça ou pack do BOX";
   const B=mtc.rows.filter(r=>r.box),viv=B.filter(r=>!isRet(r));
-  const lst=(qs?B.filter(r=>hit(r.item,qs)>=0||hit(r.pack,qs)>=0):B);
-  $("mtcInfo").textContent="📦 BOX · "+viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens"+(B.length-viv.length?" · "+(B.length-viv.length)+" já decantadas (DECK, em vermelho no fim da lista)":"");
+  const lst=(qs?B.filter(r=>hit(r.item,qs)>=0||hit(r.pack,qs)>=0):(boxFiltro==="falta"?viv:boxFiltro==="deck"?B.filter(isRet):B));
+  $("mtcInfo").textContent="📦 BOX · "+viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens"+(B.length-viv.length?" · "+(B.length-viv.length)+" já decantadas (DEC, em vermelho)":"");
   let sum="";
   if(!B.length)sum='<div class="mempty"><b>Nenhum item marcado como BOX ainda.</b>'+(podeAdmin()?' Toque em <b>Carregar lista de box (Excel)</b> logo abaixo.':' Peça ao administrador para carregar a lista de box.')+'</div>';
-  else sum='<div class="mempty">Toque no <b>quadrado</b> da caixa para dar baixa. A observação já vem como <b>Decante</b>.</div>';
+  else sum='<div class="mempty">Toque no <b>quadrado</b> da caixa para dar baixa. A observação já vem como <b>Decante</b>.</div>'+(qs?'':'<div class="mseg boxseg"><button type="button" data-bf="falta" aria-selected="'+(boxFiltro==="falta")+'">Falta decantar<small>'+viv.length+' caixas</small></button><button type="button" data-bf="deck" aria-selected="'+(boxFiltro==="deck")+'"><span><span class="btag dk" style="margin:0">DEC</span> Decantadas</span><small>'+(B.length-viv.length)+' caixas</small></button><button type="button" data-bf="todas" aria-selected="'+(boxFiltro==="todas")+'">Todas<small>'+B.length+' caixas</small></button></div>');
   if(viv.length)sum+='<button type="button" class="btn primary" id="boxXls">🖨️ Exportar BOX por pallet (Excel para imprimir)</button>';
   if(B.length)sum+='<button type="button" class="btn" id="boxCmp">📋 Confronto: lista de box x estoque (Excel)</button>';
   if(podeAdmin())sum+='<button type="button" class="btn" id="boxLoad">📦 Carregar lista de box (Excel)</button><input type="file" id="boxFile" accept=".xlsx,.xls,.csv" hidden>';
   $("mtcSum").innerHTML=sum;
   if($("boxXls"))$("boxXls").onclick=()=>boxExport(viv);
   if($("boxCmp"))$("boxCmp").onclick=()=>boxConfronto();
+  document.querySelectorAll("#mtcSum [data-bf]").forEach(b=>b.onclick=()=>{boxFiltro=b.dataset.bf;try{localStorage.setItem("leitor-miniload-boxfiltro",boxFiltro)}catch(e){}renderMtc()});
   if($("boxLoad")){$("boxLoad").onclick=()=>{$("boxFile").value="";$("boxFile").click()};$("boxFile").onchange=e=>boxCarregar(e.target.files&&e.target.files[0])}
   $("mtcWrap").hidden=!lst.length;multiUpd(!!lst.length);
   $("mtcBody").innerHTML=lst.slice().sort(mtcCmp((a,b)=>isRet(a)-isRet(b)||a.item.localeCompare(b.item)||(+a.pal||999)-(+b.pal||999))).slice(0,800).map(r=>mtcRow(r,qs||[])).join("");sortHeadUpd();
@@ -2484,6 +2489,7 @@ function renderDash(){
      '<circle cx="66" cy="66" r="52" fill="none" stroke="var(--ds-a)" stroke-width="18" stroke-dasharray="'+dv.toFixed(1)+' '+(C-dv+0.01).toFixed(1)+'" transform="rotate(-90 66 66)" data-tip="No estoque: '+fmt(viv.length)+' caixas ('+pctV+'%)"/>'+
      '<text x="66" y="66" text-anchor="middle" font-family="var(--display)" font-size="30" font-weight="700" fill="var(--ink)">'+pctV+'%</text><text x="66" y="86" text-anchor="middle" font-size="11" fill="var(--muted)">no estoque</text></svg>'+
      '<div class="dleg"><span><i style="background:var(--ds-a)"></i>No estoque · <b>'+fmt(viv.length)+'</b> caixas</span><span><i style="background:var(--ds-r)"></i>Retiradas · <b>'+fmt(ret.length)+'</b> caixas</span><span style="color:var(--muted)">'+fmt(viv.reduce((t,r)=>t+qn(r),0))+' peças no estoque</span></div></div></div>'}
+  const iBox=h.length;
   // colunas por dia
   const cols=(title,sub,data,cor,unid)=>{const mx=Math.max(1,...data.map(d=>d[1]));
     return '<div class="dcard"><h3>'+title+'</h3><p class="dsub">'+sub+'</p><div class="dcols">'+data.map(([l,v])=>'<button type="button" class="dcol'+(v?'':' zero')+'" data-tip="'+esc(l)+': '+fmt(v)+' '+unid+'" aria-label="'+esc(l)+': '+v+' '+unid+'"><em>'+fmt(v)+'</em><i style="height:'+(v?Math.max(3,Math.round(v*100/mx)):0)+'%;background:'+cor+'"></i></button>').join("")+'</div><div class="dxl">'+data.map(([l])=>'<span>'+esc(l)+'</span>').join("")+'</div></div>'};
@@ -2511,7 +2517,33 @@ function renderDash(){
   // últimas retiradas
   const ult=ret.filter(r=>mk(r).at).sort((a,b)=>mk(b).at-mk(a).at).slice(0,6);
   h+='<div class="dcard"><h3>Últimas retiradas</h3>'+(ult.length?'<div class="dmov">'+ult.map(r=>{const m=mk(r),d=new Date(m.at);return '<div><b>'+esc(r.item)+'</b><span>'+pd(d.getDate())+"/"+pd(d.getMonth()+1)+" "+pd(d.getHours())+":"+pd(d.getMinutes())+'</span><span>Pallet '+esc(r.pal||"—")+' · qtd '+esc(r.qtd)+'</span><span>'+esc(m.quem||"—")+(m.lib?' / '+esc(m.lib):'')+'</span></div>'}).join("")+'</div>':'<p class="dempty">Nenhuma retirada ainda.</p>')+'</div>';
+  // ===== BOX / Decante =====
+  {const B=R.filter(r=>r.box);
+   if(B.length){const bv=B.filter(r=>!isRet(r)),bd=B.filter(isRet),pc=Math.round(bd.length*100/B.length);
+    const bHoje=bd.filter(r=>mk(r).at&&dk(mk(r).at)===hoje).length;
+    let x='<h2 style="margin-top:6px">📦 BOX · Decante <small>'+pc+'% já decantado</small></h2>';
+    x+='<div class="dkpi"><div><small>Caixas BOX</small><b>'+fmt(B.length)+'</b><span>'+fmt(new Set(B.map(r=>r.item)).size)+' itens diferentes</span></div>'+
+       '<div style="border-color:#E5243B"><small>Já decantadas · DEC</small><b style="color:#E5243B">'+fmt(bd.length)+'</b><span>'+(bHoje?bHoje+' hoje':'nenhuma hoje')+'</span></div>'+
+       '<div><small>Falta decantar</small><b>'+fmt(bv.length)+'</b><span>'+fmt(new Set(bv.map(r=>r.item)).size)+' itens · '+fmt(new Set(bv.map(r=>r.pal).filter(Boolean)).size)+' pallets</span></div>'+
+       '<div><small>Peças para decantar</small><b>'+fmt(bv.reduce((t,r)=>t+qn(r),0))+'</b><span>soma das quantidades</span></div></div>';
+    {const C=2*Math.PI*52,dv=C*(bd.length/B.length);
+     x+='<div class="dcard"><h3>Andamento do decante</h3><div class="dhero"><svg viewBox="0 0 132 132" role="img" aria-label="'+pc+'% decantado">'+
+       '<circle cx="66" cy="66" r="52" fill="none" stroke="color-mix(in srgb,var(--line) 70%,transparent)" stroke-width="18" data-tip="Falta decantar: '+fmt(bv.length)+' caixas"/>'+
+       '<circle cx="66" cy="66" r="52" fill="none" stroke="#E5243B" stroke-width="18" stroke-dasharray="'+dv.toFixed(1)+' '+(C-dv+0.01).toFixed(1)+'" transform="rotate(-90 66 66)" data-tip="Decantadas: '+fmt(bd.length)+' caixas ('+pc+'%)"/>'+
+       '<text x="66" y="66" text-anchor="middle" font-family="var(--display)" font-size="30" font-weight="700" fill="var(--ink)">'+pc+'%</text><text x="66" y="86" text-anchor="middle" font-size="11" fill="var(--muted)">decantado</text></svg>'+
+       '<div class="dleg"><span><i style="background:#E5243B"></i>Decantadas · <b>'+fmt(bd.length)+'</b> caixas</span><span><i style="background:var(--line)"></i>Falta · <b>'+fmt(bv.length)+'</b> caixas</span><button type="button" class="btn" data-goview="box" style="height:40px;margin-top:4px">Abrir aba BOX</button></div></div></div>'}
+    const bdia={};bd.forEach(r=>{const m=mk(r);if(m.at){const k=dk(m.at);bdia[k]=(bdia[k]||0)+1}});
+    const quemB={};bd.forEach(r=>{const v=String(mk(r).quem||"").trim();if(!v)return;const k=v.toLowerCase();quemB[k]=quemB[k]||[v,0];quemB[k][1]++});
+    x+='<div class="dtwo">'+cols("Decantes por dia","Caixas BOX que saíram nos últimos 7 dias",dias.map(d=>[d===hoje?"hoje":d,bdia[d]||0]),"#E5243B","caixas")+
+       hbar("Quem mais decantou","",Object.values(quemB).sort((a,b)=>b[1]-a[1]).slice(0,5),"#E5243B","caixas")+'</div>';
+    const palB={};bv.forEach(r=>{if(r.pal)palB[r.pal]=(palB[r.pal]||0)+1});
+    const itB={};bv.forEach(r=>{itB[r.item]=itB[r.item]||[r.item,0,0];itB[r.item][1]++;itB[r.item][2]+=qn(r)});
+    x+='<div class="dtwo">'+hbar("Pallets com mais BOX para decantar","Toque para abrir o pallet",Object.entries(palB).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([p,n])=>["Pallet "+p,n,palObs(p)||"",p]),"var(--ds-a)","caixas","data-dpal")+
+       hbar("Itens BOX que mais faltam","",Object.values(itB).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([it,n,q])=>[it,n,fmt(q)+" peças"]),"var(--ds-a)","caixas")+'</div>';
+    h=h.slice(0,iBox)+x+h.slice(iBox)}}
+  {const d=new Date();h=h.replace('atualizado agora','atualizado às '+pd(d.getHours())+':'+pd(d.getMinutes()))}
   el.innerHTML=h;
+  el.querySelectorAll("[data-goview=box]").forEach(b=>b.onclick=()=>{const t=$("boxTab");if(t){t.click();window.scrollTo({top:0,behavior:"smooth"})}});
 }
 (function(){
   let tip=null,tt,y0=0;
