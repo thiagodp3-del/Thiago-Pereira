@@ -493,6 +493,7 @@ body[data-view="mtc"] #sForm,body[data-view="mtc"] #sRes{display:none!important}
 .dash>h2{margin:0;font-family:var(--display);font-size:24px;letter-spacing:.03em;text-transform:uppercase;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .dash>h2 small{font-family:var(--body);font-size:13px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:500}
 .tabs .tab-box{border-color:#1F5FAF;color:#4F8AD9}.tabs .tab-box[aria-selected="true"]{background:#1F5FAF;color:#fff}
+.btag.dk{background:#E5243B;margin-left:4px}
 .btag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#1F5FAF;color:#fff;font:700 11px/1.5 var(--body);letter-spacing:.04em;vertical-align:middle}
 body.boxmode .mload,body.boxmode #mtcPals,body.boxmode #mtcSelBar,body.boxmode #dash,body.boxmode #mtcAll,body.boxmode #mtcMode{display:none!important}
 .kbt{height:48px;min-width:56px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:13px;color:var(--muted)}
@@ -1788,7 +1789,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261031171509"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261031172725"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2216,6 +2217,33 @@ async function mtcExportAll(){
 let mtcBox=false;const BOX_LS="leitor-miniload-box";
 const boxBase=v=>String(v||"").toUpperCase().trim().split(/\s+/)[0];
 function boxAplica(raw,set){if(!raw||!Array.isArray(raw.rows))return 0;let n=0;raw.rows.forEach(r=>{const b=set.has(boxBase(r[0]));if(b){r[7]=1;n++}else if(r.length>7)r[7]=0});return n}
+/* confronto: itens da lista de box x lista MTC (o que tem para criar box, o que já foi decantado, o que não está em nenhum pallet) */
+function boxConfronto(set,linhas){
+  if(!window.XLSX){toast("Gerador de Excel não carregou");return}
+  if(!mtc||!mtc.rows.length){toast("Carregue a lista MTC primeiro");return}
+  if(!set){let bx=[];try{bx=JSON.parse(localStorage.getItem(BOX_LS)||"[]")}catch(e){}set=new Set(bx.length?bx:mtc.rows.filter(r=>r.box).map(r=>boxBase(r.item)))}
+  const num=v=>/^\d+$/.test(String(v||""))?Number(v):(v||"");
+  const R=mtc.rows.filter(r=>set.has(boxBase(r.item)));
+  const viv=R.filter(r=>!isRet(r)).sort((a,b)=>(+a.pal||9999)-(+b.pal||9999)||a.item.localeCompare(b.item));
+  const dec=R.filter(isRet).sort((a,b)=>a.item.localeCompare(b.item));
+  const tem=new Set(mtc.rows.map(r=>boxBase(r.item)));
+  const extra={};(linhas||[]).forEach(l=>{const v=boxBase(l&&l[0]);if(v&&!extra[v])extra[v]=(l||[]).slice(1).filter(x=>x!=null&&x!=="").join(" · ")});
+  const nao=[...set].filter(v=>!tem.has(v)).sort();
+  const d=new Date(),pd=n=>String(n).padStart(2,"0"),hoje=pd(d.getDate())+"/"+pd(d.getMonth()+1)+"/"+d.getFullYear();
+  const wb=XLSX.utils.book_new();wb.Props={Title:"Confronto BOX",Author:AUTORIA.autor,Company:AUTORIA.area,Comments:CREDITO};
+  const add=(rows,nome,w)=>{const ws=XLSX.utils.aoa_to_sheet(rows);ws["!cols"]=w.map(x=>({wch:x}));XLSX.utils.book_append_sheet(wb,ws,nome)};
+  add([["CONFRONTO · LISTA DE BOX x ESTOQUE · "+hoje],[],
+       ["Itens na lista de box",set.size],
+       ["Caixas para criar box (no estoque)",viv.length],
+       ["Itens diferentes para criar box",new Set(viv.map(r=>boxBase(r.item))).size],
+       ["Caixas já decantadas (DECK)",dec.length],
+       ["Itens da lista que não estão em nenhum pallet",nao.length],[],[CREDITO]],"Resumo",[46,12]);
+  add([["✓","Item","Quantidade","Pack Number","Pallet","Onde está"],...viv.map(r=>["",r.item,num(r.qtd),r.pack||"",num(r.pal),r.pal?palObs(r.pal)||"":""])],"Criar box",[4,20,11,16,7,26]);
+  add([["Item","Quantidade","Pack Number","Pallet","Decantado em","Quem retirou","Obs"],...dec.map(r=>{const m=retMark(r)||offRet(r)||{};return [r.item,num(r.qtd),r.pack||"",num(r.pal),String(retWhen(r)||"").replace(/^RETIRAD[OA]\s*/i,""),m.quem||"",m.obs||""]})],"Já decantados",[20,11,16,7,16,22,20]);
+  add([["Item","Outras colunas do Excel"],...(nao.length?nao.map(v=>[v,extra[v]||""]):[["Todos os itens da lista estão nos pallets",""]])],"Não encontrados",[20,40]);
+  saveXlsx(wb,"Confronto_BOX_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx");
+  toast("Confronto: "+viv.length+" caixas para criar box · "+dec.length+" já decantadas · "+nao.length+" itens não encontrados");
+}
 async function boxCarregar(f){
   if(!f)return;if(!window.XLSX){toast("Leitor de Excel não carregou");return}
   try{const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];const A=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
@@ -2227,7 +2255,8 @@ async function boxCarregar(f){
     mtcNewRaw.importadoEm=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes());
     try{localStorage.setItem(MTC_LS,JSON.stringify(mtcNewRaw))}catch(e){}
     mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew;render();gsPushLista();beep(true);
-    toast("Lista de box: "+set.size+" itens · "+n+" caixas da lista MTC marcadas BOX");
+    toast("Lista de box: "+set.size+" itens · "+n+" caixas da lista MTC marcadas BOX · baixando o confronto…");
+    setTimeout(()=>boxConfronto(set,A),400);
   }catch(e){toast("Não consegui ler esse arquivo")}
 }
 let mtcMode="peca";try{mtcMode=localStorage.getItem("leitor-miniload-mtc-modo")==="pack"?"pack":"peca"}catch(e){}
@@ -2383,11 +2412,11 @@ function renderMtc(){
   if(pqs)sum+='<div class="mempty">'+(shown.length?shown.length+" de "+found.length+" linhas deste pallet com “"+esc($("mtcPalIn").value.trim())+"”":"Nada com “"+esc($("mtcPalIn").value.trim())+"” neste pallet.")+"</div>";
   $("mtcSum").innerHTML=sum;
   $("mtcWrap").hidden=!shown.length;multiUpd(!!shown.length);
-  if(!Q){$("dash").hidden=false;renderDash()}
+  if(!Q){$("dash").hidden=false;renderDash();$("mtcSum").insertAdjacentHTML("afterbegin",'<button type="button" class="btn" id="goDash" style="width:100%;height:48px;font-weight:800;border:2px solid #1F5FAF;color:#1F5FAF">📊 Ver painel (resumo do estoque)</button>');$("goDash").onclick=()=>$("dash").scrollIntoView({behavior:"smooth",block:"start"})}
   const qs=pqs||(Q&&Q.qs)||[];
   $("mtcBody").innerHTML=shown.slice().sort(mtcCmp((a,b)=>isRet(a)-isRet(b)||(+a.pal||999)-(+b.pal||999)||a.item.localeCompare(b.item))).slice(0,500).map(r=>mtcRow(r,qs)).join("");sortHeadUpd();
 }
-function mtcRow(r,qs){{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(multiSel.has(retKey(r))?"msel":(r.verde?"verde":"")))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(r.box?'<span class="btag">BOX</span>':'')+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}
+function mtcRow(r,qs){{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(multiSel.has(retKey(r))?"msel":(r.verde?"verde":"")))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(r.box?'<span class="btag">BOX</span>'+(ret?'<span class="btag dk" title="Já decantado">DECK</span>':''):'')+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}
 }
 function boxExport(viv){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
@@ -2417,15 +2446,17 @@ function renderBox(){
   $("mtcPalForm").hidden=true;$("mtcBack").hidden=!qs;$("dash").hidden=true;$("mtcPals").innerHTML="";
   $("mtcIn").placeholder="Peça ou pack do BOX";
   const B=mtc.rows.filter(r=>r.box),viv=B.filter(r=>!isRet(r));
-  const lst=(qs?B.filter(r=>hit(r.item,qs)>=0||hit(r.pack,qs)>=0):viv);
-  $("mtcInfo").textContent="📦 BOX · "+viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens"+(B.length-viv.length?" · "+(B.length-viv.length)+" já foram para a linha":"");
+  const lst=(qs?B.filter(r=>hit(r.item,qs)>=0||hit(r.pack,qs)>=0):B);
+  $("mtcInfo").textContent="📦 BOX · "+viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens"+(B.length-viv.length?" · "+(B.length-viv.length)+" já decantadas (DECK, em vermelho no fim da lista)":"");
   let sum="";
   if(!B.length)sum='<div class="mempty"><b>Nenhum item marcado como BOX ainda.</b>'+(podeAdmin()?' Toque em <b>Carregar lista de box (Excel)</b> logo abaixo.':' Peça ao administrador para carregar a lista de box.')+'</div>';
   else sum='<div class="mempty">Toque no <b>quadrado</b> da caixa para dar baixa. A observação já vem como <b>Decante</b>.</div>';
   if(viv.length)sum+='<button type="button" class="btn primary" id="boxXls">🖨️ Exportar BOX por pallet (Excel para imprimir)</button>';
+  if(B.length)sum+='<button type="button" class="btn" id="boxCmp">📋 Confronto: lista de box x estoque (Excel)</button>';
   if(podeAdmin())sum+='<button type="button" class="btn" id="boxLoad">📦 Carregar lista de box (Excel)</button><input type="file" id="boxFile" accept=".xlsx,.xls,.csv" hidden>';
   $("mtcSum").innerHTML=sum;
   if($("boxXls"))$("boxXls").onclick=()=>boxExport(viv);
+  if($("boxCmp"))$("boxCmp").onclick=()=>boxConfronto();
   if($("boxLoad")){$("boxLoad").onclick=()=>{$("boxFile").value="";$("boxFile").click()};$("boxFile").onchange=e=>boxCarregar(e.target.files&&e.target.files[0])}
   $("mtcWrap").hidden=!lst.length;multiUpd(!!lst.length);
   $("mtcBody").innerHTML=lst.slice().sort(mtcCmp((a,b)=>isRet(a)-isRet(b)||a.item.localeCompare(b.item)||(+a.pal||999)-(+b.pal||999))).slice(0,800).map(r=>mtcRow(r,qs||[])).join("");sortHeadUpd();
