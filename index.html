@@ -492,6 +492,9 @@ body[data-view="mtc"] #sForm,body[data-view="mtc"] #sRes{display:none!important}
 .dash{display:grid;gap:12px;margin-top:10px}
 .dash>h2{margin:0;font-family:var(--display);font-size:24px;letter-spacing:.03em;text-transform:uppercase;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .dash>h2 small{font-family:var(--body);font-size:13px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:500}
+.tabs .tab-box{border-color:#1F5FAF;color:#4F8AD9}.tabs .tab-box[aria-selected="true"]{background:#1F5FAF;color:#fff}
+.btag{display:inline-block;margin-left:6px;padding:1px 6px;border-radius:6px;background:#1F5FAF;color:#fff;font:700 11px/1.5 var(--body);letter-spacing:.04em;vertical-align:middle}
+body.boxmode .mload,body.boxmode #mtcPals,body.boxmode #mtcSelBar,body.boxmode #dash,body.boxmode #mtcAll,body.boxmode #mtcMode{display:none!important}
 .kbt{height:48px;min-width:56px;padding:0 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface);font-weight:700;font-size:13px;color:var(--muted)}
 .jgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:6px;max-height:42vh;overflow:auto}
 .jgrid label{display:flex;align-items:center;justify-content:center;gap:6px;height:44px;border:2px solid var(--line);border-radius:10px;font-weight:700;font-variant-numeric:tabular-nums;cursor:pointer}
@@ -579,6 +582,7 @@ button.dhr{cursor:pointer}
       <button type="button" role="tab" data-v="hoje" aria-selected="false" class="tab-new">Nova tarefa <span class="chev" aria-hidden="true">›</span></button>
       <button type="button" role="tab" data-v="feitos" aria-selected="false">Feitos <small id="feitosN"></small></button>
       <button type="button" role="tab" data-v="mtc" aria-selected="false" id="mtcTab">Itens MTC</button>
+      <button type="button" role="tab" data-v="mtc" data-box="1" aria-selected="false" class="tab-box" id="boxTab">📦 BOX <small id="boxN"></small></button>
       <span class="tabbreak" aria-hidden="true"></span><button type="button" role="tab" data-v="ret" class="tab-ret" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M5 7l1 13h12l1-13M9 7V4h6v3"/><path d="M10 12l2 2 4-4"/></svg>Retiradas <small id="retTabN"></small></button>
       <button type="button" role="tab" data-v="ajuda" aria-selected="false" class="tab-help" aria-label="Ajuda: como usar o app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.6-3 4.4"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg>Ajuda</button>
     </nav>
@@ -1747,11 +1751,11 @@ function whereOf(r){
 const MTC_EMBED=null;
 /* caixas sem pack de verdade (vazio, 0, 000…) na mesma peça e pallet ganham #2, #3… para cada caixa ser única: retirar uma não some com as outras */
 const packUnico=rows=>{const c={};for(const r of rows){if(/\d{6,}/.test(r.pack))continue;const k=r.pal+"|"+r.item+"|"+r.pack;c[k]=(c[k]||0)+1;if(c[k]>1)r.pack=(r.pack?r.pack+" ":"")+"#"+c[k]}return rows};
-const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importadoEm||"",rows:packUnico(d.rows.map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6]})))}:null;
+const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importadoEm||"",rows:packUnico(d.rows.map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6],box:!!r[7]})))}:null;
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261030220557"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261031073030"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -1876,7 +1880,7 @@ async function gsPushLista(){
   try{
     const v=await (await fetch(GS_URL+"?a=versao&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"})).json();
     if(!v||!v.ok)return;if(String(v.importadoEm||"")>=em){gsListaEnviada=em;return}
-    const rows=mtcNewRaw.rows.map(r=>[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||"")]);
+    const rows=mtcNewRaw.rows.map(r=>r[7]?[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||""),"","",1]:[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||"")]);
     let j=null;try{j=await gsCall({a:"lista",t:ses.t,lista:{nome:mtcNewRaw.nome||"Itens MTC",importadoEm:em,n:rows.length,soma:somaLista(rows),rows}})}catch(x){j=null}
     if(!j){const v2=await (await fetch(GS_URL+"?a=versao&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"})).json();if(v2&&v2.ok&&String(v2.importadoEm||"")>=em)j={ok:true}}
     if(j&&j.ok){gsListaEnviada=em;if(!j.igual)toast("Lista MTC enviada para a equipe: "+rows.length+" linhas")}
@@ -1908,7 +1912,7 @@ function retToggle(r){
   let last={};try{last=JSON.parse(localStorage.getItem(RET_LS+"-nomes")||"{}")||{}}catch(e){}
   openSheet('<h3>Retirar material</h3><p><b>'+esc(r.item)+'</b> · qtd '+esc(r.qtd)+' · pack '+esc(r.pack||"—")+' · <b>pallet '+esc(r.pal||"—")+'</b></p>'+
     '<form class="manf" id="rtF" autocomplete="off"><p style="margin:0">Retirada por: <b>'+esc(ses?ses.nome:"—")+'</b> <small>(pelo seu usuário)</small></p>'+
-    '<label>Quem autorizou<input id="rtLib" autocapitalize="words" style="text-transform:none" value="'+esc(last.lib||"")+'" enterkeyhint="next"></label><label>Observação <small>(se quiser)</small><input id="rtObs" maxlength="80" style="text-transform:none" placeholder="Ex.: foi para a linha 3" enterkeyhint="done"></label>'+
+    '<label>Quem autorizou<input id="rtLib" autocapitalize="words" style="text-transform:none" value="'+esc(last.lib||"")+'" enterkeyhint="next"></label><label>Observação <small>(se quiser)</small><input id="rtObs" maxlength="80" style="text-transform:none" placeholder="Ex.: foi para a linha 3" enterkeyhint="done" value="'+(mtcBox&&view==="mtc"?"Decante":"")+'"></label>'+
     '<p class="err" id="rtErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1;background:#E5243B;border-color:#E5243B">Confirmar retirada</button><button class="btn" type="button" id="rtCancel">Cancelar</button></div></form>',()=>{
     $("rtCancel").onclick=closeSheet;
     setTimeout(()=>$("rtLib").focus(),50);$("rtLib").addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();$("rtObs").focus()}});
@@ -1994,6 +1998,7 @@ async function mtcLoadFile(f){
     if(!d){toast("Não achei as colunas de peça e pallet nessa planilha");return}
     try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}
     if(db){try{await db.doc("listas/mtc").set(d)}catch(e){}}
+    try{const bx=JSON.parse(localStorage.getItem(BOX_LS)||"[]");if(bx.length)boxAplica(d,new Set(bx))}catch(e){}
     mtcNew=mtcFrom(d);mtcNewRaw=d;mtcSel="new";mtc=mtcNew;$("mtcIn").value="";render();gsPushLista();
     const np=new Set(d.rows.map(r=>r[3]).filter(Boolean)).size;
     toast("Lista atualizada: "+d.rows.length+" linhas em "+np+" pallets");
@@ -2117,6 +2122,24 @@ async function mtcExportAll(){
     };
   });
 }
+/* BOX: itens da lista de box (Excel) ganham a marca BOX; o número da cor no fim não importa */
+let mtcBox=false;const BOX_LS="leitor-miniload-box";
+const boxBase=v=>String(v||"").toUpperCase().trim().split(/\s+/)[0];
+function boxAplica(raw,set){if(!raw||!Array.isArray(raw.rows))return 0;let n=0;raw.rows.forEach(r=>{const b=set.has(boxBase(r[0]));if(b){r[7]=1;n++}else if(r.length>7)r[7]=0});return n}
+async function boxCarregar(f){
+  if(!f)return;if(!window.XLSX){toast("Leitor de Excel não carregou");return}
+  try{const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];const A=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
+    const set=new Set();A.forEach(l=>{const v=boxBase(l&&l[0]);if(/^[A-Z]\d{6,}/.test(v))set.add(v)});
+    if(!set.size){toast("Não achei itens na primeira coluna");return}
+    try{localStorage.setItem(BOX_LS,JSON.stringify([...set]))}catch(e){}
+    if(!mtcNewRaw){toast("Carregue a lista MTC primeiro");return}
+    const n=boxAplica(mtcNewRaw,set);const d=new Date(),p2=x=>String(x).padStart(2,"0");
+    mtcNewRaw.importadoEm=d.getFullYear()+"-"+p2(d.getMonth()+1)+"-"+p2(d.getDate())+" "+p2(d.getHours())+":"+p2(d.getMinutes());
+    try{localStorage.setItem(MTC_LS,JSON.stringify(mtcNewRaw))}catch(e){}
+    mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew;render();gsPushLista();beep(true);
+    toast("Lista de box: "+set.size+" itens · "+n+" caixas da lista MTC marcadas BOX");
+  }catch(e){toast("Não consegui ler esse arquivo")}
+}
 let mtcMode="peca";try{mtcMode=localStorage.getItem("leitor-miniload-mtc-modo")==="pack"?"pack":"peca"}catch(e){}
 function mtcQuery(raw){
   const t=norm(raw).trim();
@@ -2230,6 +2253,9 @@ function renderMtc(){
   if(!mtc){$("mtcInfo").textContent="Carregue o Excel de peças para pesquisar.";$("mtcPals").innerHTML="";$("mtcSum").innerHTML="";$("mtcWrap").hidden=true;return}
   const pals={};let sem=0;const vivos=mtc.rows.filter(r=>!isRet(r));vivos.forEach(r=>{if(r.pal)pals[r.pal]=(pals[r.pal]||0)+1;else sem++});
   $("mtcInfo").textContent=mtc.nome+" · "+vivos.length+" no estoque"+(mtc.rows.length-vivos.length?" · "+(mtc.rows.length-vivos.length)+" retiradas":"")+" · "+mtc.rows.length+" linhas · "+Object.keys(pals).length+" pallets"+(mtc.em?" · atualizada em "+fmtDay(mtc.em):"");
+  {const nb=mtc.rows.filter(r=>r.box&&!isRet(r)).length;try{$("boxN").textContent=nb?"("+nb+")":""}catch(e){}}
+  {const h=document.querySelector("#mtc .mhead h2");if(h)h.textContent=mtcBox?"📦 BOX":"Itens MTC"}
+  if(mtcBox){renderBox();return}
   const raw=$("mtcIn").value,Q=mtcQuery(raw),found=mtcFind(raw);
   document.querySelectorAll("#mtcMode [data-mm]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mm===mtcMode?"true":"false"));
   $("mtcIn").placeholder=mtcMode==="pack"?"Pack number ou pallet (ex.: 60)":"Número da peça ou pallet (ex.: 60)";
@@ -2253,7 +2279,7 @@ function renderMtc(){
       sum=Object.entries(by).slice(0,8).map(([it,L0])=>{
         const l=L0.filter(r=>!isRet(r)),rt=L0.filter(isRet),tot=l.reduce((t,r)=>t+(+r.qtd||0),0),ps=[...new Set(l.map(r=>r.pal||"sem pallet"))];
         const onde=p=>{if(p==="sem pallet")return "Sem pallet";const g=palGrp(p);return "Pallet "+esc(p)+(g.length>1?' <small>(junto com '+esc(g.filter(x=>x!==p).join(" + "))+')</small>':"")+(palObs(p)?' <small>📍 '+esc(palObs(p))+'</small>':"")};
-        return '<div class="mcard"><b>'+hl(it,Q.qs)+'</b>'+(l.length?'<span class="big">'+ps.map(onde).join(" · ")+'</span><span class="sub">'+l.length+" pack"+(l.length>1?"s":"")+" no estoque · "+fmt(tot)+" peças</span>":'<span class="big" style="color:var(--ds-r)">Nada no estoque</span>')+
+        return '<div class="mcard"><b>'+hl(it,Q.qs)+(L0.some(r=>r.box)?'<span class="btag">BOX</span>':'')+'</b>'+(l.length?'<span class="big">'+ps.map(onde).join(" · ")+'</span><span class="sub">'+l.length+" pack"+(l.length>1?"s":"")+" no estoque · "+fmt(tot)+" peças</span>":'<span class="big" style="color:var(--ds-r)">Nada no estoque</span>')+
           (rt.length?'<span class="sub" style="color:var(--ds-r);font-weight:700">'+rt.length+" já retirada"+(rt.length>1?"s":"")+" (em vermelho na lista)</span>":"")+"</div>";
       }).join("");
     }
@@ -2269,7 +2295,25 @@ function renderMtc(){
   $("mtcWrap").hidden=!shown.length;
   if(!Q){$("dash").hidden=false;renderDash()}
   const qs=pqs||(Q&&Q.qs)||[];
-  $("mtcBody").innerHTML=shown.slice(0,500).sort((a,b)=>isRet(a)-isRet(b)||(+a.pal||999)-(+b.pal||999)||a.item.localeCompare(b.item)).map(r=>{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(r.verde?"verde":""))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}).join("");
+  $("mtcBody").innerHTML=shown.slice(0,500).sort((a,b)=>isRet(a)-isRet(b)||(+a.pal||999)-(+b.pal||999)||a.item.localeCompare(b.item)).map(r=>mtcRow(r,qs)).join("");
+}
+function mtcRow(r,qs){{const ret=isRet(r);return '<tr data-ret="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'" class="'+(ret?"ret":(r.verde?"verde":""))+'"><td class="ck"><label class="rck"><input type="checkbox" aria-label="Retirado"'+(ret?" checked":"")+'><span></span></label></td><td class="code">'+hl(r.item,qs)+(r.box?'<span class="btag">BOX</span>':'')+(ret&&retWho(r)?'<br><small class="rwho" style="font-family:var(--body)">'+esc(retWho(r))+"</small>":"")+'</td><td class="num">'+esc(r.qtd)+'</td><td class="code">'+hl(r.pack,qs)+'</td><td class="num">'+esc(r.pal||"—")+"</td><td>"+(ret?'<b class="rtag">'+esc(retWhen(r))+"</b>"+(retWho(r)?'<br><small class="rwho">'+esc(retWho(r))+"</small>":""):esc(stDisp(r.st)))+'</td><td class="app">'+esc(appWhere(r.pack))+"</td></tr>"}
+}
+function renderBox(){
+  const raw=$("mtcIn").value,q=skey(raw),qs=q.length>=2?qVariants(q):null;
+  $("mtcPalForm").hidden=true;$("mtcBack").hidden=!qs;$("dash").hidden=true;$("mtcPals").innerHTML="";
+  $("mtcIn").placeholder="Peça ou pack do BOX";
+  const B=mtc.rows.filter(r=>r.box),viv=B.filter(r=>!isRet(r));
+  const lst=(qs?B.filter(r=>hit(r.item,qs)>=0||hit(r.pack,qs)>=0):viv);
+  $("mtcInfo").textContent="📦 BOX · "+viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens"+(B.length-viv.length?" · "+(B.length-viv.length)+" já foram para a linha":"");
+  let sum="";
+  if(!B.length)sum='<div class="mempty"><b>Nenhum item marcado como BOX ainda.</b>'+(podeAdmin()?' Toque em <b>Carregar lista de box (Excel)</b> logo abaixo.':' Peça ao administrador para carregar a lista de box.')+'</div>';
+  else sum='<div class="mempty">Toque no <b>quadrado</b> da caixa para dar baixa. A observação já vem como <b>Decante</b>.</div>';
+  if(podeAdmin())sum+='<button type="button" class="btn" id="boxLoad">📦 Carregar lista de box (Excel)</button><input type="file" id="boxFile" accept=".xlsx,.xls,.csv" hidden>';
+  $("mtcSum").innerHTML=sum;
+  if($("boxLoad")){$("boxLoad").onclick=()=>{$("boxFile").value="";$("boxFile").click()};$("boxFile").onchange=e=>boxCarregar(e.target.files&&e.target.files[0])}
+  $("mtcWrap").hidden=!lst.length;
+  $("mtcBody").innerHTML=lst.slice(0,800).sort((a,b)=>isRet(a)-isRet(b)||a.item.localeCompare(b.item)||(+a.pal||999)-(+b.pal||999)).map(r=>mtcRow(r,qs||[])).join("");
 }
 /* ===== painel de resumo: estoque, retiradas, conferências, pallets e pessoas ===== */
 function renderDash(){
@@ -2433,10 +2477,11 @@ $("sList").addEventListener("click",e=>{
 });
 function setView(v){
   view=v;document.body.dataset.view=v;savePalPrefs();
-  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v?"true":"false"));
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v&&(v!=="mtc"||(b.dataset.box==="1")===mtcBox)?"true":"false"));
+  document.body.classList.toggle("boxmode",v==="mtc"&&mtcBox);
   render();window.scrollTo(0,0);
 }
-document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>setView(b.dataset.v)));
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.v==="mtc"){mtcBox=b.dataset.box==="1";$("mtcIn").value="";$("mtcPalIn").value=""}setView(b.dataset.v)}));
 /* salvar palete: sai da tela de hoje e vai para Feitos */
 function openSavePal(){
   const cp=currentPal();if(!cp)return;
