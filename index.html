@@ -394,6 +394,13 @@ body[data-view="mtc"] #sForm,body[data-view="mtc"] #sRes{display:none!important}
 .palchips{display:flex;flex-wrap:wrap;gap:6px}
 .palchips button{height:34px;padding:0 10px;border-radius:999px;border:1px solid var(--line);background:var(--surface);font-weight:600;font-size:13px;font-variant-numeric:tabular-nums}
 .palchips button small{color:var(--muted);font-weight:500}
+.pchip{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:999px;background:var(--surface)}
+.pchip.on{border-color:var(--accent);box-shadow:0 0 0 2px rgba(245,184,0,.35)}
+.pchip label{display:flex;align-items:center;padding:0 2px 0 10px;height:34px;cursor:pointer}.pchip input{width:20px;height:20px;margin:0}
+.pchip button{border:0!important;background:none!important;padding-left:6px!important}
+.selbar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:10px;border:2px solid var(--accent);border-radius:12px;background:rgba(245,184,0,.10)}
+.selbar b{flex:1 1 100%;font-size:14px}
+.emlinks{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.emlinks a{min-height:44px;font-size:14px}
 .mtable{min-width:560px}
 .mtable td{padding:8px 8px;font-size:13px}
 .mtable td.code{font-family:var(--mono)}
@@ -688,7 +695,7 @@ button.dhr{cursor:pointer}
     <button type="button" class="btn mback" id="mtcBack" hidden><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>Voltar para os pallets</button>
     <div class="msum" id="mtcSum"></div>
     <form class="msearch" id="mtcPalForm" autocomplete="off" role="search" hidden><input id="mtcPalIn" type="search" inputmode="numeric" placeholder="Buscar neste pallet: peça ou pack" aria-label="Buscar dentro do pallet" enterkeyhint="search"><button type="button" class="kbt" data-kb="mtcPalIn" aria-label="Trocar o teclado">ABC</button><button type="button" id="mtcPalClear">Limpar</button></form>
-    <div class="palchips" id="mtcPals"></div>
+    <div class="palchips" id="mtcPals"></div><div class="selbar" id="mtcSelBar" hidden></div>
     <section class="dash" id="dash" hidden aria-label="Resumo"></section>
     <div class="tablewrap" id="mtcWrap" hidden><table class="mtable"><thead><tr><th class="ck" title="Retirado">Tirou</th><th>Item</th><th>Qtd</th><th>Pack Number</th><th>Pallet</th><th>Status</th><th>No app</th></tr></thead><tbody id="mtcBody"></tbody></table></div>
   </section>
@@ -1765,6 +1772,8 @@ function emWire(id,onChange){
     box.querySelector(".emadd button").onclick=add;inp.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();add()}};
   };draw();
 }
+const mailWeb=(tipo,subj,body)=>{const to=emTo();return tipo==="gmail"?"https://mail.google.com/mail/?view=cm&fs=1&to="+encodeURIComponent(to.join(","))+"&su="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body)
+  :"https://outlook.office.com/mail/deeplink/compose?to="+encodeURIComponent(to.join(";"))+"&subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body)};
 const mailHref=(subj,body)=>"mailto:"+emTo().map(encodeURIComponent).join(",")+"?subject="+encodeURIComponent(subj)+"&body="+encodeURIComponent(body);
 const GSQ_LS="leitor-miniload-fila-planilha";
 let gsMarks={},gsOk=null,gsAt=0,gsBusy=false,gsLocal={},gsIds=new Set();
@@ -2077,6 +2086,34 @@ function palGrpSave(map){
   try{if(mtcNewRaw)localStorage.setItem(MTC_LS,JSON.stringify(mtcNewRaw))}catch(e){}
   gsSaveQ();gsFlush();renderMtc();
 }
+async function mesclar(S,nome){
+  S=[...new Set(S)].sort((a,b)=>(+a)-(+b));const m={},txt=S.join("+");
+  for(const x of S){for(const y of palGrp(x)){if(!S.includes(y)){const rest=palGrp(y).filter(z=>!S.includes(z));m[y]=rest.length>1?rest.join("+"):""}}}
+  for(const x of S)m[x]=txt;
+  palGrpSave(m);
+  if(nome)for(const x of S){if(palObs(x)!==nome)await palObsSet(x,nome)}
+  beep(true);toast("Pallets "+S.join(" + ")+" mesclados"+(nome?" · "+nome:""));
+}
+let palSel=new Set();
+function renderSelBar(){
+  const bar=$("mtcSelBar");if(!bar)return;const S=[...palSel].flatMap(p=>palGrp(p));const uni=[...new Set(S)].sort((a,b)=>(+a)-(+b));
+  if(!palSel.size||!podeAdmin()){bar.hidden=true;bar.innerHTML="";return}
+  const um=palSel.size===1,g=um?palGrp([...palSel][0]):[];
+  bar.hidden=false;
+  bar.innerHTML='<b>'+(um?(g.length>1?"Selecionado: Pallets "+esc(g.join(" + "))+". Marque outro para mesclar.":"Selecionado: Pallet "+esc(uni[0])+". Marque mais um para mesclar."):"Selecionados: "+esc(uni.join(" + ")))+'</b>'+
+    (palSel.size>1?'<button type="button" class="btn primary" id="selMerge">🔗 Mesclar pallets '+esc(uni.join(" + "))+'</button>':'')+
+    (um&&g.length>1?'<button type="button" class="btn" id="selSplit">Separar</button>':'')+
+    '<button type="button" class="btn" id="selClear">Limpar seleção</button>';
+  $("selClear").onclick=()=>{palSel.clear();renderMtc()};
+  if($("selSplit"))$("selSplit").onclick=()=>confirmDel("Separar os pallets "+esc(g.join(" + "))+"? Nenhuma caixa muda.",()=>{const m={};g.forEach(x=>m[x]="");palSel.clear();palGrpSave(m);toast("Pallets separados")},"Sim, separar");
+  if($("selMerge"))$("selMerge").onclick=()=>{
+    const nome0=uni.map(palObs).find(Boolean)||"";
+    openSheet('<h3>🔗 Mesclar pallets '+esc(uni.join(" + "))+'</h3><p style="margin:0">Eles passam a aparecer juntos, como um lugar só. Cada caixa continua com o número do pallet dela, e dá para separar depois.</p><form class="manf" id="smF" autocomplete="off"><label>Nome do lugar (opcional)<input id="smNome" maxlength="40" style="text-transform:none" placeholder="Ex.: Porão, Decon, Rua 3" value="'+esc(nome0)+'"></label><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Mesclar</button><button class="btn" type="button" id="smNo" style="flex:1">Cancelar</button></div></form>',()=>{
+      $("smNo").onclick=closeSheet;
+      $("smF").addEventListener("submit",async e=>{e.preventDefault();const nome=String($("smNome").value||"").trim();closeSheet();palSel.clear();await mesclar(uni,nome)});
+    });
+  };
+}
 function openJoin(p){
   if(!podeAdmin()){toast("Só o administrador junta pallets.");return}
   const all=[...new Set(mtc.rows.map(r=>r.pal).filter(Boolean))].sort((a,b)=>(+a)-(+b));
@@ -2091,12 +2128,7 @@ function openJoin(p){
     $("jF").addEventListener("submit",async e=>{e.preventDefault();
       const S=[...document.querySelectorAll("[data-j]")].filter(c=>c.checked).map(c=>c.dataset.j).sort((a,b)=>(+a)-(+b));
       if(S.length<2){$("jErr").textContent="Marque pelo menos 2 pallets.";return}
-      const m={},txt=S.join("+");
-      for(const x of S){for(const y of palGrp(x)){if(!S.includes(y)){const rest=palGrp(y).filter(z=>!S.includes(z));m[y]=rest.length>1?rest.join("+"):""}}}
-      for(const x of S)m[x]=txt;
-      const nome=String($("jNome").value||"").trim();closeSheet();palGrpSave(m);
-      if(nome)for(const x of S){if(palObs(x)!==nome)await palObsSet(x,nome)}
-      beep(true);toast("Pallets "+S.join(" + ")+" juntos"+(nome?" · "+nome:""));
+      const nome=String($("jNome").value||"").trim();closeSheet();await mesclar(S,nome);
     });
   });
 }
@@ -2137,9 +2169,10 @@ function renderMtc(){
   const inPal=!!(Q&&Q.pal!==undefined);$("mtcPalForm").hidden=!inPal;if(!inPal&&$("mtcPalIn").value)$("mtcPalIn").value="";
   const pq=inPal?skey($("mtcPalIn").value):"",pqs=pq.length>=2?qVariants(pq):null;
   const shown=pqs?found.filter(r=>hit(r.item,pqs)>=0||hit(r.pack,pqs)>=0):found;
-  $("mtcBack").hidden=!Q;
+  $("mtcBack").hidden=!Q;if(Q)palSel.clear();renderSelBar();
   // sem pesquisa: mostra os pallets para tocar
-  $("mtcPals").innerHTML=Q?"":(()=>{const vist=new Set();return Object.keys(pals).sort((a,b)=>a-b).filter(p=>{if(vist.has(p))return false;palGrp(p).forEach(x=>vist.add(x));return true}).map(p=>{const g=palGrp(p),n=g.reduce((t,x)=>t+(pals[x]||0),0);return '<button type="button" data-mpal="'+esc(p)+'"'+(g.length>1?' style="grid-column:span 2"':'')+'>'+esc(palLbl(p))+" <small>("+n+")</small>"+(palObs(p)?'<small class="pobs">'+esc(palObs(p))+'</small>':"")+"</button>"}).join("")})()+(sem?'<button type="button" data-mpal="">Sem pallet <small>('+sem+")</small></button>":"");
+  $("mtcPals").innerHTML=Q?"":(()=>{const vist=new Set();return Object.keys(pals).sort((a,b)=>a-b).filter(p=>{if(vist.has(p))return false;palGrp(p).forEach(x=>vist.add(x));return true}).map(p=>{const g=palGrp(p),n=g.reduce((t,x)=>t+(pals[x]||0),0);const bt='<button type="button" data-mpal="'+esc(p)+'">'+esc(palLbl(p))+" <small>("+n+")</small>"+(palObs(p)?'<small class="pobs">'+esc(palObs(p))+'</small>':"")+"</button>";
+  return podeAdmin()?'<span class="pchip'+(palSel.has(p)?" on":"")+'"><label><input type="checkbox" data-psel="'+esc(p)+'" aria-label="Selecionar '+esc(palLbl(p))+'"'+(palSel.has(p)?" checked":"")+'></label>'+bt+'</span>':bt}).join("")})()+(sem?'<button type="button" data-mpal="">Sem pallet <small>('+sem+")</small></button>":"");
   // resumo: por peça (total de peças, packs e em quais pallets) ou do pallet pesquisado
   let sum="";
   if(Q&&found.length){
@@ -2275,7 +2308,8 @@ $("mtcMode").addEventListener("click",e=>{const b=e.target.closest("[data-mm]");
 let mpT;$("mtcPalIn").addEventListener("input",()=>{clearTimeout(mpT);mpT=setTimeout(renderMtc,150)});
 $("mtcPalForm").addEventListener("submit",e=>{e.preventDefault();renderMtc();$("mtcPalIn").blur()});
 $("mtcPalClear").addEventListener("click",()=>{$("mtcPalIn").value="";renderMtc();$("mtcPalIn").focus()});
-$("mtcPals").addEventListener("click",e=>{const b=e.target.closest("[data-mpal]");if(!b)return;$("mtcPalIn").value="";$("mtcIn").value=b.dataset.mpal?"Pallet "+b.dataset.mpal:"Sem pallet";renderMtc();window.scrollTo(0,0)});
+$("mtcPals").addEventListener("change",e=>{const c=e.target.closest("[data-psel]");if(!c)return;c.checked?palSel.add(c.dataset.psel):palSel.delete(c.dataset.psel);c.closest(".pchip").classList.toggle("on",c.checked);renderSelBar()});
+$("mtcPals").addEventListener("click",e=>{if(e.target.closest("label"))return;const b=e.target.closest("[data-mpal]");if(!b)return;$("mtcPalIn").value="";$("mtcIn").value=b.dataset.mpal?"Pallet "+b.dataset.mpal:"Sem pallet";renderMtc();window.scrollTo(0,0)});
 let sLast=null;
 function runSearch(raw,label){
   const q=skey(raw);
@@ -2667,7 +2701,7 @@ function openCopySheet(lotes,done,tabName){
     (L.length>1?'<div class="row-acts" style="margin-top:4px"><button class="btn small" id="psAll">Marcar todos</button><button class="btn small" id="psNone">Desmarcar</button></div>':'')+
     '<p class="pstep"><span>2</span> Para quem vai o e-mail</p>'+emPickerHtml("psEm")+
     '<p class="pstep"><span>3</span> Envie</p>'+
-    '<a class="btn mail psend" id="psMail">Enviar por e-mail</a>'+'<a class="btn wa psend" id="psWa" target="_blank" rel="noopener" style="min-height:44px;font-size:15px">ou via WhatsApp</a>'+
+    '<a class="btn mail psend" id="psMail">Enviar por e-mail</a>'+'<p class="hint" style="margin:0">Abrir o e-mail por:</p><div class="emlinks"><a class="btn" id="psGm" target="_blank" rel="noopener">Gmail</a><a class="btn" id="psOl" target="_blank" rel="noopener">Outlook</a><a class="btn" id="psMl">App do celular</a></div>'+'<a class="btn wa psend" id="psWa" target="_blank" rel="noopener" style="min-height:44px;font-size:15px">ou via WhatsApp</a>'+
     '<div class="row-acts"><button class="btn" id="psXls" style="flex:1">Baixar Excel</button><button class="btn" id="psCopy" style="flex:1">Copiar texto</button></div>'+
     '<p class="hint" id="cpMsg"></p>'+
     '<details class="pmore"><summary>Outras opções</summary><p class="hint">Copiar para colar no Excel (cada campo cai na sua coluna; toque na célula A1, segure e escolha Colar).</p><div class="row-acts"><button class="btn" id="psTsv">Copiar para o Excel</button></div></details>'+
@@ -2678,7 +2712,8 @@ function openCopySheet(lotes,done,tabName){
     const upd=()=>{const K=ks(),n=K.reduce((t,k)=>t+rowsOf(k).length,0),a=$("psWa");
       a.textContent=K.length?"ou via WhatsApp":"Marque um pallet acima";const T=emTo();$("psMail").textContent=!K.length?"Marque um pallet acima":!T.length?"Marque ou adicione um e-mail acima":"Enviar por e-mail para "+(T.length>1?T.length+" pessoas":T[0])+" ("+n+" etiquetas)";
       if(K.length){a.href=waLink(K);a.classList.remove("off")}else{a.removeAttribute("href");a.classList.add("off")}
-      {const ml=$("psMail");if(K.length&&emTo().length){ml.href=mailHref("Pallets Miniload",wa(K).replace(/[*_]/g,""));ml.classList.remove("off")}else{ml.removeAttribute("href");ml.classList.add("off")}}
+      {const ml=$("psMail"),ok=K.length&&emTo().length,bd=ok?wa(K).replace(/[*_]/g,""):"",sj="Pallets Miniload";ml.hidden=!!ok;ml.removeAttribute("href");ml.classList.add("off");
+       [["psGm",()=>mailWeb("gmail",sj,bd)],["psOl",()=>mailWeb("outlook",sj,bd)],["psMl",()=>mailHref(sj,bd)]].forEach(([id,f])=>{const a=$(id);if(ok){a.href=f();a.classList.remove("off")}else{a.removeAttribute("href");a.classList.add("off")}})}
       ["psXls","psCopy","psTsv"].forEach(id=>{$(id).disabled=!K.length});};
     document.querySelectorAll("[data-pk]").forEach(c=>c.onchange=()=>{c.checked?sel.add(c.dataset.pk):sel.delete(c.dataset.pk);upd()});
     if($("psAll"))$("psAll").onclick=()=>{L.forEach(k=>sel.add(k));document.querySelectorAll("[data-pk]").forEach(c=>c.checked=true);upd()};
