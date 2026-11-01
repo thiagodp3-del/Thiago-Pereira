@@ -1832,7 +1832,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261101181217"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261101193935"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -3144,11 +3144,15 @@ function parseRetiradas(text){
   }
   return {ret:out,rest:rest.join("\n")};
 }
-function openZapSheet(){
+/* link pronto: #colar=<texto> abre o "Atualizar pallets" já preenchido (só Admin; o texto fica só no link, não no site) */
+let colarPend="";try{const h=location.hash||"";if(h.indexOf("#colar=")===0){colarPend=decodeURIComponent(h.slice(7));history.replaceState(null,"",location.pathname+location.search)}}catch(e){}
+function colarTenta(){if(!colarPend||!podeAdmin()||(IS_TEAM&&!ses))return;const t=colarPend;colarPend="";openZapSheet(t)}
+setInterval(colarTenta,1500);
+function openZapSheet(pre){
   openSheet('<h3>Colar mensagens do WhatsApp</h3><p>Cole aqui as mensagens que a equipe mandou: <b>pallets</b> e <b>retiradas</b>, pode ser tudo junto. O app atualiza a lista MTC e gera o Excel.</p>'+
     '<textarea id="zIn" rows="9" style="width:100%;font-family:var(--mono);font-size:13px;border:2px solid var(--line);border-radius:8px;padding:8px" placeholder="Cole aqui…"></textarea>'+
     '<div id="zPrev"></div><div class="row-acts"><button class="btn primary" id="zGo" style="flex:1">Conferir</button><button class="btn" id="zNo">Fechar</button></div>',()=>{
-    $("zNo").onclick=closeSheet;
+    $("zNo").onclick=closeSheet;if(typeof pre==="string"&&pre){$("zIn").value=pre;setTimeout(()=>$("zGo").click(),50)}
     $("zGo").onclick=()=>{
       const t=$("zIn").value;if(!t.trim()){toast("Cole a mensagem primeiro");return}
       const R=parseRetiradas(t),P=parseReceived(R.rest);
