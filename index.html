@@ -832,7 +832,7 @@ body.multi .mtable tbody tr{cursor:pointer}
     <button class="btn" id="xlsHoje" data-only="hoje" aria-label="Exportar Excel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Excel</span></button>
     <button class="btn" id="addRowBtn" data-only="feitos" aria-label="Adicionar linha"><span aria-hidden="true">+</span><span class="lbl">Linha</span></button>
     <button class="btn" id="colsBtn" data-only="feitos" aria-label="Colunas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg><span class="lbl">Colunas</span></button>
-    <div class="adm"><button type="button" class="admt mail" id="waBtn" aria-label="Enviar ao administrador via e-mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span><b>Enviar ao administrador</b><small>via e-mail</small></span></button><a class="admt wa" id="admWa" href="https://wa.me/5511952612966" target="_blank" rel="noopener" aria-label="Contatar o administrador via WhatsApp"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span><b>Contatar o administrador</b><small>via WhatsApp</small></span></a></div>
+    <div class="adm"><button type="button" class="admt mail" id="waBtn" aria-label="Enviar o Excel por e-mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span><b>Enviar Excel</b><small>por e-mail · um toque</small></span></button><a class="admt wa" id="admWa" href="https://wa.me/5511952612966" target="_blank" rel="noopener" aria-label="Contatar o administrador via WhatsApp"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span><b>Contatar o administrador</b><small>via WhatsApp</small></span></a></div>
     <button class="btn" id="moreBtn" aria-label="Mais opções">⋯</button>
   </div>
 </footer>
@@ -1219,7 +1219,7 @@ function openManual(pre,falta){
 $("manBtn").addEventListener("click",()=>openManual());
 $("shootBtn").addEventListener("click",()=>{if(!currentPal()){toast("Escolha o palete primeiro");return}openCamera()});
 $("xlsHoje").addEventListener("click",()=>doExport());
-$("waBtn").addEventListener("click",()=>openMailXls());
+$("waBtn").addEventListener("click",()=>quickMail());
 $("savePal").addEventListener("click",openSavePal);
 $("undoBtn").addEventListener("click",undo);
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"&&!(e.target.closest&&e.target.closest("input,select,textarea"))){e.preventDefault();undo()}});
@@ -1832,7 +1832,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261031174846"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261101173308"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2180,6 +2180,25 @@ function mtcAllBook(){
   return {wb,all,name:"Itens_MTC_todos_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx"};
 }
 /* e-mail a qualquer hora, com o Excel completo anexado (pelo Compartilhar do celular / PC) */
+/* um toque: monta o Excel completo e abre o Compartilhar (a pessoa escolhe o e-mail dela e para quem vai) */
+function quickMail(){
+  if(!window.XLSX){toast("Gerador de Excel não carregou");return}
+  const B=mtcAllBook();const done=rows.filter(r=>r.dia);
+  if(!B&&!done.length){toast("Ainda não tem nada para enviar");return}
+  const wb=B?B.wb:XLSX.utils.book_new();
+  if(done.length){const lotes=[...new Set(done.map(r=>r.dia+"|"+(r.vals.palete||"")))].sort(),usados=new Set(wb.SheetNames.map(x=>x.toLowerCase()));
+    for(const k of lotes){const [d0,pl]=k.split("|");let t=("Feito "+fmtDay(d0).replace("/","-")+" P"+(pl||"?")).slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
+      const l=done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
+      const ws=XLSX.utils.aoa_to_sheet([["Número da peça","Quantidade","Pack Number"],...l.map(r=>[r.vals.peca||"",/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),r.vals.pack?cleanPack(r.vals.pack):""])]);ws["!cols"]=[{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,t)}}
+  const d=new Date(),pd=n=>String(n).padStart(2,"0"),name="Miniload_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx";
+  const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"}),file=new File([buf],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const assunto="Leitor Miniload · "+d.toLocaleDateString("pt-BR"),texto="Segue o Excel do Leitor Miniload ("+name+").\n\n"+CREDITO;
+  if(navigator.canShare&&navigator.canShare({files:[file]})){navigator.share({files:[file],title:assunto,text:texto}).then(()=>toast("Excel enviado para o app de e-mail")).catch(e=>{if(!(e&&e.name==="AbortError"))openMailXls()});return}
+  // computador sem Compartilhar: baixa o Excel e abre um e-mail em branco para anexar
+  try{XLSX.writeFile(wb,name)}catch(e){}
+  location.href="mailto:?subject="+encodeURIComponent(assunto)+"&body="+encodeURIComponent("Segue em anexo o Excel "+name+" (está na pasta Downloads).\n\n"+CREDITO);
+  toast("Excel baixado: anexe no e-mail que abriu");
+}
 function openMailXls(){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
   const temMtc=!!(mtc&&mtc.rows.length),done=rows.filter(r=>r.dia),nPal=new Set(done.map(r=>r.dia+"|"+(r.vals.palete||""))).size;
