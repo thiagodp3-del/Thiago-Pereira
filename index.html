@@ -1832,7 +1832,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261101173308"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261101181217"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2957,7 +2957,7 @@ function openCols(){
 $("colsBtn").addEventListener("click",openCols);
 
 function openMore(){
-  openSheet('<h3>Mais opções</h3>'+(ses?'<p class="hint" style="margin:0">Conectado como <b>'+esc(ses.nome)+'</b>'+(ses.perfil==="admin"?" (administrador)":ses.perfil==="consulta"?" (só consulta)":"")+'</p><div class="row-acts"><button class="btn" id="mSair" style="flex:1">Sair (pedir a senha de novo)</button></div>':'<div class="row-acts"><button class="btn primary" id="mEntrar" style="flex:1">Entrar com usuário e senha</button></div>')+(IS_TEAM?'':'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1;background:#25D366;border-color:#1DA851;color:#0B2E17;font-weight:800">Colar mensagens do WhatsApp (pallets e retiradas)</button></div>')+'<div class="row-acts"><button class="btn" id="mOld" style="flex:1">Ver lista antiga (25/10) · oculta</button></div>'+'<div class="row-acts"><button class="btn primary" id="mPaste">Colar paletes recebidos</button></div><p class="hint">Cole o texto que a equipe mandou pelo WhatsApp (ou copiado para o Excel). Cada palete entra como salvo e vira uma aba no Excel.</p><div class="row-acts"><button class="btn" id="mGal">Ler fotos da galeria</button></div><p class="hint">Escolha várias fotos de etiquetas de uma vez. Cada uma vira uma linha (ou confere a linha do mesmo pack).</p><div class="row-acts"><button class="btn" id="mImport">Importar Excel</button></div><p class="hint">A importação lê a primeira aba. Cabeçalhos como Item, Quantidade e Pack Number caem nas colunas certas; linhas "palet 2" marcam o palete dos itens seguintes.</p><div class="row-acts"><button class="btn" id="mReset">Zerar conferência</button></div><p class="hint">Volta todos os itens para Pendente e apaga as linhas novas. Use antes de uma recontagem.</p><div class="row-acts"><button class="btn danger" id="mWipe">Apagar a lista inteira</button></div><div class="row-acts"><button class="btn" id="mClose">Fechar</button></div>',
+  openSheet('<h3>Mais opções</h3>'+(ses?'<p class="hint" style="margin:0">Conectado como <b>'+esc(ses.nome)+'</b>'+(ses.perfil==="admin"?" (administrador)":ses.perfil==="consulta"?" (só consulta)":"")+'</p><div class="row-acts"><button class="btn" id="mSair" style="flex:1">Sair (pedir a senha de novo)</button></div>':'<div class="row-acts"><button class="btn primary" id="mEntrar" style="flex:1">Entrar com usuário e senha</button></div>')+(IS_TEAM&&podeAdmin()?'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1">📋 Atualizar pallets da lista MTC (colar texto)</button></div>':'')+(IS_TEAM?'':'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1;background:#25D366;border-color:#1DA851;color:#0B2E17;font-weight:800">Colar mensagens do WhatsApp (pallets e retiradas)</button></div>')+'<div class="row-acts"><button class="btn" id="mOld" style="flex:1">Ver lista antiga (25/10) · oculta</button></div>'+'<div class="row-acts"><button class="btn primary" id="mPaste">Colar paletes recebidos</button></div><p class="hint">Cole o texto que a equipe mandou pelo WhatsApp (ou copiado para o Excel). Cada palete entra como salvo e vira uma aba no Excel.</p><div class="row-acts"><button class="btn" id="mGal">Ler fotos da galeria</button></div><p class="hint">Escolha várias fotos de etiquetas de uma vez. Cada uma vira uma linha (ou confere a linha do mesmo pack).</p><div class="row-acts"><button class="btn" id="mImport">Importar Excel</button></div><p class="hint">A importação lê a primeira aba. Cabeçalhos como Item, Quantidade e Pack Number caem nas colunas certas; linhas "palet 2" marcam o palete dos itens seguintes.</p><div class="row-acts"><button class="btn" id="mReset">Zerar conferência</button></div><p class="hint">Volta todos os itens para Pendente e apaga as linhas novas. Use antes de uma recontagem.</p><div class="row-acts"><button class="btn danger" id="mWipe">Apagar a lista inteira</button></div><div class="row-acts"><button class="btn" id="mClose">Fechar</button></div>',
   ()=>{
     $("mClose").onclick=closeSheet;
     if($("mSair"))$("mSair").onclick=()=>{closeSheet();confirmDel("Sair deste celular? Vai pedir usuário e senha de novo.",()=>logout("Você saiu. Digite usuário e senha para entrar."),"Sim, sair")};
@@ -3169,13 +3169,15 @@ function openZapSheet(){
           for(const x of pals[p])raw.rows.push([String(x.peca).replace(/^P(?=[AN]\d)/,""),x.qtd,String(x.pack||"").replace(/^S/,""),p,"conferido "+hoje,0,0]);
         }
         for(const x of R.ret){for(const r of raw.rows){if(String(r[3])===x.pal&&String(r[2])===x.pack){r[4]="RETIRADO "+x.quando+(x.quem?" · Retirou: "+x.quem+" · Liberou: "+x.lib:"")}}}
-        raw.importadoEm=raw.importadoEm&&raw.importadoEm>="2026-10-26"?raw.importadoEm:"2026-10-26";
+        raw.importadoEm=d.getFullYear()+"-"+pd(d.getMonth()+1)+"-"+pd(d.getDate())+" "+pd(d.getHours())+":"+pd(d.getMinutes()); // versão nova: vai para a planilha e para a equipe
+        try{const bo=boxGuardado();Object.keys(bo).forEach(k=>{if(bo[k]&&bo[k].length)boxAplica(raw,new Set(bo[k]),k)})}catch(e){}
+        {const bx={};raw.rows.forEach(r=>{if(r[7])bx[boxBase(r[0])]=r[7]});raw.rows.forEach(r=>{if(!r[7]&&bx[boxBase(r[0])]){while(r.length<7)r.push("");r[7]=bx[boxBase(r[0])]}})} // caixa nova de item que já é BOX também vira BOX
         try{localStorage.setItem(MTC_LS,JSON.stringify(raw))}catch(e){}
         let ok=true;if(db){try{await db.doc("listas/mtc").set(raw)}catch(e){ok=false}}
         mtcNewRaw=raw;mtcNew=mtcFrom(raw);if(mtcSel==="new")mtc=mtcNew;closeSheet();render();
         if(!ok){toast("Atenção: não consegui salvar na nuvem. Tente de novo.");beep(false);return}
         beep(true);toast("Lista MTC atualizada: "+Object.keys(pals).length+" pallet(s), "+achou.length+" retirada(s)");
-        mtcExportAll();
+        gsPushLista();if(!IS_TEAM)mtcExportAll();
       };
     };
   });
