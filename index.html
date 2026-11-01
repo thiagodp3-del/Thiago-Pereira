@@ -1832,7 +1832,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261101193935"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261101194554"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -1919,12 +1919,13 @@ async function gsPull(){
   }catch(e){gsOk=false}
   try{renderMtc();renderRet()}catch(e){}
 }
+let gsErr="";
 async function gsFlush(){
   if(gsBusy||!gsQueue.length||!ses)return;gsBusy=true;
   try{
     while(gsQueue.length&&ses){
       const q=gsQueue[0];let j=null;
-      try{j=await gsCall({a:"mov",t:ses.t,mov:q.mov})}catch(e){j=null}
+      try{j=await gsCall({a:"mov",t:ses.t,mov:q.mov});gsErr=""}catch(e){j=null;gsErr=String(e&&e.message||e).slice(0,90)}
       if(!j){await gsPull();if(gsIds.has(q.mov.id)){gsQueue.shift();gsSaveQ();continue}gsOk=false;break} // sem resposta: só tira da fila se a planilha mostrar o código
       if(j.erro==="sessao"){logout("Seu acesso expirou ou foi bloqueado. Entre de novo com usuário e senha.");break}
       gsQueue.shift();gsSaveQ();
@@ -1943,7 +1944,7 @@ function gsSend(key,r,m,sit){
 }
 function gsStatus(){
   if(!ses)return '<span class="gs warn">🔒 Entre com usuário e senha para usar a planilha: toque em ⋯ e em Entrar</span>';
-  if(gsQueue.length)return '<span class="gs warn">⏳ '+gsQueue.length+' baixa(s) esperando internet para subir na planilha</span>';
+  if(gsQueue.length)return '<span class="gs warn" onclick="gsFlush()" style="cursor:pointer">⏳ '+gsQueue.length+' baixa(s) esperando para subir na planilha · toque para tentar de novo'+(gsErr?'<br><small>Motivo: '+esc(gsErr)+'</small>':'')+'</span>';
   if(gsOk===true){const d=new Date(gsAt),pd=n=>String(n).padStart(2,"0");return '<span class="gs ok">☁ Planilha sincronizada às '+pd(d.getHours())+":"+pd(d.getMinutes())+'</span>'}
   if(gsOk===false)return '<span class="gs warn">⚠ Sem conexão com a planilha. As baixas ficam guardadas neste celular e sobem quando voltar a internet.</span>';
   return '<span class="gs">Conectando à planilha…</span>';
