@@ -1832,7 +1832,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261101194554"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261101200142"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2364,7 +2364,8 @@ function palObs(p){if(mtcSel==="new"&&Object.prototype.hasOwnProperty.call(gsLoc
 const podeAdmin=()=>!IS_TEAM||!!(ses&&ses.perfil==="admin");
 function palGrp(p){p=String(p||"");if(!p)return [""];const k="G|"+p;const v=Object.prototype.hasOwnProperty.call(gsLocal,k)?gsLocal[k]:((mtcNewRaw&&mtcNewRaw.grp&&mtcNewRaw.grp[p])||"");
   const m=[...new Set(String(v||"").split("+").map(x=>x.trim()).filter(Boolean))];return m.length>1&&m.includes(p)?m.sort((a,b)=>(+a)-(+b)):[p]}
-const palLbl=p=>{if(!p)return "Sem pallet";const g=palGrp(p);return g.length>1?"Pallets "+g.join(" + "):"Pallet "+p};
+const palJunta=g=>g.length<2?g.join(""):g.slice(0,-1).join(", ")+" e "+g[g.length-1];
+const palLbl=p=>{if(!p)return "Sem pallet";const g=palGrp(p);return g.length>1?"Pallets "+palJunta(g)+" (juntos)":"Pallet "+p};
 function palGrpSave(map){
   if(mtcNewRaw)mtcNewRaw.grp=Object.assign({},mtcNewRaw.grp||{});
   for(const [p,v] of Object.entries(map)){
@@ -2381,7 +2382,7 @@ async function mesclar(S,nome){
   for(const x of S)m[x]=txt;
   palGrpSave(m);
   if(nome)for(const x of S){if(palObs(x)!==nome)await palObsSet(x,nome)}
-  beep(true);toast("Pallets "+S.join(" + ")+" mesclados"+(nome?" · "+nome:""));
+  beep(true);toast("Pallets "+palJunta(S)+" mesclados"+(nome?" · "+nome:""));
 }
 let palSel=new Set();
 function renderSelBar(){
@@ -2389,15 +2390,15 @@ function renderSelBar(){
   if(!palSel.size||!podeAdmin()){bar.hidden=true;bar.innerHTML="";return}
   const um=palSel.size===1,g=um?palGrp([...palSel][0]):[];
   bar.hidden=false;
-  bar.innerHTML='<b>'+(um?(g.length>1?"Selecionado: Pallets "+esc(g.join(" + "))+". Marque outro para mesclar.":"Selecionado: Pallet "+esc(uni[0])+". Marque mais um para mesclar."):"Selecionados: "+esc(uni.join(" + ")))+'</b>'+
-    (palSel.size>1?'<button type="button" class="btn primary" id="selMerge">🔗 Mesclar pallets '+esc(uni.join(" + "))+'</button>':'')+
+  bar.innerHTML='<b>'+(um?(g.length>1?"Selecionado: Pallets "+esc(palJunta(g))+". Marque outro para mesclar.":"Selecionado: Pallet "+esc(uni[0])+". Marque mais um para mesclar."):"Selecionados: "+esc(palJunta(uni)))+'</b>'+
+    (palSel.size>1?'<button type="button" class="btn primary" id="selMerge">🔗 Mesclar pallets '+esc(palJunta(uni))+'</button>':'')+
     (um&&g.length>1?'<button type="button" class="btn" id="selSplit">Separar</button>':'')+
     '<button type="button" class="btn" id="selClear">Limpar seleção</button>';
   $("selClear").onclick=()=>{palSel.clear();renderMtc()};
-  if($("selSplit"))$("selSplit").onclick=()=>confirmDel("Separar os pallets "+esc(g.join(" + "))+"? Nenhuma caixa muda.",()=>{const m={};g.forEach(x=>m[x]="");palSel.clear();palGrpSave(m);toast("Pallets separados")},"Sim, separar");
+  if($("selSplit"))$("selSplit").onclick=()=>confirmDel("Separar os pallets "+esc(palJunta(g))+"? Nenhuma caixa muda.",()=>{const m={};g.forEach(x=>m[x]="");palSel.clear();palGrpSave(m);toast("Pallets separados")},"Sim, separar");
   if($("selMerge"))$("selMerge").onclick=()=>{
     const nome0=uni.map(palObs).find(Boolean)||"";
-    openSheet('<h3>🔗 Mesclar pallets '+esc(uni.join(" + "))+'</h3><p style="margin:0">Eles passam a aparecer juntos, como um lugar só. Cada caixa continua com o número do pallet dela, e dá para separar depois.</p><form class="manf" id="smF" autocomplete="off"><label>Nome do lugar (opcional)<input id="smNome" maxlength="40" style="text-transform:none" placeholder="Ex.: Porão, Decon, Rua 3" value="'+esc(nome0)+'"></label><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Mesclar</button><button class="btn" type="button" id="smNo" style="flex:1">Cancelar</button></div></form>',()=>{
+    openSheet('<h3>🔗 Mesclar pallets '+esc(palJunta(uni))+'</h3><p style="margin:0">Eles passam a aparecer juntos, como um lugar só. Cada caixa continua com o número do pallet dela, e dá para separar depois.</p><form class="manf" id="smF" autocomplete="off"><label>Nome do lugar (opcional)<input id="smNome" maxlength="40" style="text-transform:none" placeholder="Ex.: Porão, Decon, Rua 3" value="'+esc(nome0)+'"></label><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Mesclar</button><button class="btn" type="button" id="smNo" style="flex:1">Cancelar</button></div></form>',()=>{
       $("smNo").onclick=closeSheet;
       $("smF").addEventListener("submit",async e=>{e.preventDefault();const nome=String($("smNome").value||"").trim();closeSheet();palSel.clear();await mesclar(uni,nome)});
     });
@@ -2411,9 +2412,9 @@ function openJoin(p){
     '<div class="jgrid">'+all.map(x=>'<label><input type="checkbox" data-j="'+esc(x)+'"'+(sel.has(x)?" checked":"")+'>'+esc(x)+'</label>').join("")+'</div>'+
     '<form class="manf" id="jF" autocomplete="off"><label>Nome do lugar (opcional)<input id="jNome" maxlength="40" style="text-transform:none" placeholder="Ex.: Porão, Decon, Rua 3" value="'+esc(palObs(p))+'"></label>'+
     '<p class="err" id="jErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Juntar</button><button class="btn" type="button" id="jNo" style="flex:1">Cancelar</button></div>'+
-    (g0.length>1?'<div class="row-acts"><button class="btn" type="button" id="jSep" style="flex:1">Separar '+esc(g0.join(" + "))+'</button></div>':'')+'</form>',()=>{
+    (g0.length>1?'<div class="row-acts"><button class="btn" type="button" id="jSep" style="flex:1">Separar '+esc(palJunta(g0))+'</button></div>':'')+'</form>',()=>{
     $("jNo").onclick=closeSheet;
-    if($("jSep"))$("jSep").onclick=()=>confirmDel("Separar os pallets "+esc(g0.join(" + "))+"? Nenhuma caixa muda.",()=>{const m={};g0.forEach(x=>m[x]="");closeSheet();palGrpSave(m);toast("Pallets separados")},"Sim, separar");
+    if($("jSep"))$("jSep").onclick=()=>confirmDel("Separar os pallets "+esc(palJunta(g0))+"? Nenhuma caixa muda.",()=>{const m={};g0.forEach(x=>m[x]="");closeSheet();palGrpSave(m);toast("Pallets separados")},"Sim, separar");
     $("jF").addEventListener("submit",async e=>{e.preventDefault();
       const S=[...document.querySelectorAll("[data-j]")].filter(c=>c.checked).map(c=>c.dataset.j).sort((a,b)=>(+a)-(+b));
       if(S.length<2){$("jErr").textContent="Marque pelo menos 2 pallets.";return}
@@ -2477,7 +2478,7 @@ function renderMtc(){
       const by={};found.forEach(r=>{(by[r.item]=by[r.item]||[]).push(r)});
       sum=Object.entries(by).slice(0,8).map(([it,L0])=>{
         const l=L0.filter(r=>!isRet(r)),rt=L0.filter(isRet),tot=l.reduce((t,r)=>t+(+r.qtd||0),0),ps=[...new Set(l.map(r=>r.pal||"sem pallet"))];
-        const onde=p=>{if(p==="sem pallet")return "Sem pallet";const g=palGrp(p);return "Pallet "+esc(p)+(g.length>1?' <small>(junto com '+esc(g.filter(x=>x!==p).join(" + "))+')</small>':"")+(palObs(p)?' <small>📍 '+esc(palObs(p))+'</small>':"")};
+        const onde=p=>{if(p==="sem pallet")return "Sem pallet";const g=palGrp(p);return "Pallet "+esc(p)+(g.length>1?' <small>(junto com '+esc(palJunta(g.filter(x=>x!==p)))+')</small>':"")+(palObs(p)?' <small>📍 '+esc(palObs(p))+'</small>':"")};
         return '<div class="mcard"><b>'+hl(it,Q.qs)+(L0.some(r=>r.box)?'<span class="btag">BOX</span>':'')+'</b>'+(l.length?'<span class="big">'+ps.map(onde).join(" · ")+'</span><span class="sub">'+l.length+" pack"+(l.length>1?"s":"")+" no estoque · "+fmt(tot)+" peças</span>":'<span class="big" style="color:var(--ds-r)">Nada no estoque</span>')+
           (rt.length?'<span class="sub" style="color:var(--ds-r);font-weight:700">'+rt.length+" já retirada"+(rt.length>1?"s":"")+" (em vermelho na lista)</span>":"")+"</div>";
       }).join("");
@@ -2506,7 +2507,7 @@ function boxExport(viv){
   // aba 1: tudo numa folha só, separado por pallet (para imprimir)
   const A=[["BOX POR PALLET · "+hoje],[viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens · "+pals.length+" pallets"],[]];
   for(const p of pals){const l=viv.filter(r=>(r.pal||"")===p).sort((a,b)=>a.item.localeCompare(b.item)||String(a.pack).localeCompare(String(b.pack)));
-    const g=p?palGrp(p):[];const tit=(p?"PALLET "+p:"SEM PALLET")+(g.length>1?" (junto com "+g.filter(x=>x!==p).join(" + ")+")":"")+(p&&palObs(p)?" · "+palObs(p):"")+" · "+l.length+" caixa"+(l.length>1?"s":"");
+    const g=p?palGrp(p):[];const tit=(p?"PALLET "+p:"SEM PALLET")+(g.length>1?" (junto com "+palJunta(g.filter(x=>x!==p))+")":"")+(p&&palObs(p)?" · "+palObs(p):"")+" · "+l.length+" caixa"+(l.length>1?"s":"");
     A.push([tit]);A.push(["✓","Item","Quantidade","Pack Number","Pallet"]);
     l.forEach(r=>A.push(["",r.item,num(r.qtd),r.pack||"",num(r.pal)]));A.push([]);}
   A.push([CREDITO]);
