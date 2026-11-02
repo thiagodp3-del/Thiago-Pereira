@@ -1832,7 +1832,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261101200142"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261102020338"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -1963,7 +1963,8 @@ async function gsPushLista(){
     let j=null;try{j=await gsCall({a:"lista",t:ses.t,lista:{nome:mtcNewRaw.nome||"Itens MTC",importadoEm:em,n:rows.length,soma:somaLista(rows),rows}})}catch(x){j=null}
     if(!j){const v2=await (await fetch(GS_URL+"?a=versao&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"})).json();if(v2&&v2.ok&&String(v2.importadoEm||"")>=em)j={ok:true}}
     if(j&&j.ok){gsListaEnviada=em;if(!j.igual)toast("Lista MTC enviada para a equipe: "+rows.length+" linhas")}
-  }catch(e){}
+    else toast("A lista NÃO subiu para a planilha: "+((j&&j.erro)||"sem resposta")+". Me mande um print.")
+  }catch(e){toast("A lista NÃO subiu para a planilha: "+String(e&&e.message||e).slice(0,60))}
 }
 async function gsPullMtc(){
   gsPushLista();
