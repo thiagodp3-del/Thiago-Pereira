@@ -192,6 +192,7 @@ td.editcol{width:1%;padding:4px 8px}
 .gs.ok{color:#137A3A;border-color:#9BD4AE;background:#EAF7EF}
 .gs.warn{color:#9A5B00;border-color:#F5B800;background:#FFF6D6}
 .tabs .tabbreak{flex-basis:100%;height:0}
+.tabs .tab-nac{border:2px solid #2E9E5B!important;color:#7BE0A3!important}.tabs .tab-nac[aria-selected="true"]{background:#2E9E5B;color:#fff!important}
 .tabs .tab-ret{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;border:2px solid #E5243B!important;color:#FF8A95!important;background:#1F2A36}
 .tabs .tab-ret svg{width:20px;height:20px;flex:none}
 .tabs .tab-ret[aria-selected="true"]{background:#E5243B;color:#fff!important}
@@ -647,6 +648,7 @@ body.multi .mtable tbody tr{cursor:pointer}
       <button type="button" role="tab" data-v="hoje" aria-selected="false" class="tab-new">Nova tarefa <span class="chev" aria-hidden="true">›</span></button>
       <button type="button" role="tab" data-v="feitos" aria-selected="false">Feitos <small id="feitosN"></small></button>
       <button type="button" role="tab" data-v="mtc" aria-selected="false" id="mtcTab">Itens MTC</button>
+      <button type="button" role="tab" data-v="mtc" data-nac="1" aria-selected="false" class="tab-nac" id="nacTab">🇧🇷 Nacionais</button>
       <button type="button" role="tab" data-v="mtc" data-box="1" aria-selected="false" class="tab-box" id="boxTab">📦 BOX <small id="boxN"></small></button>
       <span class="tabbreak" aria-hidden="true"></span><button type="button" role="tab" data-v="ret" class="tab-ret" aria-selected="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h18M5 7l1 13h12l1-13M9 7V4h6v3"/><path d="M10 12l2 2 4-4"/></svg>Retiradas <small id="retTabN"></small></button>
       <button type="button" role="tab" data-v="ajuda" aria-selected="false" class="tab-help" aria-label="Ajuda: como usar o app"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 2.6-3 4.4"/><circle cx="12" cy="17.6" r=".6" fill="currentColor"/></svg>Ajuda</button>
@@ -756,7 +758,7 @@ body.multi .mtable tbody tr{cursor:pointer}
     <div class="moldbar" id="mOldBar" hidden><span><b>Lista antiga 25/10</b> (oculta · só consulta)</span><button type="button" class="btn small" id="mSelNew">‹ Voltar para a lista atual</button></div>
     <div class="mmode" id="mtcMode" role="group" aria-label="Procurar por"><span>Procurar por:</span><button type="button" data-mm="peca" aria-pressed="true">Peça</button><button type="button" data-mm="pack" aria-pressed="false">Pack number</button></div>
     <form class="msearch" id="mtcForm" autocomplete="off" role="search"><input id="mtcIn" type="search" inputmode="numeric" placeholder="Número da peça ou pallet (ex.: 60)" aria-label="Pesquisar na lista MTC" enterkeyhint="search"><button type="button" class="kbt" data-kb="mtcIn" aria-label="Trocar o teclado">ABC</button><button type="button" id="mtcClear">Limpar</button></form>
-    <button type="button" class="btn primary mtcall" id="mtcAll"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Exportar Excel · todos os itens MTC</button>
+    <button type="button" class="btn primary mtcall" id="mtcAll"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>Exportar Excel · todos os itens desta aba</button>
     <div class="empty" id="mtcNewEmpty" hidden><b>Lista nova ainda vazia</b><span>Os pallets entram aqui conforme forem conferidos, começando pelo pallet 1. </span></div>
     <div class="mload"><button type="button" class="btn small" id="mtcLoad">Carregar lista (Excel)</button><button type="button" class="btn small" id="mtcSend" hidden>Enviar lista</button></div>
     <input type="file" id="mtcFile" accept=".xlsx,.xls,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv" hidden>
@@ -1859,11 +1861,12 @@ const MTC_EMBED=null;
 /* caixas sem pack de verdade (vazio, 0, 000…) na mesma peça e pallet ganham #2, #3… para cada caixa ser única: retirar uma não some com as outras */
 const packUnico=rows=>{const c={};for(const r of rows){if(/\d{6,}/.test(r.pack))continue;const k=r.pal+"|"+r.item+"|"+r.pack;c[k]=(c[k]||0)+1;if(c[k]>1)r.pack=(r.pack?r.pack+" ":"")+"#"+c[k]}return rows};
 const boxDiasDe=v=>!v?[]:(v===1||v===true||v==="1")?["anterior"]:String(v).split(",").map(x=>x.trim()).filter(Boolean);
-const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importadoEm||"",rows:packUnico(d.rows.map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6],box:!!r[7],boxd:boxDiasDe(r[7])})))}:null;
+const isNacP=p=>/^N\d/.test(String(p||""));let mtcNac=false;const pN=p=>isNacP(p)?String(p).slice(1)+" Nacional":String(p??"");
+const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome||"Lista MTC"),em:d.importadoEm||"",rows:packUnico(d.rows.filter(r=>isNacP(r[3])===mtcNac).map(r=>({item:r[0]||"",qtd:r[1]||"",pack:r[2]||"",pal:String(r[3]||""),st:r[4]||"",pag:r[5],verde:!!r[6],box:!!r[7],boxd:boxDiasDe(r[7])})))}:null;
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103085006"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103093335"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2329,7 +2332,7 @@ async function mtcExportAll(){
   const blob=new Blob([XLSX.write(B.wb,{bookType:"xlsx",type:"array"})],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   if(downloads){try{await downloads.save({filename:B.name,data:blob});toast("Excel salvo");beep(true)}catch(e){if(e&&e.code!=="declined")toast("Não foi possível salvar")}return}
   const tsv=B.all.map(r=>r.map(v=>String(v??"").replace(/[\t\n]/g," ")).join("\t")).join("\n");
-  openSheet('<h3>Exportar todos os itens MTC</h3><p>'+(B.all.length-1)+' etiquetas.</p>'+
+  openSheet('<h3>Exportar todos os '+(mtcNac?'Itens Nacionais':'itens MTC')+'</h3><p>'+(B.all.length-1)+' etiquetas.</p>'+
     '<div class="row-acts"><button class="btn primary" id="xaFile" style="flex:1">Salvar / compartilhar o Excel</button></div>'+
     '<div class="row-acts"><button class="btn" id="xaCopy" style="flex:1">Copiar para colar no Excel</button></div>'+
     '<p class="hint">Se o arquivo não salvar neste celular, use <b>Copiar</b> e cole no Excel (toque na célula A1, segure e escolha Colar).</p>'+
@@ -2349,7 +2352,7 @@ async function mtcExportAll(){
 let mtcBox=false;const BOX_LS="leitor-miniload-box-"+LST;
 let boxFiltro="todas";try{boxFiltro=localStorage.getItem("leitor-miniload-boxfiltro")||"todas"}catch(e){}
 const boxBase=v=>String(v||"").toUpperCase().trim().split(/\s+/)[0];
-function boxAplica(raw,set,dia){if(!raw||!Array.isArray(raw.rows))return 0;dia=dia||"anterior";let n=0;raw.rows.forEach(r=>{if(!set.has(boxBase(r[0])))return;const L=boxDiasDe(r[7]);if(!L.includes(dia))L.push(dia);while(r.length<7)r.push("");r[7]=L.join(",");n++});return n}
+function boxAplica(raw,set,dia){if(!raw||!Array.isArray(raw.rows))return 0;dia=dia||"anterior";let n=0;raw.rows.forEach(r=>{if(isNacP(r[3])||!set.has(boxBase(r[0])))return;const L=boxDiasDe(r[7]);if(!L.includes(dia))L.push(dia);while(r.length<7)r.push("");r[7]=L.join(",");n++});return n}
 function boxGuardado(){let o={};try{o=JSON.parse(localStorage.getItem(BOX_LS)||"{}")||{}}catch(e){}if(Array.isArray(o))o=o.length?{anterior:o}:{};return o}
 const boxDiaTxt=d=>d==="anterior"?"carregado antes (sem data)":/^\d{4}-\d\d-\d\d$/.test(d)?d.split("-").reverse().join("/"):d;
 let boxDia="";try{boxDia=localStorage.getItem("leitor-miniload-boxdia")||""}catch(e){}
@@ -2434,7 +2437,7 @@ const podeAdmin=()=>!IS_TEAM||!!(ses&&ses.perfil==="admin");
 function palGrp(p){p=String(p||"");if(!p)return [""];const k="G|"+p;const v=Object.prototype.hasOwnProperty.call(gsLocal,k)?gsLocal[k]:((mtcNewRaw&&mtcNewRaw.grp&&mtcNewRaw.grp[p])||"");
   const m=[...new Set(String(v||"").split("+").map(x=>x.trim()).filter(Boolean))];return m.length>1&&m.includes(p)?m.sort((a,b)=>(+a)-(+b)):[p]}
 const palJunta=g=>g.length<2?g.join(""):g.slice(0,-1).join(", ")+" e "+g[g.length-1];
-const palLbl=p=>{if(!p)return "Sem pallet";const g=palGrp(p);return g.length>1?"Pallets "+palJunta(g)+" (juntos)":"Pallet "+p};
+const palLbl=p=>{if(!p)return "Sem pallet";const g=palGrp(p);return g.length>1?"Pallets "+palJunta(g.map(pN))+" (juntos)":"Pallet "+pN(p)};
 function palGrpSave(map){
   if(mtcNewRaw)mtcNewRaw.grp=Object.assign({},mtcNewRaw.grp||{});
   for(const [p,v] of Object.entries(map)){
@@ -2501,7 +2504,7 @@ async function palObsSet(p,v){
 }
 function openObs(p){
   if(soConsulta()){semPermissao();return}
-  openSheet('<h3>📍 Onde está o Pallet '+esc(p)+'?</h3><p>Escreva o lugar. Ex.: Recebimento, Decon, dentro do Miniload.</p><form class="manf" id="obF" autocomplete="off"><label>Local do pallet<input id="obIn" maxlength="60" style="text-transform:none" value="'+esc(palObs(p))+'" enterkeyhint="done"></label><p class="err" id="obErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Confirmar</button><button class="btn" type="button" id="obCancel">Voltar</button></div>'+(palObs(p)?'<div class="row-acts" style="margin-top:8px"><button class="btn" type="button" id="obDel" style="flex:1">Apagar o local</button></div>':'')+'</form>',()=>{
+  openSheet('<h3>📍 Onde está o Pallet '+esc(pN(p))+'?</h3><p>Escreva o lugar. Ex.: Recebimento, Decon, dentro do Miniload.</p><form class="manf" id="obF" autocomplete="off"><label>Local do pallet<input id="obIn" maxlength="60" style="text-transform:none" value="'+esc(palObs(p))+'" enterkeyhint="done"></label><p class="err" id="obErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Confirmar</button><button class="btn" type="button" id="obCancel">Voltar</button></div>'+(palObs(p)?'<div class="row-acts" style="margin-top:8px"><button class="btn" type="button" id="obDel" style="flex:1">Apagar o local</button></div>':'')+'</form>',()=>{
     $("obCancel").onclick=closeSheet;setTimeout(()=>$("obIn").focus(),50);
     const save=async v=>{v=String(v||"").trim();const antes=palObs(p);if(v===antes){closeSheet();return}
       closeSheet();await palObsSet(p,v);beep(true);
@@ -2523,7 +2526,7 @@ function renderMtc(){
   const pals={};let sem=0;const vivos=mtc.rows.filter(r=>!isRet(r));vivos.forEach(r=>{if(r.pal)pals[r.pal]=(pals[r.pal]||0)+1;else sem++});
   $("mtcInfo").textContent=mtc.nome+" · "+vivos.length+" no estoque"+(mtc.rows.length-vivos.length?" · "+(mtc.rows.length-vivos.length)+" retiradas":"")+" · "+mtc.rows.length+" linhas · "+Object.keys(pals).length+" pallets"+(mtc.em?" · atualizada em "+fmtDay(mtc.em):"");
   {const nb=mtc.rows.filter(r=>r.box&&!isRet(r)).length;try{$("boxN").textContent=nb?"("+nb+")":""}catch(e){}}
-  {const h=document.querySelector("#mtc .mhead h2");if(h)h.textContent=mtcBox?"📦 BOX":"Itens MTC"}
+  {const h=document.querySelector("#mtc .mhead h2");if(h)h.textContent=mtcBox?"📦 BOX":mtcNac?"🇧🇷 Itens Nacionais":"Itens MTC"}
   if(mtcBox){renderBox();return}
   const raw=$("mtcIn").value,Q=mtcQuery(raw),found=mtcFind(raw);
   document.querySelectorAll("#mtcMode [data-mm]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mm===mtcMode?"true":"false"));
@@ -2547,7 +2550,7 @@ function renderMtc(){
       const by={};found.forEach(r=>{(by[r.item]=by[r.item]||[]).push(r)});
       sum=Object.entries(by).slice(0,8).map(([it,L0])=>{
         const l=L0.filter(r=>!isRet(r)),rt=L0.filter(isRet),tot=l.reduce((t,r)=>t+(+r.qtd||0),0),ps=[...new Set(l.map(r=>r.pal||"sem pallet"))];
-        const onde=p=>{if(p==="sem pallet")return "Sem pallet";const g=palGrp(p);return "Pallet "+esc(p)+(g.length>1?' <small>(junto com '+esc(palJunta(g.filter(x=>x!==p)))+')</small>':"")+(palObs(p)?' <small>📍 '+esc(palObs(p))+'</small>':"")};
+        const onde=p=>{if(p==="sem pallet")return "Sem pallet";const g=palGrp(p);return "Pallet "+esc(pN(p))+(g.length>1?' <small>(junto com '+esc(palJunta(g.filter(x=>x!==p)))+')</small>':"")+(palObs(p)?' <small>📍 '+esc(palObs(p))+'</small>':"")};
         return '<div class="mcard"><b>'+hl(it,Q.qs)+(L0.some(r=>r.box)?'<span class="btag">BOX</span>':'')+'</b>'+(l.length?'<span class="big">'+ps.map(onde).join(" · ")+'</span><span class="sub">'+l.length+" pack"+(l.length>1?"s":"")+" no estoque · "+fmt(tot)+" peças</span>":'<span class="big" style="color:var(--ds-r)">Nada no estoque</span>')+
           (rt.length?'<span class="sub" style="color:var(--ds-r);font-weight:700">'+rt.length+" já retirada"+(rt.length>1?"s":"")+" (em vermelho na lista)</span>":"")+"</div>";
       }).join("");
@@ -2555,7 +2558,7 @@ function renderMtc(){
   }else if(Q){
     // sem resultado exato: sugere peças/packs parecidos (1 ou 2 dígitos trocados, faltando ou sobrando)
     const sug=Q.qs?mtcSimilar(Q.qs[Q.qs.length-1]):[];
-    sum='<div class="mempty">Nada exato para “'+esc(raw)+'” na lista MTC.'+(sug.length?" Você quis dizer:":"")+"</div>"+
+    sum='<div class="mempty">Nada exato para “'+esc(raw)+'” na lista '+(mtcNac?'de Itens Nacionais':'MTC')+'.'+(sug.length?" Você quis dizer:":"")+"</div>"+
       sug.map(v=>'<button type="button" class="mcard" data-sug="'+esc(v)+'" style="text-align:left;cursor:pointer"><b>'+esc(v)+'</b><span class="sub">tocar para ver</span></button>').join("");
   }
   if(Q&&Q.pal&&podeAdmin())sum+='<button type="button" class="btn joinbtn" data-join="'+esc(Q.pal)+'">🔗 '+(palGrp(Q.pal).length>1?"Juntar / separar pallets":"Juntar com outro pallet")+'</button>';
@@ -2576,7 +2579,7 @@ function boxExport(viv){
   // aba 1: tudo numa folha só, separado por pallet (para imprimir)
   const A=[["BOX POR PALLET · "+hoje],[viv.length+" caixas no estoque · "+new Set(viv.map(r=>r.item)).size+" itens · "+pals.length+" pallets"],[]];
   for(const p of pals){const l=viv.filter(r=>(r.pal||"")===p).sort((a,b)=>a.item.localeCompare(b.item)||String(a.pack).localeCompare(String(b.pack)));
-    const g=p?palGrp(p):[];const tit=(p?"PALLET "+p:"SEM PALLET")+(g.length>1?" (junto com "+palJunta(g.filter(x=>x!==p))+")":"")+(p&&palObs(p)?" · "+palObs(p):"")+" · "+l.length+" caixa"+(l.length>1?"s":"");
+    const g=p?palGrp(p):[];const tit=(p?"PALLET "+pN(p):"SEM PALLET")+(g.length>1?" (junto com "+palJunta(g.filter(x=>x!==p))+")":"")+(p&&palObs(p)?" · "+palObs(p):"")+" · "+l.length+" caixa"+(l.length>1?"s":"");
     A.push([tit]);A.push(["✓","Item","Quantidade","Pack Number","Pallet"]);
     l.forEach(r=>A.push(["",r.item,num(r.qtd),r.pack||"",num(r.pal)]));A.push([]);}
   A.push([CREDITO]);
@@ -2586,7 +2589,7 @@ function boxExport(viv){
   XLSX.utils.book_append_sheet(wb,ws,"BOX por pallet");
   // uma aba por pallet também
   const usados=new Set(["box por pallet"]);
-  for(const p of pals){const t=(p?"Pallet "+p:"Sem pallet").slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
+  for(const p of pals){const t=(p?"Pallet "+pN(p):"Sem pallet").slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
     const l=viv.filter(r=>(r.pal||"")===p).sort((a,b)=>a.item.localeCompare(b.item));
     const w=XLSX.utils.aoa_to_sheet([["Item","Quantidade","Pack Number","Pallet"],...l.map(r=>[r.item,num(r.qtd),r.pack||"",num(r.pal)])]);w["!cols"]=[{wch:20},{wch:11},{wch:16},{wch:7}];XLSX.utils.book_append_sheet(wb,w,t)}
   saveXlsx(wb,"BOX_por_pallet_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx");
@@ -2658,7 +2661,7 @@ function renderDash(){
   // barras horizontais
   const hbar=(title,sub,data,cor,unid,attr)=>{const mx=Math.max(1,...data.map(d=>d[1]));
     return '<div class="dcard"><h3>'+title+'</h3>'+(sub?'<p class="dsub">'+sub+'</p>':'')+(data.length?'<div class="dhb">'+data.map(([l,v,sm,key])=>'<'+(attr?'button type="button" '+attr+'="'+esc(key)+'"':'div')+' class="dhr" data-tip="'+esc(l)+': '+fmt(v)+' '+unid+'"><span class="lb">'+esc(l)+(sm?'<small>'+esc(sm)+'</small>':'')+'</span><span class="tr"><i style="width:'+Math.round(v*100/mx)+'%;background:'+cor+'"></i></span><span class="v">'+fmt(v)+'</span></'+(attr?'button':'div')+'>').join("")+'</div>':'<p class="dempty">Nada ainda.</p>')+'</div>'};
-  const topP=Object.entries(palsViv).sort((a,b)=>b[1]-a[1]||(+a[0])-(+b[0])).slice(0,8).map(([p,n])=>["Pallet "+p,n,palObs(p)||"",p]);
+  const topP=Object.entries(palsViv).sort((a,b)=>b[1]-a[1]||(+a[0])-(+b[0])).slice(0,8).map(([p,n])=>["Pallet "+pN(p),n,palObs(p)||"",p]);
   {const vist=new Set(),tiles=[];Object.keys(pals).sort((a,b)=>(+a)-(+b)).forEach(p=>{if(vist.has(p))return;const g=palGrp(p);g.forEach(x=>vist.add(x));tiles.push([p,g,g.reduce((t,x)=>t+(palsViv[x]||0),0)])});
    const mx=Math.max(1,...tiles.map(t=>t[2]));
    h+='<div class="dcard"><h3>Mapa dos pallets</h3><p class="dsub">Caixas no estoque em cada pallet · quanto mais escuro, mais cheio · toque para abrir</p><div class="dmap">'+tiles.map(([p,g,n])=>{const a=n?0.55+0.45*n/mx:0;
@@ -2693,7 +2696,7 @@ function renderDash(){
        hbar("Quem mais decantou","",Object.values(quemB).sort((a,b)=>b[1]-a[1]).slice(0,5),"#E5243B","caixas")+'</div>';
     const palB={};bv.forEach(r=>{if(r.pal)palB[r.pal]=(palB[r.pal]||0)+1});
     const itB={};bv.forEach(r=>{itB[r.item]=itB[r.item]||[r.item,0,0];itB[r.item][1]++;itB[r.item][2]+=qn(r)});
-    x+='<div class="dtwo">'+hbar("Pallets com mais BOX para decantar","Toque para abrir o pallet",Object.entries(palB).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([p,n])=>["Pallet "+p,n,palObs(p)||"",p]),"var(--ds-a)","caixas","data-dpal")+
+    x+='<div class="dtwo">'+hbar("Pallets com mais BOX para decantar","Toque para abrir o pallet",Object.entries(palB).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([p,n])=>["Pallet "+pN(p),n,palObs(p)||"",p]),"var(--ds-a)","caixas","data-dpal")+
        hbar("Itens BOX que mais faltam","",Object.values(itB).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([it,n,q])=>[it,n,fmt(q)+" peças"]),"var(--ds-a)","caixas")+'</div>';
     h=h.slice(0,iBox)+x+h.slice(iBox)}}
   {const d=new Date();h=h.replace('atualizado agora','atualizado às '+pd(d.getHours())+':'+pd(d.getMinutes()))}
@@ -2729,7 +2732,7 @@ function renderRet(){
   const when=r=>{const m=retMark(r)||offRet(r);if(!m)return "";const d=new Date(m.at);return pd(d.getDate())+"/"+pd(d.getMonth()+1)+" "+pd(d.getHours())+":"+pd(d.getMinutes())};
   $("retXls").hidden=$("retForm").hidden=!L.length;const rq=norm($("retIn").value||"").replace(/\s/g,"");
   const show=L.filter(r=>!retPalSel||(r.pal||"—")===retPalSel).filter(r=>{if(!rq)return true;const m=retMark(r)||offRet(r)||{};return norm([r.pal,r.item,r.pack,m.quem,m.lib,m.obs].join(" ")).replace(/\s/g,"").includes(rq)}).sort(retCmp);$("retSort").hidden=!L.length;document.querySelectorAll("#retSort [data-rs]").forEach(b=>{const on=b.dataset.rs===retSortK.k;b.setAttribute("aria-pressed",on?"true":"false");b.textContent=b.textContent.replace(/ [▲▼]$/,"")+(on?(retSortK.d>0?" ▲":" ▼"):"")});
-  $("retBody").innerHTML=show.map(r=>{const m=retMark(r)||offRet(r)||{};return '<div class="rcard"><div class="rtop"><span class="rpal">Pallet '+esc(r.pal||"—")+'</span><span class="rwhen">'+esc(when(r))+'</span></div><div class="ritem">'+esc(r.item)+'</div><div class="rmeta">Qtd <b>'+esc(r.qtd)+'</b> · Pack <b>'+esc(r.pack||"—")+'</b></div><div class="rwho2">Retirou: <b>'+esc(m.quem||"—")+'</b> · Autorizou: <b>'+esc(m.lib||"—")+'</b></div>'+(m.obs?'<div class="rwho2">Obs: <b>'+esc(m.obs)+'</b></div>':'')+(retMark(r)?'<button type="button" class="rundo" data-rundo="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'">↩ Voltar ao pallet</button>':'<small class="rwhen">✔ baixa registrada na lista oficial</small>')+"</div>"}).join("");
+  $("retBody").innerHTML=show.map(r=>{const m=retMark(r)||offRet(r)||{};return '<div class="rcard"><div class="rtop"><span class="rpal">Pallet '+esc(pN(r.pal)||"—")+'</span><span class="rwhen">'+esc(when(r))+'</span></div><div class="ritem">'+esc(r.item)+'</div><div class="rmeta">Qtd <b>'+esc(r.qtd)+'</b> · Pack <b>'+esc(r.pack||"—")+'</b></div><div class="rwho2">Retirou: <b>'+esc(m.quem||"—")+'</b> · Autorizou: <b>'+esc(m.lib||"—")+'</b></div>'+(m.obs?'<div class="rwho2">Obs: <b>'+esc(m.obs)+'</b></div>':'')+(retMark(r)?'<button type="button" class="rundo" data-rundo="'+esc(JSON.stringify([r.pal,r.item,r.pack]))+'">↩ Voltar ao pallet</button>':'<small class="rwhen">✔ baixa registrada na lista oficial</small>')+"</div>"}).join("");
   if(!show.length&&L.length)$("retBody").innerHTML='<div class="mempty">Nada encontrado nas retiradas'+(rq?" para “"+esc($("retIn").value.trim())+"”":"")+".</div>";
 }
 function lev(a,b){
@@ -2775,7 +2778,7 @@ function runSearch(raw,label){
     :(mf.length?"":'<div class="snone">'+(q.length<3?"Não consegui ler a peça nem o pack.":"Nada encontrado para “"+esc(raw)+"” em nenhum inventário.")+"</div>");
   for(const M of mfs){const mf=M.rows;
     const ps=[...new Set(mf.map(r=>r.pal||"sem pallet"))],tot=mf.reduce((t,r)=>t+(+r.qtd||0),0);
-    $("sList").innerHTML+='<button type="button" class="sitem" data-mtc="'+esc(raw)+'" data-msel="'+M.k+'"><span class="where">'+M.nm+' · '+ps.slice(0,6).map(p=>p==="sem pallet"?"sem pallet":"Pallet "+esc(p)).join(", ")+(ps.length>6?"…":"")+'</span><span class="st pend">MTC</span><span class="vals"><span>'+mf.length+" linha"+(mf.length>1?"s":"")+'</span><span>'+tot.toLocaleString("pt-BR")+" peças</span><span>tocar para ver</span></span></button>";
+    $("sList").innerHTML+='<button type="button" class="sitem" data-mtc="'+esc(raw)+'" data-msel="'+M.k+'"><span class="where">'+M.nm+' · '+ps.slice(0,6).map(p=>p==="sem pallet"?"sem pallet":"Pallet "+esc(pN(p))).join(", ")+(ps.length>6?"…":"")+'</span><span class="st pend">MTC</span><span class="vals"><span>'+mf.length+" linha"+(mf.length>1?"s":"")+'</span><span>'+tot.toLocaleString("pt-BR")+" peças</span><span>tocar para ver</span></span></button>";
   }
   if(mf.length){
     if(!found.length)$("sSum").textContent="Só nas listas MTC";
@@ -2810,11 +2813,11 @@ $("sList").addEventListener("click",e=>{
 });
 function setView(v){
   view=v;document.body.dataset.view=v;savePalPrefs();
-  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v&&(v!=="mtc"||(b.dataset.box==="1")===mtcBox)?"true":"false"));
+  document.querySelectorAll(".tabs button").forEach(b=>b.setAttribute("aria-selected",b.dataset.v===v&&(v!=="mtc"||((b.dataset.box==="1")===mtcBox&&(b.dataset.nac==="1")===mtcNac))?"true":"false"));
   document.body.classList.toggle("boxmode",v==="mtc"&&mtcBox);
   render();window.scrollTo(0,0);
 }
-document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.v==="mtc"){mtcBox=b.dataset.box==="1";$("mtcIn").value="";$("mtcPalIn").value=""}setView(b.dataset.v)}));
+document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.v==="mtc"){mtcBox=b.dataset.box==="1";const nn=b.dataset.nac==="1";if(nn!==mtcNac){mtcNac=nn;palSel.clear();$("mtcIn").value="";$("mtcPalIn").value="";if(mtcNewRaw){mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew}}$("mtcIn").value="";$("mtcPalIn").value=""}setView(b.dataset.v)}));
 /* salvar palete: sai da tela de hoje e vai para Feitos */
 function openSavePal(){
   const cp=currentPal();if(!cp)return;
@@ -3028,7 +3031,7 @@ function openCols(){
 $("colsBtn").addEventListener("click",openCols);
 
 function openMore(){
-  openSheet('<h3>Mais opções</h3>'+(ses?'<p class="hint" style="margin:0">Conectado como <b>'+esc(ses.nome)+'</b>'+(ses.perfil==="admin"?" (administrador)":ses.perfil==="consulta"?" (só consulta)":"")+'</p><div class="row-acts"><button class="btn" id="mSair" style="flex:1">Sair (pedir a senha de novo)</button></div>':'<div class="row-acts"><button class="btn primary" id="mEntrar" style="flex:1">Entrar com usuário e senha</button></div>')+(IS_TEAM&&podeAdmin()?'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1">📋 Atualizar pallets da lista MTC (colar texto)</button></div>':'')+(IS_TEAM?'':'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1;background:#25D366;border-color:#1DA851;color:#0B2E17;font-weight:800">Colar mensagens do WhatsApp (pallets e retiradas)</button></div>')+'<div class="row-acts"><button class="btn" id="mOld" style="flex:1">Ver lista antiga (25/10) · oculta</button></div>'+'<div class="row-acts"><button class="btn primary" id="mPaste">Colar paletes recebidos</button></div><p class="hint">Cole o texto que a equipe mandou pelo WhatsApp (ou copiado para o Excel). Cada palete entra como salvo e vira uma aba no Excel.</p><div class="row-acts"><button class="btn" id="mGal">Ler fotos da galeria</button></div><p class="hint">Escolha várias fotos de etiquetas de uma vez. Cada uma vira uma linha (ou confere a linha do mesmo pack).</p><div class="row-acts"><button class="btn" id="mImport">Importar Excel</button></div><p class="hint">A importação lê a primeira aba. Cabeçalhos como Item, Quantidade e Pack Number caem nas colunas certas; linhas "palet 2" marcam o palete dos itens seguintes.</p><div class="row-acts"><button class="btn" id="mReset">Zerar conferência</button></div><p class="hint">Volta todos os itens para Pendente e apaga as linhas novas. Use antes de uma recontagem.</p><div class="row-acts"><button class="btn danger" id="mWipe">Apagar a lista inteira</button></div><div class="row-acts"><button class="btn" id="mClose">Fechar</button></div>',
+  openSheet('<h3>Mais opções</h3>'+(ses?'<p class="hint" style="margin:0">Conectado como <b>'+esc(ses.nome)+'</b>'+(ses.perfil==="admin"?" (administrador)":ses.perfil==="consulta"?" (só consulta)":"")+'</p><div class="row-acts"><button class="btn" id="mSair" style="flex:1">Sair (pedir a senha de novo)</button></div>':'<div class="row-acts"><button class="btn primary" id="mEntrar" style="flex:1">Entrar com usuário e senha</button></div>')+(IS_TEAM&&podeAdmin()?'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1">📋 Atualizar pallets '+(mtcNac?'NACIONAIS':'da lista MTC')+' (colar texto)</button></div>':'')+(IS_TEAM?'':'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1;background:#25D366;border-color:#1DA851;color:#0B2E17;font-weight:800">Colar mensagens do WhatsApp (pallets e retiradas)</button></div>')+'<div class="row-acts"><button class="btn" id="mOld" style="flex:1">Ver lista antiga (25/10) · oculta</button></div>'+'<div class="row-acts"><button class="btn primary" id="mPaste">Colar paletes recebidos</button></div><p class="hint">Cole o texto que a equipe mandou pelo WhatsApp (ou copiado para o Excel). Cada palete entra como salvo e vira uma aba no Excel.</p><div class="row-acts"><button class="btn" id="mGal">Ler fotos da galeria</button></div><p class="hint">Escolha várias fotos de etiquetas de uma vez. Cada uma vira uma linha (ou confere a linha do mesmo pack).</p><div class="row-acts"><button class="btn" id="mImport">Importar Excel</button></div><p class="hint">A importação lê a primeira aba. Cabeçalhos como Item, Quantidade e Pack Number caem nas colunas certas; linhas "palet 2" marcam o palete dos itens seguintes.</p><div class="row-acts"><button class="btn" id="mReset">Zerar conferência</button></div><p class="hint">Volta todos os itens para Pendente e apaga as linhas novas. Use antes de uma recontagem.</p><div class="row-acts"><button class="btn danger" id="mWipe">Apagar a lista inteira</button></div><div class="row-acts"><button class="btn" id="mClose">Fechar</button></div>',
   ()=>{
     $("mClose").onclick=closeSheet;
     if($("mSair"))$("mSair").onclick=()=>{closeSheet();confirmDel("Sair deste celular? Vai pedir usuário e senha de novo.",()=>logout("Você saiu. Digite usuário e senha para entrar."),"Sim, sair")};
@@ -3220,20 +3223,20 @@ let colarPend="";try{const h=location.hash||"";if(h.indexOf("#colar=")===0){cola
 function colarTenta(){if(!colarPend||!podeAdmin()||(IS_TEAM&&!ses))return;const t=colarPend;colarPend="";openZapSheet(t)}
 setInterval(colarTenta,1500);
 function openZapSheet(pre){
-  openSheet('<h3>Colar mensagens do WhatsApp</h3><p>Cole aqui as mensagens que a equipe mandou: <b>pallets</b> e <b>retiradas</b>, pode ser tudo junto. O app atualiza a lista MTC e gera o Excel.</p>'+
+  openSheet('<h3>Colar mensagens do WhatsApp'+(mtcNac?' · <span style="color:#2E9E5B">NACIONAIS</span>':' · MTC')+'</h3><p>Cole aqui as mensagens que a equipe mandou: <b>pallets</b> e <b>retiradas</b>, pode ser tudo junto. O app atualiza a lista '+(mtcNac?'<b>de Itens Nacionais</b> (não mexe na MTC)':'<b>MTC</b> (não mexe na Nacional)')+'.</p>'+
     '<textarea id="zIn" rows="9" style="width:100%;font-family:var(--mono);font-size:13px;border:2px solid var(--line);border-radius:8px;padding:8px" placeholder="Cole aqui…"></textarea>'+
     '<div id="zPrev"></div><div class="row-acts"><button class="btn primary" id="zGo" style="flex:1">Conferir</button><button class="btn" id="zNo">Fechar</button></div>',()=>{
     $("zNo").onclick=closeSheet;if(typeof pre==="string"&&pre){$("zIn").value=pre;setTimeout(()=>$("zGo").click(),50)}
     $("zGo").onclick=()=>{
       const t=$("zIn").value;if(!t.trim()){toast("Cole a mensagem primeiro");return}
-      const R=parseRetiradas(t),P=parseReceived(R.rest);
+      const R=parseRetiradas(t),P=parseReceived(R.rest);if(mtcNac){const nn=p=>isNacP(p)?String(p):"N"+String(p);P.items.forEach(x=>x.pal=nn(x.pal));R.ret.forEach(x=>x.pal=nn(x.pal))}
       const raw=JSON.parse(JSON.stringify(mtcNewRaw||{nome:"Itens MTC 26/10",importadoEm:"2026-10-26",rows:[]}));raw.rows=raw.rows||[];
       const pals={};P.items.forEach(x=>{(pals[x.pal]=pals[x.pal]||[]).push(x)});
       const novos=Object.keys(pals).filter(p=>!raw.rows.some(r=>String(r[3])===p)),atual=Object.keys(pals).filter(p=>raw.rows.some(r=>String(r[3])===p));
       const achou=R.ret.filter(x=>raw.rows.some(r=>String(r[3])===x.pal&&String(r[2])===x.pack)),nao=R.ret.filter(x=>!achou.includes(x));
       if(!P.items.length&&!R.ret.length){$("zPrev").innerHTML='<p class="err" style="color:#B42318;font-weight:700">Não reconheci nenhum pallet nem retirada nessa mensagem.</p>';return}
       $("zPrev").innerHTML='<div class="mcard" style="margin:8px 0"><b>Vou fazer:</b>'+
-        (Object.keys(pals).length?'<span class="sub">Pallets: '+Object.keys(pals).map(p=>"<b>"+esc(p)+"</b> ("+pals[p].length+")").join(", ")+'</span>'+(novos.length?'<span class="sub">Novos: '+esc(novos.join(", "))+'</span>':"")+(atual.length?'<span class="sub" style="color:#B42318">Substituir (já existem): '+esc(atual.join(", "))+'</span>':""):"")+
+        (Object.keys(pals).length?'<span class="sub">Pallets: '+Object.keys(pals).map(p=>"<b>"+esc(pN(p))+"</b> ("+pals[p].length+")").join(", ")+'</span>'+(novos.length?'<span class="sub">Novos: '+esc(novos.join(", "))+'</span>':"")+(atual.length?'<span class="sub" style="color:#B42318">Substituir (já existem): '+esc(atual.join(", "))+'</span>':""):"")+
         (R.ret.length?'<span class="sub">Retiradas: '+achou.length+' de '+R.ret.length+' encontradas na lista</span>'+(nao.length?'<span class="sub" style="color:#B42318">Não encontradas: '+nao.map(x=>"pallet "+esc(x.pal)+" pack "+esc(x.pack)).join(", ")+'</span>':""):"")+
         (P.unread.length?'<span class="sub" style="color:#B42318">'+P.unread.length+' linha(s) não reconhecida(s)</span>':"")+'</div>';
       $("zGo").textContent="Confirmar e salvar";
@@ -3246,12 +3249,12 @@ function openZapSheet(pre){
         for(const x of R.ret){for(const r of raw.rows){if(String(r[3])===x.pal&&String(r[2])===x.pack){r[4]="RETIRADO "+x.quando+(x.quem?" · Retirou: "+x.quem+" · Liberou: "+x.lib:"")}}}
         raw.importadoEm=d.getFullYear()+"-"+pd(d.getMonth()+1)+"-"+pd(d.getDate())+" "+pd(d.getHours())+":"+pd(d.getMinutes()); // versão nova: vai para a planilha e para a equipe
         try{const bo=boxGuardado();Object.keys(bo).forEach(k=>{if(bo[k]&&bo[k].length)boxAplica(raw,new Set(bo[k]),k)})}catch(e){}
-        {const bx={};raw.rows.forEach(r=>{if(r[7])bx[boxBase(r[0])]=r[7]});raw.rows.forEach(r=>{if(!r[7]&&bx[boxBase(r[0])]){while(r.length<7)r.push("");r[7]=bx[boxBase(r[0])]}})} // caixa nova de item que já é BOX também vira BOX
+        {const bx={};const bk=r=>(isNacP(r[3])?"N|":"M|")+boxBase(r[0]);raw.rows.forEach(r=>{if(r[7])bx[bk(r)]=r[7]});raw.rows.forEach(r=>{if(!r[7]&&bx[bk(r)]){while(r.length<7)r.push("");r[7]=bx[bk(r)]}})} // caixa nova de item que já é BOX também vira BOX
         try{localStorage.setItem(MTC_LS,JSON.stringify(raw))}catch(e){}
         let ok=true;if(db){try{await db.doc("listas/mtc").set(raw)}catch(e){ok=false}}
         mtcNewRaw=raw;mtcNew=mtcFrom(raw);if(mtcSel==="new")mtc=mtcNew;closeSheet();render();
         if(!ok){toast("Atenção: não consegui salvar na nuvem. Tente de novo.");beep(false);return}
-        beep(true);toast("Lista MTC atualizada: "+Object.keys(pals).length+" pallet(s), "+achou.length+" retirada(s)");
+        beep(true);toast((mtcNac?"Itens Nacionais atualizados: ":"Lista MTC atualizada: ")+Object.keys(pals).length+" pallet(s), "+achou.length+" retirada(s)");
         gsPushLista();if(!IS_TEAM)mtcExportAll();
       };
     };
