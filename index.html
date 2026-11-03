@@ -1183,6 +1183,9 @@ function getReader(){
 }
 $("camBtn").addEventListener("click",openCamera);
 $("palPick").addEventListener("click",()=>openPalPicker());
+function kbWire(id){const inp=$(id);if(!inp||inp.dataset.kbw)return;inp.dataset.kbw="1";const w=document.createElement("div");w.style.cssText="display:flex;gap:8px;align-items:stretch";inp.parentNode.insertBefore(w,inp);w.appendChild(inp);inp.style.flex="1";inp.style.minWidth="0";
+  const b=document.createElement("button");b.type="button";b.className="kbt";const set=m=>{inp.setAttribute("inputmode",m);b.textContent=m==="numeric"?"ABC":"123";b.setAttribute("aria-label",m==="numeric"?"Usar teclado com letras":"Usar teclado de números")};set(inp.getAttribute("inputmode")||"numeric");
+  b.addEventListener("pointerdown",e=>e.preventDefault());b.addEventListener("click",()=>{set(inp.getAttribute("inputmode")==="numeric"?"text":"numeric");inp.blur();setTimeout(()=>inp.focus(),30)});w.appendChild(b)}
 function openManual(pre,falta){
   if(!currentPal()){toast("Escolha o palete primeiro");return}
   pre=pre&&pre.peca!==undefined?pre:null;
@@ -1195,6 +1198,7 @@ function openManual(pre,falta){
     '<div class="row-acts"><button class="btn primary" type="submit">Salvar linha</button><button class="btn" type="button" id="manCancel">Cancelar</button></div>'+
     (pre?'':'<p class="hint">Depois de salvar, a tela fica aberta para você digitar a próxima etiqueta.</p>')+'</form>',
   ()=>{
+    ["manPeca","manQtd","manPack"].forEach(kbWire);
     if(pre){
       $("manPeca").value=String(pre.peca||"").replace(/^P(?=[AN]\d)/,"");$("manQtd").value=pre.qtd||"";$("manPack").value=String(pre.pack||"").replace(/^S/,"");
       ["manPeca","manQtd","manPack"].forEach(id=>{if(!$(id).value)$(id).style.borderColor="#E5243B"});
@@ -1833,7 +1837,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103073144"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103074428"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
