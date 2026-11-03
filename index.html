@@ -1361,7 +1361,7 @@ async function processPhotos(files){
         if(!(r.peca&&r.pack)){  // leitura incompleta: não lança linha pela metade, guarda e pede outra foto
           photoPend={peca:r.peca||"",qtd:r.qtd||"",pack:r.pack||"",pal:currentPal(),at:Date.now()};
           const falta=[!r.peca&&"item",!r.qtd&&"quantidade",!r.pack&&"pack"].filter(Boolean).join(", ");
-          const m="Faltou ler: "+falta+". Tire OUTRA FOTO da mesma etiqueta, mais perto e reta. O que já foi lido fica guardado.";
+          const m="Faltou ler: "+falta+". Toque no campo vermelho para digitar, ou tire OUTRA FOTO da mesma etiqueta. O que já foi lido fica guardado.";
           say(m,"bad");dockState(m,"bad");beep(false);
           setTimeout(()=>{dockFields(photoPend,false);dockState(m,"bad")},60);
           continue;
@@ -1374,6 +1374,32 @@ async function processPhotos(files){
     if(files.length>1)toast(okN+" de "+files.length+" etiquetas lançadas");
   }finally{photoBusy=false}
 }
+/* tocar no campo do painel (Item / Qtd / Pack) para digitar ali mesmo o que a foto não leu */
+[["dfPeca","peca"],["dfQtd","qtd"],["dfPack","pack"]].forEach(([id,k])=>{
+  const el=$(id);el.style.cursor="pointer";el.title="Toque para digitar";
+  el.addEventListener("click",()=>{
+    if(photoBusy||el.querySelector("input"))return;
+    if(!currentPal()){toast("Escolha o palete primeiro");return}
+    if(!(photoPend&&photoPend.pal===currentPal()))photoPend={peca:"",qtd:"",pack:"",pal:currentPal(),at:Date.now()};
+    const bEl=el.querySelector("b"),inp=document.createElement("input");
+    inp.value=String(photoPend[k]||"").replace(k==="pack"?/^S/:/^P(?=[AN]\d)/,"");
+    inp.setAttribute("inputmode",k==="peca"?"text":"numeric");inp.autocapitalize="characters";inp.spellcheck=false;inp.enterKeyHint="done";
+    inp.style.cssText="width:100%;min-width:0;font:inherit;font-size:18px;padding:4px 6px;border-radius:6px;border:2px solid #F5B800;background:#fff;color:#111";
+    bEl.hidden=true;el.appendChild(inp);setTimeout(()=>inp.focus(),20);
+    let feito=false;
+    const fim=async ok=>{
+      if(feito)return;feito=true;const v=inp.value.trim();inp.remove();bEl.hidden=false;
+      if(ok&&v){photoPend[k]=k==="peca"?cleanPart(v):k==="qtd"?cleanQty(v):cleanPack(v);photoPend.at=Date.now()}
+      dockFields(photoPend,false);
+      if(photoPend.peca&&photoPend.pack){const r={peca:photoPend.peca,qtd:photoPend.qtd,pack:photoPend.pack};photoPend=null;
+        if(await applyLabel(r)){dockFields(null,false,true);dockState("Etiqueta lançada. Toque em Foto para a próxima.","")}}
+      else{const falta=[!photoPend.peca&&"item",!photoPend.qtd&&"quantidade",!photoPend.pack&&"pack"].filter(Boolean).join(", ");dockState("Falta: "+falta+". Toque no campo para digitar ou tire outra foto.","bad")}
+    };
+    inp.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();fim(true)}else if(e.key==="Escape")fim(false)});
+    inp.addEventListener("blur",()=>fim(true));
+    inp.addEventListener("click",e=>e.stopPropagation());
+  });
+});
 // peça: mantém o código de cor separado por espaço (ex.: PA9604600595 9051)
 const cleanPart=v=>{
   v=norm(v).replace(/\./g,"").replace(/\s+/g," ").trim();if(!v)return "";
@@ -1837,7 +1863,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103074428"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103080201"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
