@@ -1094,7 +1094,7 @@ async function scanToday(code){
 /* classifica uma barra lida: peça (P), quantidade (Q) ou pack (S) */
 function classify1(t){
   const n=norm(t).replace(/\s/g,"");
-  if(/^Q\d{1,6}(ST|PCE|PC|EA)?$/.test(n))return {k:"qtd",v:cleanQty(n.replace(/[A-Z]+$/,""))};
+  if(/^Q(\d{1,6}|\d{1,3}([.,]\d{3})+)(ST|PCE|PC|EA)?$/.test(n))return {k:"qtd",v:cleanQty(n.replace(/[A-Z]+$/,""))};
   if(/^S\d{6,}$/.test(n))return {k:"pack",v:cleanPack(n)};
   if(/^P[A-Z0-9][A-Z0-9\-\/]{4,}$/.test(n)){
     const strict=/^P[A-Z]\d{10}(\d{4})?$/.test(n)||/^PN\d{12}$/.test(n);
@@ -1486,7 +1486,7 @@ const sleep0=()=>new Promise(r=>setTimeout(r,0));
 function classifyCode(got,t){
   const n=norm(t).replace(/\s/g,"");
   got.raw=got.raw||[];if(!got.raw.includes(n))got.raw.push(n);
-  if(!got.qtd&&/^Q\d{1,6}(ST|PCE|PC|EA)?$/.test(n)){got.qtd=cleanQty(n.replace(/[A-Z]+$/,""));return true}
+  if(!got.qtd&&/^Q(\d{1,6}|\d{1,3}([.,]\d{3})+)(ST|PCE|PC|EA)?$/.test(n)){got.qtd=cleanQty(n.replace(/[A-Z]+$/,""));return true}
   if(!got.pack&&/^S\d{6,}$/.test(n)){got.pack=cleanPack(n);return true}
   // peça: qualquer barra que comece com P (o identificador da peça na etiqueta VDA), em qualquer formato
   if(!got.peca&&/^P[A-Z0-9][A-Z0-9\-\/]{4,}$/.test(n)){
@@ -1863,7 +1863,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103080201"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103082409"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
