@@ -1886,7 +1886,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103143226"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103144838"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2008,6 +2008,10 @@ function gsStatus(){
 /* app do administrador: publica a lista nova na planilha para a equipe (cópia exata, com soma de conferência) */
 const somaLista=rows=>{const t=JSON.stringify(rows);let k=0x811c9dc5;for(let i=0;i<t.length;i++){k^=t.charCodeAt(i);k=Math.imul(k,0x01000193)>>>0}return k.toString(16).padStart(8,"0")};
 let gsListaEnviada="";
+const PEND_LS="leitor-miniload-mtc-pend";
+function pendGet(){try{return JSON.parse(localStorage.getItem(PEND_LS)||"null")}catch(e){return null}}
+function pendAdd(pals){try{const o=pendGet()||{pals:[]};pals.forEach(p=>{p=String(p);if(!o.pals.includes(p))o.pals.push(p)});localStorage.setItem(PEND_LS,JSON.stringify(o))}catch(e){}}
+function pendClear(){try{localStorage.removeItem(PEND_LS)}catch(e){}}
 async function gsPushLista(){
   if(!ses||ses.perfil!=="admin"||!mtcNewRaw||!Array.isArray(mtcNewRaw.rows)||!mtcNewRaw.rows.length)return;
   const em=String(mtcNewRaw.importadoEm||"");if(!em||gsListaEnviada===em)return;
@@ -2017,7 +2021,7 @@ async function gsPushLista(){
     const rows=mtcNewRaw.rows.map(r=>r[7]?[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||""),"","",(r[7]===1||r[7]===true||r[7]==="1")?1:String(r[7])]:[String(r[0]||""),String(r[1]??""),String(r[2]||""),String(r[3]??""),String(r[4]||"")]);
     let j=null;try{j=await gsCall({a:"lista",t:ses.t,lista:{nome:mtcNewRaw.nome||"Itens MTC",importadoEm:em,n:rows.length,soma:somaLista(rows),rows}})}catch(x){j=null}
     if(!j){const v2=await (await fetch(GS_URL+"?a=versao&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"})).json();if(v2&&v2.ok&&String(v2.importadoEm||"")>=em)j={ok:true}}
-    if(j&&j.ok){gsListaEnviada=em;if(!j.igual)toast("Lista MTC enviada para a equipe: "+rows.length+" linhas")}
+    if(j&&j.ok){gsListaEnviada=em;pendClear();if(!j.igual)toast("Lista MTC enviada para a equipe: "+rows.length+" linhas")}
     else toast("A lista NÃO subiu para a planilha: "+((j&&j.erro)||"sem resposta")+". Me mande um print.")
   }catch(e){toast("A lista NÃO subiu para a planilha: "+String(e&&e.message||e).slice(0,60))}
 }
@@ -2026,7 +2030,9 @@ async function gsPullMtc(){
   if(!IS_TEAM)return;
   if(!ses)return;
   try{const r=await fetch(GS_URL+"?a=mtc&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"});const j=await r.json();if(j&&j.erro==="sessao"){logout("Seu acesso expirou ou foi bloqueado. Entre de novo com usuário e senha.");return}
-    const d=j&&j.mtc;const somaOk=x=>{if(!x||!x.soma)return true;const t=JSON.stringify(x.rows);let k=0x811c9dc5;for(let i=0;i<t.length;i++){k^=t.charCodeAt(i);k=Math.imul(k,0x01000193)>>>0}return k.toString(16).padStart(8,"0")===x.soma};if(d&&Array.isArray(d.rows)&&(d.rows.length||d.zerada)&&somaOk(d)&&(d.importadoEm||"")>=((mtcNewRaw&&mtcNewRaw.importadoEm)||"")){const m=mtcFrom(d);if(m){mtcNewRaw=d;mtcNew=m;if(mtcSel==="new")mtc=m;try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}render()}}}catch(e){}
+    let d=j&&j.mtc;const somaOk=x=>{if(!x||!x.soma)return true;const t=JSON.stringify(x.rows);let k=0x811c9dc5;for(let i=0;i<t.length;i++){k^=t.charCodeAt(i);k=Math.imul(k,0x01000193)>>>0}return k.toString(16).padStart(8,"0")===x.soma};if(d&&Array.isArray(d.rows)&&(d.rows.length||d.zerada)&&somaOk(d)&&(d.importadoEm||"")>=((mtcNewRaw&&mtcNewRaw.importadoEm)||"")){const pd0=pendGet();if(pd0&&pd0.pals&&pd0.pals.length&&mtcNewRaw&&Array.isArray(mtcNewRaw.rows)){const ps=pd0.pals.map(String),loc=mtcNewRaw.rows.filter(r=>ps.includes(String(r[3])));
+      if(loc.length){const dt=new Date(),z=n=>String(n).padStart(2,"0");d={nome:d.nome,importadoEm:dt.getFullYear()+"-"+z(dt.getMonth()+1)+"-"+z(dt.getDate())+" "+z(dt.getHours())+":"+z(dt.getMinutes()),rows:d.rows.filter(r=>!ps.includes(String(r[3]))).concat(loc)};delete d.soma;delete d.n;setTimeout(gsPushLista,300);toast("Pallets carregados neste celular mantidos: "+ps.map(pN).join(", "))}}
+    const m=mtcFrom(d);if(m){mtcNewRaw=d;mtcNew=m;if(mtcSel==="new")mtc=m;try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}render()}}}catch(e){}
 }
 setTimeout(gsPullMtc,800);setInterval(()=>{if(!document.hidden)gsPullMtc()},300000);
 setInterval(()=>{if(!document.hidden){gsFlush();gsPull()}},20000);
@@ -2199,7 +2205,7 @@ async function mtcLoadFile(f){
     if(db){try{await db.doc("listas/mtc").set(d)}catch(e){}}
     try{const bo=boxGuardado();Object.keys(bo).forEach(k=>{if(bo[k]&&bo[k].length)boxAplica(d,new Set(bo[k]),k)})}catch(e){}
     mtcNew=mtcFrom(d);mtcNewRaw=d;mtcSel="new";mtc=mtcNew;$("mtcIn").value="";render();gsPushLista();
-    toast((mtcNac?"🇧🇷 NAC":"🌎 MTC")+" atualizada: "+d0.rows.length+" etiquetas em "+novosP.length+" pallet(s)");
+    pendAdd(novosP);toast((mtcNac?"🇧🇷 NAC":"🌎 MTC")+" atualizada: "+d0.rows.length+" etiquetas em "+novosP.length+" pallet(s)");
   }catch(e){toast("Não consegui ler esse arquivo")}
 }
 async function mtcSendFile(){
@@ -3300,7 +3306,7 @@ function openZapSheet(pre){
         let ok=true;if(db){try{await db.doc("listas/mtc").set(raw)}catch(e){ok=false}}
         mtcNewRaw=raw;mtcNew=mtcFrom(raw);if(mtcSel==="new")mtc=mtcNew;closeSheet();render();
         if(!ok){toast("Atenção: não consegui salvar na nuvem. Tente de novo.");beep(false);return}
-        beep(true);toast((mtcNac?"Itens Nacionais atualizados: ":"Lista MTC atualizada: ")+Object.keys(pals).length+" pallet(s), "+achou.length+" retirada(s)");
+        pendAdd(Object.keys(pals));beep(true);toast((mtcNac?"Itens Nacionais atualizados: ":"Lista MTC atualizada: ")+Object.keys(pals).length+" pallet(s), "+achou.length+" retirada(s)");
         gsPushLista();if(!IS_TEAM)mtcExportAll();
       };
     };
