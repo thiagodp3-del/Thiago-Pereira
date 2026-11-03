@@ -1886,7 +1886,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103103253"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103110112"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2274,9 +2274,13 @@ function enviarPallets(sel,via,ok){
     else{location.href="mailto:"+encodeURIComponent(para).replace(/%2C%20/g,",")+"?subject="+encodeURIComponent(assunto)+"&body="+encodeURIComponent("Segue em anexo o Excel "+name+" (está nos Downloads / Arquivos do celular).\n\n"+CREDITO);toast("Excel baixado: anexe no e-mail que abriu")}};
   let pode=false;try{pode=!!(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}))}catch(e){}
   if(pode){
-    if(via==="mail"&&para){try{navigator.clipboard&&navigator.clipboard.writeText(para).catch(()=>{})}catch(e){}}
-    toast(via==="wa"?"Escolha WhatsApp e depois o administrador":"Escolha Gmail, Outlook ou Mail"+(para?". O e-mail de quem recebe foi copiado: no campo Para, segure e Colar":""));
-    navigator.share(via==="wa"?{files:[file]}:{files:[file],title:assunto}).then(()=>toast("Excel enviado")).catch(e=>{if(e&&e.name==="AbortError")return;reserva()});return}
+    const dados=via==="wa"?{files:[file]}:{files:[file],title:assunto};
+    const abrir=()=>navigator.share(dados).then(()=>toast("Excel enviado")).catch(e=>{if(e&&e.name==="AbortError")return;
+      // o iPhone às vezes recusa o Compartilhar fora do toque: abre um botão para tocar de novo (o Excel continua anexado)
+      openSheet('<h3>📎 Excel pronto</h3><p style="margin:0">'+esc(name)+'</p><div class="row-acts"><button class="btn primary" type="button" id="shGo" style="flex:1;height:56px;font-size:17px">'+(via==="wa"?"Abrir WhatsApp com o Excel":"Abrir e-mail com o Excel")+'</button></div><p class="hint">Escolha '+(via==="wa"?"WhatsApp":"Gmail, Outlook ou Mail")+'. O Excel vai anexado.</p><div class="row-acts"><button class="btn" type="button" id="shDl" style="flex:1">Só baixar o Excel</button><button class="btn" type="button" id="shNo">Fechar</button></div>',()=>{
+        $("shGo").onclick=()=>{navigator.share(dados).then(()=>{closeSheet();toast("Excel enviado")}).catch(e2=>{if(!(e2&&e2.name==="AbortError"))toast("O celular não deixou compartilhar: "+(e2&&e2.name||"erro"))})};
+        $("shDl").onclick=()=>{closeSheet();reserva()};$("shNo").onclick=closeSheet})});
+    abrir();return}
   reserva();return;
   try{XLSX.writeFile(wb,name)}catch(e){}
   if(via==="wa"){window.open("https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(assunto+" · o Excel "+name+" está na pasta Downloads, vou anexar."),"_blank");toast("Excel baixado: anexe na conversa do WhatsApp")}
