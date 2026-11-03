@@ -861,6 +861,7 @@ const DEFAULT_COLS=[
   {id:"palete",name:"Palete",prefix:""}
 ];
 const LS_KEY="leitor-miniload-v1";
+/*ZERA*/try{if(localStorage.getItem("leitor-miniload-contagem")!=="27"){const v=localStorage.getItem(LS_KEY);if(v)localStorage.setItem(LS_KEY+"-ate-02-11",v);localStorage.removeItem(LS_KEY);localStorage.removeItem(LS_KEY+"-pal");localStorage.setItem("leitor-miniload-contagem","27")}}catch(e){}/*/ZERA*/
 const SEED=/*SEED*/null;
 let cols=DEFAULT_COLS.slice(), rows=[], db=null, downloads=null, mode="loading";
 let filter="all", query="", draft=null, flashId=null;
@@ -1832,7 +1833,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103071813"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103073144"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
