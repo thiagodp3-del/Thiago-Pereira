@@ -832,7 +832,7 @@ body.multi .mtable tbody tr{cursor:pointer}
     <button class="btn" id="xlsHoje" data-only="hoje" aria-label="Exportar Excel"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg><span class="lbl">Excel</span></button>
     <button class="btn" id="addRowBtn" data-only="feitos" aria-label="Adicionar linha"><span aria-hidden="true">+</span><span class="lbl">Linha</span></button>
     <button class="btn" id="colsBtn" data-only="feitos" aria-label="Colunas"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M9 4v16M15 4v16"/></svg><span class="lbl">Colunas</span></button>
-    <div class="adm"><button type="button" class="admt mail" id="waBtn" aria-label="Enviar o Excel por e-mail"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span><b>Enviar Excel</b><small>por e-mail · um toque</small></span></button><a class="admt wa" id="admWa" href="https://wa.me/5511952612966" target="_blank" rel="noopener" aria-label="Contatar o administrador via WhatsApp"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span><b>Contatar o administrador</b><small>via WhatsApp</small></span></a></div>
+    <div class="adm"><button type="button" class="admt mail" id="waBtn" aria-label="Enviar o Excel dos pallets"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg><span><b>Enviar Excel</b><small>escolha o pallet · e-mail ou WhatsApp</small></span></button><a class="admt wa" id="admWa" href="https://wa.me/5511952612966" target="_blank" rel="noopener" aria-label="Contatar o administrador via WhatsApp"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm0 18.2c-1.5 0-3-.4-4.3-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.3-.4.8-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2 5.2 5.2 0 0 0 1.1 2.8 11.9 11.9 0 0 0 4.6 4c1.7.7 2.4.8 3.2.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3z"/></svg><span><b>Contatar o administrador</b><small>via WhatsApp</small></span></a></div>
     <button class="btn" id="moreBtn" aria-label="Mais opções">⋯</button>
   </div>
 </footer>
@@ -1863,7 +1863,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103082409"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103085006"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2215,7 +2215,43 @@ function mtcAllBook(){
 }
 /* e-mail a qualquer hora, com o Excel completo anexado (pelo Compartilhar do celular / PC) */
 /* um toque: monta o Excel completo e abre o Compartilhar (a pessoa escolhe o e-mail dela e para quem vai) */
+/* enviar Excel: escolher os pallets e mandar por e-mail ou WhatsApp (administrador) */
 function quickMail(){
+  if(!window.XLSX){toast("Gerador de Excel não carregou");return}
+  const ok=rows.filter(r=>(r.vals.palete||"")&&(r.vals.peca||r.vals.pack));
+  const pals=[...new Set(ok.map(r=>String(r.vals.palete)))].sort((a,b)=>String(a).localeCompare(String(b),"pt-BR",{numeric:true}));
+  if(!pals.length){toast("Ainda não tem pallet lido para enviar");return}
+  const cnt=p=>ok.filter(r=>String(r.vals.palete)===p).length;
+  openSheet('<h3>Enviar Excel</h3><p style="margin:0">Qual pallet você quer enviar? Cada pallet vira uma aba do Excel.</p>'+
+    '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0" id="spList">'+pals.map(p=>'<span class="pchip"><label><input type="checkbox" value="'+esc(p)+'"> <span style="padding:0 10px 0 6px">Pallet '+esc(p)+' <small>('+cnt(p)+')</small></span></label></span>').join("")+'</div>'+
+    '<div class="row-acts"><button class="btn" type="button" id="spAll" style="flex:1">Marcar todos</button></div>'+
+    '<p class="err" id="spErr"></p>'+
+    '<div class="row-acts"><button class="btn primary" type="button" id="spMail" style="flex:1">📧 E-mail</button><button class="btn wa" type="button" id="spWa" style="flex:1">WhatsApp do administrador</button></div>',()=>{
+    const boxes=()=>[...document.querySelectorAll("#spList input")];
+    const mark=()=>boxes().forEach(x=>x.closest(".pchip").classList.toggle("on",x.checked));
+    boxes().forEach(x=>x.addEventListener("change",mark));
+    $("spAll").onclick=()=>{const all=boxes().every(x=>x.checked);boxes().forEach(x=>x.checked=!all);mark();$("spAll").textContent=all?"Marcar todos":"Desmarcar todos"};
+    const go=via=>{const sel=boxes().filter(x=>x.checked).map(x=>x.value);if(!sel.length){$("spErr").textContent="Marque pelo menos um pallet.";return}
+      closeSheet();enviarPallets(sel,via,ok)};
+    $("spMail").onclick=()=>go("mail");$("spWa").onclick=()=>go("wa");
+  });
+}
+function enviarPallets(sel,via,ok){
+  const wb=XLSX.utils.book_new(),d=new Date(),pd=n=>String(n).padStart(2,"0");
+  for(const p of sel){const l=ok.filter(r=>String(r.vals.palete)===p).sort((a,b)=>(a.ord||0)-(b.ord||0));
+    const ws=XLSX.utils.aoa_to_sheet([["Número da peça","Quantidade","Pack Number","Dia"],...l.map(r=>[r.vals.peca||"",/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),r.vals.pack?cleanPack(r.vals.pack):"",r.dia?fmtDay(r.dia):""])]);
+    ws["!cols"]=[{wch:20},{wch:12},{wch:16},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,("Pallet "+p).slice(0,31))}
+  const name="Miniload_pallet"+(sel.length>1?"s_":"_")+sel.join("-").slice(0,40)+"_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx";
+  const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"}),file=new File([buf],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+  const assunto="Leitor Miniload · Pallet"+(sel.length>1?"s ":" ")+sel.join(", "),texto=assunto+" · "+d.toLocaleDateString("pt-BR")+"\n\n"+CREDITO;
+  if(navigator.canShare&&navigator.canShare({files:[file]})){
+    if(via==="wa")toast("Na lista que abrir, escolha WhatsApp e depois o administrador");
+    navigator.share({files:[file],title:assunto,text:texto}).then(()=>toast("Excel enviado")).catch(e=>{if(!(e&&e.name==="AbortError"))toast("Não consegui abrir o Compartilhar")});return}
+  try{XLSX.writeFile(wb,name)}catch(e){}
+  if(via==="wa"){window.open("https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(assunto+" · o Excel "+name+" está na pasta Downloads, vou anexar."),"_blank");toast("Excel baixado: anexe na conversa do WhatsApp")}
+  else{location.href="mailto:?subject="+encodeURIComponent(assunto)+"&body="+encodeURIComponent("Segue em anexo o Excel "+name+" (está na pasta Downloads).\n\n"+CREDITO);toast("Excel baixado: anexe no e-mail que abriu")}
+}
+function quickMailTudo(){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
   const B=mtcAllBook();const done=rows.filter(r=>r.dia);
   if(!B&&!done.length){toast("Ainda não tem nada para enviar");return}
