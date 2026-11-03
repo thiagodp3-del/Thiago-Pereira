@@ -1886,7 +1886,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103142836"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103143226"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2270,7 +2270,7 @@ function quickMail(){
 /* não repete caixa: o mesmo pack lido várias vezes (pallet enviado de novo, palete reaberto) sai uma vez só, a leitura mais nova */
 const packReal=k=>/^\d{6,}$/.test(k)&&!/^0+$/.test(k);
 function semDup(l){const vistos=new Set(),out=[];
-  l.slice().sort((a,b)=>(b.at||0)-(a.at||0)||String(b.dia||"").localeCompare(String(a.dia||""))||(b.ord||0)-(a.ord||0)).forEach(r=>{const k=xPack(r.vals.pack);if(packReal(k)){if(vistos.has(k))return;vistos.add(k)}out.push(r)});
+  l.slice().sort((a,b)=>(b.at||0)-(a.at||0)||String(b.dia||"").localeCompare(String(a.dia||""))||(b.ord||0)-(a.ord||0)).forEach(r=>{const pk=xPack(r.vals.pack);if(packReal(pk)){const k=xPeca(r.vals.peca).replace(/\s+/g,"")+"|"+pk;if(vistos.has(k))return;vistos.add(k)}out.push(r)});
   return out.sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||(a.ord||0)-(b.ord||0))}
 function enviarPallets(sel,via,ok){
   const wb=XLSX.utils.book_new(),d=new Date(),pd=n=>String(n).padStart(2,"0");let tot=0,tirou=0;
@@ -3356,12 +3356,13 @@ async function doExport(soWhats){
   if(soWhats){openCopySheet(lotes,done,tabName);return}
   const wb=XLSX.utils.book_new();
   wb.Props={Title:"Paletes Miniload",Subject:"Inventário de paletes",Author:AUTORIA.autor,Company:AUTORIA.area,Comments:CREDITO+" · "+AUTORIA.registro};
-  for(const k of lotes){
-    const l=semDup(done).filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
+  const unicos=semDup(done),palsX=[...new Set(done.map(r=>String(r.vals.palete||"")))].sort(palSort); // um pallet = uma aba só, mesmo lido em dias diferentes
+  for(const px of palsX){
+    const l=unicos.filter(r=>String(r.vals.palete||"")===px);
     const data=l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)]);
     const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...data,[],[CREDITO]]);
     ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];
-    XLSX.utils.book_append_sheet(wb,ws,tabName(k));
+    XLSX.utils.book_append_sheet(wb,ws,("Palete "+(px||"?")+(MODO_NAC?" NAC":"")).slice(0,31));
   }
   const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});
   const d=new Date(),pd=n=>String(n).padStart(2,"0");
