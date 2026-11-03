@@ -1886,7 +1886,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103110112"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103110701"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2185,14 +2185,21 @@ async function mtcLoadFile(f){
   if(!window.XLSX){toast("Leitor de Excel não carregou");return}
   try{
     const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});
-    const d=mtcParse(wb,f.name);
-    if(!d){toast("Não achei as colunas de peça e pallet nessa planilha");return}
+    const d0=mtcParse(wb,f.name);
+    if(!d0){toast("Não achei as colunas de peça e pallet nessa planilha");return}
+    // só mexe nos pallets que estão no Excel, e só na aba atual (MTC ou NAC); o resto da lista fica igual
+    d0.rows.forEach(r=>{r[0]=String(r[0]).replace(/^P(?=[AN]\d)/,"");if(mtcNac&&r[3]&&!isNacP(r[3]))r[3]="N"+r[3]});
+    const novosP=[...new Set(d0.rows.map(r=>r[3]).filter(Boolean))];
+    const base=JSON.parse(JSON.stringify(mtcNewRaw||{rows:[]}));base.rows=(base.rows||[]).filter(r=>!novosP.includes(String(r[3])));
+    const d={nome:(mtcNewRaw&&mtcNewRaw.nome)||d0.nome,importadoEm:d0.importadoEm,rows:base.rows.concat(d0.rows.map(r=>[r[0],r[1],r[2],r[3],r[4]||"",0,0]))};
+    const ja=novosP.filter(p=>(mtcNewRaw&&mtcNewRaw.rows||[]).some(r=>String(r[3])===p));
+    const ok=await new Promise(res=>openSheet('<h3>📥 Carregar lista do Excel</h3><p>'+"Carregar <b>"+d0.rows.length+" etiquetas</b> em <b>"+novosP.length+" pallet(s)</b> na aba <b>"+(mtcNac?"🇧🇷 NAC":"🌎 MTC")+"</b>: "+esc(novosP.map(pN).join(", "))+"."+(ja.length?"<br><span style=\"color:#B42318\">Vão ser substituídos (já existem): "+esc(ja.map(pN).join(", "))+"</span>":"")+"<br>Os outros pallets não mudam."+'</p><div class="row-acts"><button class="btn primary" id="clYes" style="flex:1">Sim, carregar</button><button class="btn" id="clNo" style="flex:1">Cancelar</button></div>',()=>{$("clNo").onclick=()=>{closeSheet();res(false)};$("clYes").onclick=()=>{closeSheet();res(true)}}));
+    if(!ok)return;
     try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}
     if(db){try{await db.doc("listas/mtc").set(d)}catch(e){}}
     try{const bo=boxGuardado();Object.keys(bo).forEach(k=>{if(bo[k]&&bo[k].length)boxAplica(d,new Set(bo[k]),k)})}catch(e){}
     mtcNew=mtcFrom(d);mtcNewRaw=d;mtcSel="new";mtc=mtcNew;$("mtcIn").value="";render();gsPushLista();
-    const np=new Set(d.rows.map(r=>r[3]).filter(Boolean)).size;
-    toast("Lista atualizada: "+d.rows.length+" linhas em "+np+" pallets");
+    toast((mtcNac?"🇧🇷 NAC":"🌎 MTC")+" atualizada: "+d0.rows.length+" etiquetas em "+novosP.length+" pallet(s)");
   }catch(e){toast("Não consegui ler esse arquivo")}
 }
 async function mtcSendFile(){
