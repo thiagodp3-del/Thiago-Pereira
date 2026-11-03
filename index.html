@@ -1832,7 +1832,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:d.nome||"Lista MTC",em:d.importa
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261102020338"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103071813"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -1840,7 +1840,8 @@ try{const d=JSON.parse(localStorage.getItem(MTC_LS)||"null");const m=mtcFrom(d);
 let mtc=mtcNew;
 const RET_LS="leitor-miniload-retiradas";
 let retMarks={};try{retMarks=JSON.parse(localStorage.getItem(RET_LS)||"{}")||{}}catch(e){}
-const retKey=r=>(mtcSel==="old"?"25":"26")+"|"+(r.pal||"")+"|"+r.item+"|"+(r.pack||"");
+const LST="27",CORTE=new Date(2026,10,3,7,0).getTime(); // contagem nova a partir de 03/11/2026
+const retKey=r=>(mtcSel==="old"?"25":LST)+"|"+(r.pal||"")+"|"+r.item+"|"+(r.pack||"");
 const offRet=r=>{const m=/RETIRADO (\d\d)\/(\d\d) (\d\d):(\d\d)(?:.*?Retirou: (.*?) · (?:Liberou|Autorizou): (.*))?$/.exec(r.st||"");if(!m)return null;return {at:new Date(new Date().getFullYear(),+m[2]-1,+m[1],+m[3],+m[4]).getTime(),quem:m[5]||"",lib:m[6]||"",oficial:true}};
 const isRet=r=>!!retMarks[retKey(r)]||!!gsMarks[retKey(r)]||/RETIRAD/i.test(r.st||"");
 const retMark=r=>retMarks[retKey(r)]||gsMarks[retKey(r)]||null;
@@ -1904,14 +1905,14 @@ async function gsPull(){
     const r=await fetch(GS_URL+"?a=ret&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"});
     const j=await r.json();if(j&&j.erro==="sessao"){logout("Seu acesso expirou ou foi bloqueado. Entre de novo com usuário e senha.");return}if(!j||!j.ok)throw new Error("resposta");
     const M={},LOC={},IDS=new Set();
-    for(const l of j.linhas||[]){if(l.id)IDS.add(l.id);if(l.lista==="LOCAL"){LOC[String(l.pal||"")]=String(l.sit||"").replace(/^LOCAL:\s*/,"");continue}
+    for(const l of j.linhas||[]){if(l.id)IDS.add(l.id);if(l.lista==="LOCAL"){if(gsParseWhen(l.quando)<CORTE)continue;LOC[String(l.pal||"")]=String(l.sit||"").replace(/^LOCAL:\s*/,"");continue}
       const k=(l.lista||"26")+"|"+(l.pal||"")+"|"+(l.item||"")+"|"+String(l.pack||"").replace(/^'/,"");
       if(/DESFEIT/i.test(l.sit||""))delete M[k];else{const om=/Obs:\s*(.*)$/.exec(l.sit||"");M[k]={at:gsParseWhen(l.quando),quem:l.quem||"",lib:l.lib||"",obs:om?om[1]:"",nuvem:true}}}
     gsMarks=M;gsLocal=LOC;gsIds=IDS;gsOk=true;gsAt=Date.now();
     // o que já está na planilha sai da memória local deste celular
     let mud=false;for(const k of Object.keys(retMarks)){if(gsMarks[k]&&!gsQueue.some(q=>q.key===k)){delete retMarks[k];mud=true}}
     // baixa marcada neste celular que não está na planilha nem na fila (app antigo perdeu o envio): manda de novo
-    if(ses&&ses.perfil!=="consulta"){let novo=0;for(const k of Object.keys(retMarks)){if(gsMarks[k]||gsQueue.some(q=>q.key===k))continue;const m=retMarks[k]||{},p=k.split("|");
+    if(ses&&ses.perfil!=="consulta"){let novo=0;for(const k of Object.keys(retMarks)){if(k.indexOf(LST+"|")!==0||gsMarks[k]||gsQueue.some(q=>q.key===k))continue;const m=retMarks[k]||{},p=k.split("|");
       const r=(mtc&&mtc.rows||[]).find(x=>(x.pal||"")===(p[1]||"")&&x.item===p[2]&&(x.pack||"")===(p[3]||""));if(!r)continue;
       gsQueue.push({key:k,mov:{id:uid(),tipo:"RETIRADO",lista:p[0],pal:r.pal||"",item:r.item,qtd:r.qtd,pack:r.pack||"",lib:m.lib||"",obs:[m.quem&&m.quem!==ses.nome?"Retirou: "+m.quem:"",m.obs||"","enviada depois"].filter(Boolean).join(" · "),quando:gsWhen(m.at||Date.now())}});novo++}
       if(novo){gsSaveQ();setTimeout(gsFlush,50);toast(novo+" baixa(s) que tinham ficado só neste celular foram enviadas para a planilha")}}
@@ -1971,7 +1972,7 @@ async function gsPullMtc(){
   if(!IS_TEAM)return;
   if(!ses)return;
   try{const r=await fetch(GS_URL+"?a=mtc&t="+encodeURIComponent(ses.t)+"&z="+Date.now(),{cache:"no-store"});const j=await r.json();if(j&&j.erro==="sessao"){logout("Seu acesso expirou ou foi bloqueado. Entre de novo com usuário e senha.");return}
-    const d=j&&j.mtc;const somaOk=x=>{if(!x||!x.soma)return true;const t=JSON.stringify(x.rows);let k=0x811c9dc5;for(let i=0;i<t.length;i++){k^=t.charCodeAt(i);k=Math.imul(k,0x01000193)>>>0}return k.toString(16).padStart(8,"0")===x.soma};if(d&&Array.isArray(d.rows)&&d.rows.length&&somaOk(d)&&(d.importadoEm||"")>=((mtcNewRaw&&mtcNewRaw.importadoEm)||"")){const m=mtcFrom(d);if(m){mtcNewRaw=d;mtcNew=m;if(mtcSel==="new")mtc=m;try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}render()}}}catch(e){}
+    const d=j&&j.mtc;const somaOk=x=>{if(!x||!x.soma)return true;const t=JSON.stringify(x.rows);let k=0x811c9dc5;for(let i=0;i<t.length;i++){k^=t.charCodeAt(i);k=Math.imul(k,0x01000193)>>>0}return k.toString(16).padStart(8,"0")===x.soma};if(d&&Array.isArray(d.rows)&&(d.rows.length||d.zerada)&&somaOk(d)&&(d.importadoEm||"")>=((mtcNewRaw&&mtcNewRaw.importadoEm)||"")){const m=mtcFrom(d);if(m){mtcNewRaw=d;mtcNew=m;if(mtcSel==="new")mtc=m;try{localStorage.setItem(MTC_LS,JSON.stringify(d))}catch(e){}render()}}}catch(e){}
 }
 setTimeout(gsPullMtc,800);setInterval(()=>{if(!document.hidden)gsPullMtc()},300000);
 setInterval(()=>{if(!document.hidden){gsFlush();gsPull()}},20000);
@@ -2155,7 +2156,7 @@ async function mtcSendFile(){
 }
 /* exporta TODOS os itens MTC (lista nova + lista de 25/10) num Excel só */
 function mtcAllBook(){
-  const L=(mtcSel==="old"?[["Itens MTC 25-10",mtcOld,"25"]]:[["Itens MTC 26-10",mtcNew,"26"]]).filter(([,m])=>m&&m.rows.length);
+  const L=(mtcSel==="old"?[["Itens MTC 25-10",mtcOld,"25"]]:[["Contagem 03-11",mtcNew,LST]]).filter(([,m])=>m&&m.rows.length);
   if(!L.length)return null;
   const num=v=>/^\d+$/.test(String(v||""))?Number(v):(v||"");
   const head=["Item","Quantidade","Pack Number","Pallet","Status","Retirado","Quem retirou","Quem autorizou"];
@@ -2278,7 +2279,7 @@ async function mtcExportAll(){
   });
 }
 /* BOX: itens da lista de box (Excel) ganham a marca BOX; o número da cor no fim não importa */
-let mtcBox=false;const BOX_LS="leitor-miniload-box";
+let mtcBox=false;const BOX_LS="leitor-miniload-box-"+LST;
 let boxFiltro="todas";try{boxFiltro=localStorage.getItem("leitor-miniload-boxfiltro")||"todas"}catch(e){}
 const boxBase=v=>String(v||"").toUpperCase().trim().split(/\s+/)[0];
 function boxAplica(raw,set,dia){if(!raw||!Array.isArray(raw.rows))return 0;dia=dia||"anterior";let n=0;raw.rows.forEach(r=>{if(!set.has(boxBase(r[0])))return;const L=boxDiasDe(r[7]);if(!L.includes(dia))L.push(dia);while(r.length<7)r.push("");r[7]=L.join(",");n++});return n}
@@ -2695,7 +2696,7 @@ function runSearch(raw,label){
   const found=q.length<3?[]:rows.filter(r=>hit(r.vals.peca,qs)>=0||hit(r.vals.pack,qs)>=0)
     .sort((a,b)=>(b.dia||"").localeCompare(a.dia||"")||(b.at||0)-(a.at||0));
   sLast=found;
-  const mfs=[["new",mtcNew,"Itens MTC 26/10"]].concat(mtcSel==="old"?[["old",mtcOld,"Itens MTC 25/10 (oculta)"]]:[]).map(([k,L,nm])=>({k,nm,rows:q.length>=3&&L?L.rows.filter(r=>{const kk=(k==="old"?"25":"26")+"|"+(r.pal||"")+"|"+r.item+"|"+(r.pack||"");return !retMarks[kk]&&!gsMarks[kk]}).filter(r=>(hit(r.item,qs)>=0||hit(r.pack,qs)>=0)):[]})).filter(x=>x.rows.length);
+  const mfs=[["new",mtcNew,"Contagem 03/11"]].concat(mtcSel==="old"?[["old",mtcOld,"Itens MTC 25/10 (oculta)"]]:[]).map(([k,L,nm])=>({k,nm,rows:q.length>=3&&L?L.rows.filter(r=>{const kk=(k==="old"?"25":LST)+"|"+(r.pal||"")+"|"+r.item+"|"+(r.pack||"");return !retMarks[kk]&&!gsMarks[kk]}).filter(r=>(hit(r.item,qs)>=0||hit(r.pack,qs)>=0)):[]})).filter(x=>x.rows.length);
   const mf=mfs.flatMap(x=>x.rows);
   box.hidden=false;
   $("sLabel").hidden=!label;if(label)$("sLabel").textContent=label;
