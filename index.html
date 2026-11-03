@@ -1886,7 +1886,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103110701"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103142836"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2252,46 +2252,52 @@ function quickMail(){
   const ok=rows.filter(r=>(r.vals.palete||"")&&(r.vals.peca||r.vals.pack));
   const pals=[...new Set(ok.map(r=>String(r.vals.palete)))].sort((a,b)=>String(a).localeCompare(String(b),"pt-BR",{numeric:true}));
   if(!pals.length){toast("Ainda não tem pallet lido para enviar");return}
-  const cnt=p=>ok.filter(r=>String(r.vals.palete)===p).length;
+  const cnt=p=>semDup(ok.filter(r=>String(r.vals.palete)===p)).length;
   openSheet('<h3>Enviar Excel · '+(MODO_NAC?'🇧🇷 NAC':'🌎 MTC')+'</h3><p style="margin:0">Qual pallet você quer enviar? Cada pallet vira uma aba do Excel.</p>'+
     '<div style="display:flex;flex-wrap:wrap;gap:8px;margin:12px 0" id="spList">'+pals.map(p=>'<span class="pchip"><label><input type="checkbox" value="'+esc(p)+'"> <span style="padding:0 10px 0 6px">Pallet '+esc(p)+' <small>('+cnt(p)+')</small></span></label></span>').join("")+'</div>'+
     '<div class="row-acts"><button class="btn" type="button" id="spAll" style="flex:1">Marcar todos</button></div>'+
     '<p class="err" id="spErr"></p>'+
-    '<div class="row-acts"><button class="btn primary" type="button" id="spMail" style="flex:1">📧 E-mail</button><button class="btn wa" type="button" id="spWa" style="flex:1">WhatsApp do administrador</button></div>',()=>{
+    '<div class="row-acts"><button class="btn primary" type="button" id="spGo" style="flex:1;height:52px;font-size:17px">📥 Gerar Excel</button></div>',()=>{
     const boxes=()=>[...document.querySelectorAll("#spList input")];
     const mark=()=>boxes().forEach(x=>x.closest(".pchip").classList.toggle("on",x.checked));
     boxes().forEach(x=>x.addEventListener("change",mark));
     $("spAll").onclick=()=>{const all=boxes().every(x=>x.checked);boxes().forEach(x=>x.checked=!all);mark();$("spAll").textContent=all?"Marcar todos":"Desmarcar todos"};
     const go=via=>{const sel=boxes().filter(x=>x.checked).map(x=>x.value);if(!sel.length){$("spErr").textContent="Marque pelo menos um pallet.";return}
       closeSheet();enviarPallets(sel,via,ok)};
-    $("spMail").onclick=()=>go("mail");$("spWa").onclick=()=>go("wa");
+    $("spGo").onclick=()=>go("");
   });
 }
+/* não repete caixa: o mesmo pack lido várias vezes (pallet enviado de novo, palete reaberto) sai uma vez só, a leitura mais nova */
+const packReal=k=>/^\d{6,}$/.test(k)&&!/^0+$/.test(k);
+function semDup(l){const vistos=new Set(),out=[];
+  l.slice().sort((a,b)=>(b.at||0)-(a.at||0)||String(b.dia||"").localeCompare(String(a.dia||""))||(b.ord||0)-(a.ord||0)).forEach(r=>{const k=xPack(r.vals.pack);if(packReal(k)){if(vistos.has(k))return;vistos.add(k)}out.push(r)});
+  return out.sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||(a.ord||0)-(b.ord||0))}
 function enviarPallets(sel,via,ok){
-  const wb=XLSX.utils.book_new(),d=new Date(),pd=n=>String(n).padStart(2,"0");
-  for(const p of sel){const l=ok.filter(r=>String(r.vals.palete)===p).sort((a,b)=>(a.ord||0)-(b.ord||0));
+  const wb=XLSX.utils.book_new(),d=new Date(),pd=n=>String(n).padStart(2,"0");let tot=0,tirou=0;
+  const todos=semDup(ok.filter(r=>sel.includes(String(r.vals.palete))));
+  for(const p of sel){const bruto=ok.filter(r=>String(r.vals.palete)===p).length;const l=todos.filter(r=>String(r.vals.palete)===p);tot+=l.length;tirou+=bruto-l.length;
     const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number","Dia"],...l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack),r.dia?fmtDay(r.dia):""])]);
     ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,("Pallet "+p+(MODO_NAC?" NAC":"")).slice(0,31))}
   const name="Miniload_"+(MODO_NAC?"NAC_":"")+"pallet"+(sel.length>1?"s_":"_")+sel.join("-").slice(0,40)+"_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx";
   const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"}),file=new File([buf],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
-  const assunto="Leitor Miniload · "+(MODO_NAC?"NACIONAIS · ":"MTC · ")+"Pallet"+(sel.length>1?"s ":" ")+sel.join(", "),texto=assunto+" · "+d.toLocaleDateString("pt-BR")+"\n\n"+CREDITO;
-  const para=(via==="mail"?(emTo().length?emTo():[ADMIN_EMAIL]):[]).join(", ");
-  const reserva=()=>{try{XLSX.writeFile(wb,name)}catch(e){}
-    if(via==="wa"){window.open("https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(assunto+" · o Excel "+name+" foi baixado no celular, vou anexar."),"_blank");toast("Excel baixado: anexe na conversa do WhatsApp")}
-    else{location.href="mailto:"+encodeURIComponent(para).replace(/%2C%20/g,",")+"?subject="+encodeURIComponent(assunto)+"&body="+encodeURIComponent("Segue em anexo o Excel "+name+" (está nos Downloads / Arquivos do celular).\n\n"+CREDITO);toast("Excel baixado: anexe no e-mail que abriu")}};
+  const assunto="Leitor Miniload · "+(MODO_NAC?"NACIONAIS · ":"MTC · ")+"Pallet"+(sel.length>1?"s ":" ")+sel.join(", ");
   let pode=false;try{pode=!!(navigator.share&&navigator.canShare&&navigator.canShare({files:[file]}))}catch(e){}
-  if(pode){
-    const dados=via==="wa"?{files:[file]}:{files:[file],title:assunto};
-    const abrir=()=>navigator.share(dados).then(()=>toast("Excel enviado")).catch(e=>{if(e&&e.name==="AbortError")return;
-      // o iPhone às vezes recusa o Compartilhar fora do toque: abre um botão para tocar de novo (o Excel continua anexado)
-      openSheet('<h3>📎 Excel pronto</h3><p style="margin:0">'+esc(name)+'</p><div class="row-acts"><button class="btn primary" type="button" id="shGo" style="flex:1;height:56px;font-size:17px">'+(via==="wa"?"Abrir WhatsApp com o Excel":"Abrir e-mail com o Excel")+'</button></div><p class="hint">Escolha '+(via==="wa"?"WhatsApp":"Gmail, Outlook ou Mail")+'. O Excel vai anexado.</p><div class="row-acts"><button class="btn" type="button" id="shDl" style="flex:1">Só baixar o Excel</button><button class="btn" type="button" id="shNo">Fechar</button></div>',()=>{
-        $("shGo").onclick=()=>{navigator.share(dados).then(()=>{closeSheet();toast("Excel enviado")}).catch(e2=>{if(!(e2&&e2.name==="AbortError"))toast("O celular não deixou compartilhar: "+(e2&&e2.name||"erro"))})};
-        $("shDl").onclick=()=>{closeSheet();reserva()};$("shNo").onclick=closeSheet})});
-    abrir();return}
-  reserva();return;
-  try{XLSX.writeFile(wb,name)}catch(e){}
-  if(via==="wa"){window.open("https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(assunto+" · o Excel "+name+" está na pasta Downloads, vou anexar."),"_blank");toast("Excel baixado: anexe na conversa do WhatsApp")}
-  else{location.href="mailto:?subject="+encodeURIComponent(assunto)+"&body="+encodeURIComponent("Segue em anexo o Excel "+name+" (está na pasta Downloads).\n\n"+CREDITO);toast("Excel baixado: anexe no e-mail que abriu")}
+  let baixou=false;
+  openSheet('<h3>📎 Excel pronto · '+(MODO_NAC?'🇧🇷 NAC':'🌎 MTC')+'</h3><p style="margin:0"><b>'+esc(name)+'</b><br>'+tot+' etiqueta'+(tot===1?'':'s')+' em '+sel.length+' pallet'+(sel.length>1?'s':'')+(tirou?' · <span style="color:#B42318">'+tirou+' repetida'+(tirou>1?'s':'')+' tirada'+(tirou>1?'s':'')+'</span>':'')+'</p>'+
+    '<p class="pstep"><span>1</span> Baixe o Excel</p><div class="row-acts"><button class="btn primary" type="button" id="exDl" style="flex:1;height:52px;font-size:17px">📥 Baixar Excel</button></div>'+
+    '<p class="pstep"><span>2</span> Envie</p><div class="row-acts"><button class="btn mail" type="button" id="exMail" style="flex:1;height:52px" disabled>📧 E-mail</button><button class="btn wa" type="button" id="exWa" style="flex:1;height:52px" disabled>WhatsApp</button></div>'+
+    '<p class="hint" id="exMsg" style="margin:0">Primeiro toque em Baixar Excel. Depois escolha como enviar: o Excel vai anexado.</p><div class="row-acts"><button class="btn" type="button" id="exNo" style="flex:1">Fechar</button></div>',()=>{
+    const libera=()=>{baixou=true;$("exMail").disabled=false;$("exWa").disabled=false;$("exDl").textContent="✓ Excel baixado (baixar de novo)";$("exMsg").innerHTML="Agora escolha <b>E-mail</b> ou <b>WhatsApp</b>."};
+    $("exDl").onclick=()=>{try{XLSX.writeFile(wb,name);toast("Excel baixado: "+name)}catch(e){toast("Não consegui baixar o Excel")}libera()};
+    const enviar=v=>{
+      if(pode){navigator.share(v==="wa"?{files:[file]}:{files:[file],title:assunto}).then(()=>{closeSheet();toast("Excel enviado")}).catch(e=>{if(e&&e.name==="AbortError")return;manual(v)});return}
+      manual(v)};
+    const manual=v=>{ // celular sem Compartilhar de arquivo: abre o e-mail/WhatsApp e a pessoa anexa o Excel que baixou
+      if(v==="wa")window.open("https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(assunto+" · Excel "+name+" (vou anexar)"),"_blank");
+      else location.href="mailto:"+(emTo().length?emTo():[ADMIN_EMAIL]).join(",")+"?subject="+encodeURIComponent(assunto)+"&body="+encodeURIComponent("Segue em anexo o Excel "+name+".\n\n"+CREDITO);
+      $("exMsg").innerHTML="Anexe o arquivo <b>"+esc(name)+"</b> que foi baixado (pasta Downloads / Arquivos).";};
+    $("exMail").onclick=()=>enviar("mail");$("exWa").onclick=()=>enviar("wa");$("exNo").onclick=closeSheet;
+  });
 }
 function quickMailTudo(){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
@@ -2300,7 +2306,7 @@ function quickMailTudo(){
   const wb=B?B.wb:XLSX.utils.book_new();
   if(done.length){const lotes=[...new Set(done.map(r=>r.dia+"|"+(r.vals.palete||"")))].sort(),usados=new Set(wb.SheetNames.map(x=>x.toLowerCase()));
     for(const k of lotes){const [d0,pl]=k.split("|");let t=("Feito "+fmtDay(d0).replace("/","-")+" P"+(pl||"?")).slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
-      const l=done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
+      const l=semDup(done).filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
       const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)])]);ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,t)}}
   const d=new Date(),pd=n=>String(n).padStart(2,"0"),name="Miniload_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx";
   const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"}),file=new File([buf],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
@@ -2330,7 +2336,7 @@ function openMailXls(){
       if($("mxFeitos")&&$("mxFeitos").checked){const lotes=[...new Set(done.map(r=>r.dia+"|"+(r.vals.palete||"")))].sort();const multi=new Set(lotes.map(k=>k.split("|")[0])).size>1;
         const usados=new Set(wb.SheetNames.map(x=>x.toLowerCase()));
         for(const k of lotes){const [d,pl]=k.split("|");let t=("Feito "+(multi?fmtDay(d).replace("/","-")+" ":"")+"P"+(pl||"?")).replace(/[\\\/?*\[\]:]/g,"-").slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
-          const l=done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
+          const l=semDup(done).filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
           const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)]),[],[CREDITO]]);ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,t)}}
       if(!wb.SheetNames.length)return null;
       const d=new Date(),pd=n=>String(n).padStart(2,"0");
@@ -3172,7 +3178,7 @@ function guardaCredito(){
 }
 try{console.info("%cLeitor Miniload%c — criado e desenvolvido por Thiago Pereira ("+AUTORIA.registro+")","font-weight:bold;color:#F5B800","")}catch(e){}
 function openCopySheet(lotes,done,tabName){
-  const rowsOf=k=>done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
+  const rowsOf=k=>semDup(done).filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
   const pk=r=>r.vals.pack?cleanPack(r.vals.pack):"—";
   const tsv=ks=>["Palete\tNúmero da peça\tQuantidade\tPack Number",...ks.flatMap(k=>rowsOf(k).map(r=>[tabName(k),xPeca(r.vals.peca),r.vals.qtd||"",xPack(r.vals.pack)].join("\t"))),"",CREDITO].join("\n");
   const wa=ks=>ks.map(k=>{const l=rowsOf(k);return "*"+tabName(k)+"* ("+l.length+" etiqueta"+(l.length>1?"s":"")+")\nPeça | Qtd | Pack\n"+l.map((r,i)=>(i+1)+") "+(String(r.vals.peca||"—").replace(/^P(?=[AN]\d)/,""))+" | "+(r.vals.qtd||"—")+" | "+String(pk(r)).replace(/^S(?=\d)/,"")).join("\n")}).join("\n\n")+"\n\n_"+CREDITO+"_";
@@ -3351,7 +3357,7 @@ async function doExport(soWhats){
   const wb=XLSX.utils.book_new();
   wb.Props={Title:"Paletes Miniload",Subject:"Inventário de paletes",Author:AUTORIA.autor,Company:AUTORIA.area,Comments:CREDITO+" · "+AUTORIA.registro};
   for(const k of lotes){
-    const l=done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
+    const l=semDup(done).filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
     const data=l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)]);
     const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...data,[],[CREDITO]]);
     ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];
