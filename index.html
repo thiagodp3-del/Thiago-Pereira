@@ -1886,7 +1886,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261103102625"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261103103253"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2238,6 +2238,7 @@ function mtcAllBook(){
 }
 /* e-mail a qualquer hora, com o Excel completo anexado (pelo Compartilhar do celular / PC) */
 /* um toque: monta o Excel completo e abre o Compartilhar (a pessoa escolhe o e-mail dela e para quem vai) */
+const xPeca=v=>String(v||"").trim().replace(/^P(?=[A-Z0-9])/,""),xPack=v=>String(v||"").trim().replace(/^S/i,""),xPal=r=>{const p=String(r&&r.vals&&r.vals.palete||"");return (typeof MODO_NAC!=="undefined"&&MODO_NAC)?p+" NAC":(/^\d+$/.test(p)?Number(p):p)};
 /* enviar Excel: escolher os pallets e mandar por e-mail ou WhatsApp (administrador) */
 function quickMail(){
   if(!window.XLSX){toast("Gerador de Excel não carregou");return}
@@ -2262,8 +2263,8 @@ function quickMail(){
 function enviarPallets(sel,via,ok){
   const wb=XLSX.utils.book_new(),d=new Date(),pd=n=>String(n).padStart(2,"0");
   for(const p of sel){const l=ok.filter(r=>String(r.vals.palete)===p).sort((a,b)=>(a.ord||0)-(b.ord||0));
-    const ws=XLSX.utils.aoa_to_sheet([["Número da peça","Quantidade","Pack Number","Dia"],...l.map(r=>[r.vals.peca||"",/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),r.vals.pack?cleanPack(r.vals.pack):"",r.dia?fmtDay(r.dia):""])]);
-    ws["!cols"]=[{wch:20},{wch:12},{wch:16},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,("Pallet "+p+(MODO_NAC?" NAC":"")).slice(0,31))}
+    const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number","Dia"],...l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack),r.dia?fmtDay(r.dia):""])]);
+    ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,("Pallet "+p+(MODO_NAC?" NAC":"")).slice(0,31))}
   const name="Miniload_"+(MODO_NAC?"NAC_":"")+"pallet"+(sel.length>1?"s_":"_")+sel.join("-").slice(0,40)+"_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx";
   const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"}),file=new File([buf],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const assunto="Leitor Miniload · "+(MODO_NAC?"NACIONAIS · ":"MTC · ")+"Pallet"+(sel.length>1?"s ":" ")+sel.join(", "),texto=assunto+" · "+d.toLocaleDateString("pt-BR")+"\n\n"+CREDITO;
@@ -2289,7 +2290,7 @@ function quickMailTudo(){
   if(done.length){const lotes=[...new Set(done.map(r=>r.dia+"|"+(r.vals.palete||"")))].sort(),usados=new Set(wb.SheetNames.map(x=>x.toLowerCase()));
     for(const k of lotes){const [d0,pl]=k.split("|");let t=("Feito "+fmtDay(d0).replace("/","-")+" P"+(pl||"?")).slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
       const l=done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
-      const ws=XLSX.utils.aoa_to_sheet([["Número da peça","Quantidade","Pack Number"],...l.map(r=>[r.vals.peca||"",/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),r.vals.pack?cleanPack(r.vals.pack):""])]);ws["!cols"]=[{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,t)}}
+      const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)])]);ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,t)}}
   const d=new Date(),pd=n=>String(n).padStart(2,"0"),name="Miniload_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx";
   const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"}),file=new File([buf],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
   const assunto="Leitor Miniload · "+d.toLocaleDateString("pt-BR"),texto="Segue o Excel do Leitor Miniload ("+name+").\n\n"+CREDITO;
@@ -2319,7 +2320,7 @@ function openMailXls(){
         const usados=new Set(wb.SheetNames.map(x=>x.toLowerCase()));
         for(const k of lotes){const [d,pl]=k.split("|");let t=("Feito "+(multi?fmtDay(d).replace("/","-")+" ":"")+"P"+(pl||"?")).replace(/[\\\/?*\[\]:]/g,"-").slice(0,31);if(usados.has(t.toLowerCase()))continue;usados.add(t.toLowerCase());
           const l=done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
-          const ws=XLSX.utils.aoa_to_sheet([["Número da peça","Quantidade","Pack Number"],...l.map(r=>[r.vals.peca||"",/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),r.vals.pack?cleanPack(r.vals.pack):""]),[],[CREDITO]]);ws["!cols"]=[{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,t)}}
+          const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)]),[],[CREDITO]]);ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,t)}}
       if(!wb.SheetNames.length)return null;
       const d=new Date(),pd=n=>String(n).padStart(2,"0");
       return {wb,name:"Miniload_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx"}};
@@ -3162,7 +3163,7 @@ try{console.info("%cLeitor Miniload%c — criado e desenvolvido por Thiago Perei
 function openCopySheet(lotes,done,tabName){
   const rowsOf=k=>done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
   const pk=r=>r.vals.pack?cleanPack(r.vals.pack):"—";
-  const tsv=ks=>["Palete\tNúmero da peça\tQuantidade\tPack Number",...ks.flatMap(k=>rowsOf(k).map(r=>[tabName(k),r.vals.peca||"",r.vals.qtd||"",r.vals.pack?cleanPack(r.vals.pack):""].join("\t"))),"",CREDITO].join("\n");
+  const tsv=ks=>["Palete\tNúmero da peça\tQuantidade\tPack Number",...ks.flatMap(k=>rowsOf(k).map(r=>[tabName(k),xPeca(r.vals.peca),r.vals.qtd||"",xPack(r.vals.pack)].join("\t"))),"",CREDITO].join("\n");
   const wa=ks=>ks.map(k=>{const l=rowsOf(k);return "*"+tabName(k)+"* ("+l.length+" etiqueta"+(l.length>1?"s":"")+")\nPeça | Qtd | Pack\n"+l.map((r,i)=>(i+1)+") "+(String(r.vals.peca||"—").replace(/^P(?=[AN]\d)/,""))+" | "+(r.vals.qtd||"—")+" | "+String(pk(r)).replace(/^S(?=\d)/,"")).join("\n")}).join("\n\n")+"\n\n_"+CREDITO+"_";
   const waLink=ks=>"https://wa.me/"+ADMIN_WA+"?text="+encodeURIComponent(wa(ks));
   // ordem: hoje primeiro, depois os dias anteriores; dentro do dia, pelo número do pallet
@@ -3204,7 +3205,7 @@ function openCopySheet(lotes,done,tabName){
     $("psXls").onclick=async()=>{
       if(!window.XLSX){toast("Gerador de Excel não carregou");return}
       const K=ks(),wb=XLSX.utils.book_new();wb.Props={Title:"Paletes Miniload",Author:AUTORIA.autor,Company:AUTORIA.area,Comments:CREDITO};
-      for(const k of K){const ws=XLSX.utils.aoa_to_sheet([["Número da peça","Quantidade","Pack Number"],...rowsOf(k).map(r=>[r.vals.peca||"",/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),r.vals.pack?cleanPack(r.vals.pack):""]),[],[CREDITO]]);ws["!cols"]=[{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,tabName(k))}
+      for(const k of K){const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...rowsOf(k).map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)]),[],[CREDITO]]);ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,tabName(k))}
       const name=(K.length===1?tabName(K[0]).replace(/\s+/g,"_"):"Paletes_"+K.length)+"_"+TODAY+".xlsx";
       const blob=new Blob([XLSX.write(wb,{bookType:"xlsx",type:"array"})],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
       if(downloads){try{await downloads.save({filename:name,data:blob});toast("Excel salvo")}catch(e){if(e&&e.code!=="declined")toast("Não foi possível salvar")}return}
@@ -3334,20 +3335,20 @@ async function doExport(soWhats){
   if(!done.length){toast("Nenhum palete feito ainda");return}
   const lotes=[...new Set(done.map(r=>r.dia+"|"+(r.vals.palete||"")))].sort((a,b)=>a.split("|")[0].localeCompare(b.split("|")[0])||palSort(a.split("|")[1],b.split("|")[1]));
   const multiDay=new Set(lotes.map(k=>k.split("|")[0])).size>1;
-  const tabName=k=>{const [d,p]=k.split("|");return ((multiDay?fmtDay(d).replace("/","-")+" ":"")+"Palete "+(p||"?")).slice(0,31)};
+  const tabName=k=>{const [d,p]=k.split("|");return ((multiDay?fmtDay(d).replace("/","-")+" ":"")+"Palete "+(p||"?")+(MODO_NAC?" NAC":"")).slice(0,31)};
   if(soWhats){openCopySheet(lotes,done,tabName);return}
   const wb=XLSX.utils.book_new();
   wb.Props={Title:"Paletes Miniload",Subject:"Inventário de paletes",Author:AUTORIA.autor,Company:AUTORIA.area,Comments:CREDITO+" · "+AUTORIA.registro};
   for(const k of lotes){
     const l=done.filter(r=>r.dia+"|"+(r.vals.palete||"")===k).sort((a,b)=>(a.ord||0)-(b.ord||0));
-    const data=l.map(r=>[r.vals.peca||"",/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),r.vals.pack?cleanPack(r.vals.pack):""]);
-    const ws=XLSX.utils.aoa_to_sheet([["Número da peça","Quantidade","Pack Number"],...data,[],[CREDITO]]);
-    ws["!cols"]=[{wch:20},{wch:12},{wch:16}];
+    const data=l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)]);
+    const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...data,[],[CREDITO]]);
+    ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];
     XLSX.utils.book_append_sheet(wb,ws,tabName(k));
   }
   const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"});
   const d=new Date(),pd=n=>String(n).padStart(2,"0");
-  const name="Miniload_paletes_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx";
+  const name="Miniload_"+(MODO_NAC?"NAC_":"")+"paletes_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"-"+d.getFullYear()+".xlsx";
   if(!downloads){
     if(window.claude){openCopySheet(lotes,done,tabName);return} // quem não está logado no Claude não pode baixar: copia para colar no Excel
     try{
