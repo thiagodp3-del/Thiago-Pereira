@@ -1127,7 +1127,7 @@ const precisa=()=>MODO_NAC?["peca","qtd"]:["peca","qtd","pack"]; // nacional: s�
 const completo=o=>!!(o&&o.peca&&(MODO_NAC?o.qtd:o.pack));
 const faltaTxt=o=>precisa().filter(k=>!o[k]).map(k=>({peca:"item",qtd:"quantidade",pack:"pack"})[k]).join(", ");
 function parseNac(t){
-  const m=/^\s*(\d{6})(\d{9})\s*(\d{2})\s*([A-Z][A-Z0-9]{5,}(?: \d{4})?)\s+(\d{11})(\d{5})(\d{2})\s*$/.exec(String(t||"").toUpperCase());
+  const m=/^\s*(\d{6})(\d*?)\s*(\d{2})\s*([A-Z][A-Z0-9]{5,}(?: \d{3,4})?)\s+(\d{11})(\d{5})(\d{2})\s*$/.exec(String(t||"").toUpperCase());
   if(!m)return null;
   const vol=String(parseInt(m[6],10)),tot=String(parseInt(m[7],10));
   return {peca:cleanPart(m[4]),qtd:cleanQty(m[5]),pack:"",nac:{data:m[1].slice(4,6)+"/"+m[1].slice(2,4)+"/20"+m[1].slice(0,2),chamada:String(parseInt(m[2],10)),seq:m[3],vol:vol+" de "+tot}};
@@ -1518,7 +1518,16 @@ async function applyLabel(g){
 }
 let zxMulti=null;
 /* procura o quadradinho 2D (Data Matrix) na foto: primeiro o leitor do celular, depois o ZXing em pedaços da foto */
+let zxw=null;function zxWasm(){if(zxw)return zxw;zxw=new Promise((ok,no)=>{if(window.ZXingWASM)return ok(window.ZXingWASM);const s=document.createElement("script");s.src="zx/zxing_reader.js";s.onload=()=>{try{ZXingWASM.prepareZXingModule({overrides:{locateFile:(p)=>"zx/"+p},fireImmediately:true});ok(ZXingWASM)}catch(e){no(e)}};s.onerror=no;document.head.appendChild(s)});zxw.catch(()=>{zxw=null});return zxw}
+async function dmWasm(img){
+  const Z=await zxWasm();const W=img.naturalWidth,H=img.naturalHeight,c=document.createElement("canvas");
+  for(const M of [1600,2400,1000]){const sc=Math.min(1,M/Math.max(W,H));c.width=Math.round(W*sc);c.height=Math.round(H*sc);const g=c.getContext("2d",{willReadFrequently:true});g.drawImage(img,0,0,c.width,c.height);
+    const r=await Z.readBarcodes(g.getImageData(0,0,c.width,c.height),{formats:["DataMatrix"],tryHarder:true,tryRotate:true,tryInvert:false,maxNumberOfSymbols:2});
+    for(const x of r||[])if(x.isValid!==false&&parseNac(x.text))return x.text}
+  return "";
+}
 async function decodeDM(img){
+  try{const t=await dmWasm(img);if(t)return t}catch(e){}
   try{if("BarcodeDetector" in window){const sup=await BarcodeDetector.getSupportedFormats();if(sup.includes("data_matrix")){const d=new BarcodeDetector({formats:["data_matrix"]});const r=await d.detect(img);for(const x of r||[])if(parseNac(x.rawValue))return x.rawValue}}}catch(e){}
   const Z=window.ZXing;if(!Z)return "";
   const h=new Map();h.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.DATA_MATRIX]);h.set(Z.DecodeHintType.TRY_HARDER,true);
@@ -1924,7 +1933,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104134937"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261104153317"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
