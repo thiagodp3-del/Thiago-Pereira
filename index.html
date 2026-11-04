@@ -1129,10 +1129,11 @@ const precisa=()=>MODO_NAC?["peca","qtd"]:["peca","qtd","pack"]; // nacional: s�
 const completo=o=>!!(o&&o.peca&&(MODO_NAC?o.qtd:o.pack));
 const faltaTxt=o=>precisa().filter(k=>!o[k]).map(k=>({peca:"item",qtd:"quantidade",pack:"pack"})[k]).join(", ");
 function parseNac(t){
-  const m=/^\s*(\d{6})(\d*?)\s*(\d{2})\s*([A-Z][A-Z0-9]{5,}(?: \d{3,4})?)\s+(\d{11})(\d{5})(\d{2})\s*$/.exec(String(t||"").toUpperCase());
+  const m0=/^\s*(\d{6})\s*(\d*?)\s*(\d{2})\s*([A-Z][A-Z0-9]{5,})(?:\s+(\d{3,4}))?\s+(\d{11})(\d{5})(\d{2})\s*$/.exec(String(t||"").toUpperCase());
+  const m=m0&&[m0[0],m0[1],m0[2],m0[3],m0[4]+(m0[5]?" "+m0[5]:""),m0[6],m0[7],m0[8]];
   if(!m)return null;
   const vol=String(parseInt(m[6],10)),tot=String(parseInt(m[7],10));
-  return {peca:cleanPart(m[4]),qtd:cleanQty(m[5]),pack:"",nac:{data:m[1].slice(4,6)+"/"+m[1].slice(2,4)+"/20"+m[1].slice(0,2),chamada:String(parseInt(m[2],10)),seq:m[3],vol:vol+" de "+tot}};
+  return {peca:cleanPart(m[4]),qtd:cleanQty(m[5]),pack:"",nac:{data:m[1].slice(4,6)+"/"+m[1].slice(2,4)+"/20"+m[1].slice(0,2),chamada:m[2]?String(parseInt(m[2],10)):"",seq:m[3],vol:vol+" de "+tot}};
 }
 function classify1(t){
   const n=norm(t).replace(/\s/g,"");
@@ -1456,7 +1457,7 @@ async function readLabel(file,onProg){
   try{img=await loadImg(url)}catch(e){URL.revokeObjectURL(url);throw new Error("Não consegui abrir essa foto.")}
   const got={peca:"",qtd:"",pack:"",via:""};
   const viaDM=async()=>{try{const t=await decodeDM(img);const nc=t&&parseNac(t);if(nc){URL.revokeObjectURL(url);return {peca:nc.peca,qtd:nc.qtd,pack:nc.pack,via:"código 2D (nacional)",raw:[t]}}}catch(e){}return null};
-  if(MODO_NAC){const r=await viaDM();if(r)return r} // tarefa NAC: etiqueta nacional primeiro
+  if(MODO_NAC){const r=await viaDM();if(r)return r;URL.revokeObjectURL(url);throw new Error("Não consegui ler o quadradinho. Tire outra foto mais perto do quadradinho, ou toque nos campos vermelhos para digitar a peça e a quantidade.")} // tarefa NAC: só o quadradinho (a nacional não tem as barras P/Q/S)
   try{
     const codes=await decodeAll(img,got,onProg);
     for(const t of codes)classifyCode(got,t);
@@ -1955,7 +1956,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104155956"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261104160331"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
