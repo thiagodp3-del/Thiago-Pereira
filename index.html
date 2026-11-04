@@ -1956,7 +1956,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104160331"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261104162704"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2536,8 +2536,8 @@ async function boxCarregar(f){
 let mtcMode="peca";try{mtcMode=localStorage.getItem("leitor-miniload-mtc-modo")==="pack"?"pack":"peca"}catch(e){}
 function mtcQuery(raw){
   const t=norm(raw).trim();
-  const pm=t.match(/^(?:PALLET|PALETE|PALET|P)?\s*(\d{1,3})$/);
-  if(pm)return {pal:String(parseInt(pm[1],10))};
+  const pm=t.match(/^(?:PALLET|PALETE|PALET|P)?\s*(N)?\s*(\d{1,3})(?:\s*(?:NACIONAL|NAC))?$/);
+  if(pm)return {pal:((pm[1]||mtcNac)?"N":"")+String(parseInt(pm[2],10))}; // na aba NAC os pallets são N1, N2…
   if(/^SEM\s+PALLET$/.test(t))return {pal:""};
   const q=skey(raw);return q.length>=3?{qs:qVariants(q)}:null;
 }
