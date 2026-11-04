@@ -193,6 +193,7 @@ td.editcol{width:1%;padding:4px 8px}
 .gs.warn{color:#9A5B00;border-color:#F5B800;background:#FFF6D6}
 .tabs .tabbreak{flex-basis:100%;height:0}
 .tabs .ti{font-size:16px;margin-right:2px}
+.cxbar{margin:8px 0 0;padding:10px;border:2px solid #2E9E5B;border-radius:12px;background:rgba(46,158,91,.10)}.cxbar p{margin:0 0 8px;font-weight:700;color:var(--ink)}.cxbar .cxb{display:flex;flex-wrap:wrap;gap:6px}.cxbar button{min-width:48px;height:48px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:800;font-size:18px;color:var(--ink)}.cxbar button.on{background:#2E9E5B;border-color:#2E9E5B;color:#fff}.cxbar input{width:80px;height:48px;font-size:18px;text-align:center;border-radius:10px;border:2px solid var(--line)}
 .modotag{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:6px;font-size:12px;letter-spacing:.06em;background:#2563EB;color:#fff;vertical-align:2px}.modotag.nac{background:#fff;color:#111;border:1px solid #111}
 .modobar{display:flex;gap:8px;margin:0 0 12px}.modobar button{flex:1;height:48px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:800;font-size:15px;color:var(--muted)}.modobar button.on{border-color:#2563EB;background:#2563EB;color:#fff}.modobar button.on.nac{border-color:#111;background:#fff;color:#111;box-shadow:0 0 0 3px #2E9E5B}
 .tabs .tab-nac{background:#fff!important;border:2px solid #fff!important;color:#111!important}.tabs .tab-nac[aria-selected="true"]{background:#fff!important;color:#111!important;box-shadow:0 0 0 3px #2E9E5B}
@@ -714,6 +715,7 @@ body.multi .mtable tbody tr{cursor:pointer}
       </div>
       <div class="tnew" id="tNew">
         <div class="dstate" id="dState">Toque em Foto e fotografe a etiqueta</div>
+        <div class="cxbar" id="cxBar" hidden></div>
         <div class="dnew" id="dNew">
           <div class="dfields">
             <div class="df wait" id="dfPeca"><small>Item (P)</small><b>—</b></div>
@@ -1514,7 +1516,27 @@ async function applyLabel(g){
   const m="Linha "+n+" lançada: "+txt+(falta.length?". Faltou "+falta.join(", ")+": toque no campo vermelho para completar."+extra:"");
   say(m,falta.length?"warn":"ok");dockState(m,falta.length?"bad":"ok");beep(!falta.length);
   requestAnimationFrame(()=>{const t=$("tNew");if(t)t.scrollIntoView({block:"end",behavior:"smooth"})});
+  if(MODO_NAC&&!falta.length)cxOferecer(r);else cxFechar();
   return true;
+}
+/* NAC: depois de ler uma caixa, "quantas caixas iguais a esta?" — copia a linha (uma linha por caixa, como se tivesse lido cada uma) */
+let cxBase=null;
+function cxFechar(){cxBase=null;const b=$("cxBar");if(b){b.hidden=true;b.innerHTML=""}}
+function cxOferecer(r){
+  cxBase={id:r.id,n:1};const b=$("cxBar");if(!b)return;
+  const it=String(r.vals.peca||"").replace(/^P(?=[AN]\d)/,"");
+  b.innerHTML='<p>Quantas caixas iguais a esta? <small style="font-weight:400">'+esc(it)+' · '+esc(r.vals.qtd||"")+' pçs</small></p><div class="cxb">'+[1,2,3,4,5,6,8,10].map(n=>'<button type="button" data-cx="'+n+'"'+(n===1?' class="on"':'')+'>'+n+'</button>').join("")+'<input id="cxOutro" inputmode="numeric" placeholder="outro" aria-label="Outra quantidade de caixas"></div>';
+  b.hidden=false;
+  b.querySelectorAll("[data-cx]").forEach(x=>x.onclick=()=>cxAplicar(+x.dataset.cx));
+  const o=$("cxOutro");o.addEventListener("keydown",e=>{if(e.key==="Enter"){e.preventDefault();const n=parseInt(o.value,10);if(n>0&&n<=200)cxAplicar(n);o.blur()}});o.addEventListener("change",()=>{const n=parseInt(o.value,10);if(n>0&&n<=200)cxAplicar(n)});
+}
+async function cxAplicar(n){
+  if(!cxBase)return;const base=rows.find(x=>x.id===cxBase.id);if(!base){cxFechar();return}
+  const iguais=rows.filter(x=>x.cxDe===base.id);const atual=1+iguais.length;
+  if(n>atual){checkpoint("caixas iguais");const novos=[];for(let i=atual;i<n;i++){const c={id:newId(),ord:nextOrd()+novos.length,vals:{...base.vals},status:"ok",at:Date.now(),origem:"hoje",dia:base.dia,via:"cópia (caixa igual)",cxDe:base.id};novos.push(c)}rows.push(...novos);render();for(const c of novos)await writeRow(c)}
+  else if(n<atual){checkpoint("caixas iguais");const tira=iguais.slice(n-1).map(x=>x.id);rows=rows.filter(x=>!tira.includes(x.id));render();for(const id of tira){try{await deleteRow(id)}catch(e){}}}
+  cxBase.n=n;const b=$("cxBar");if(b)b.querySelectorAll("[data-cx]").forEach(x=>x.classList.toggle("on",+x.dataset.cx===n));
+  const q=parseInt(base.vals.qtd,10)||0;beep(true);toast(n+" caixa"+(n>1?"s":"")+" de "+String(base.vals.peca||"").replace(/^P(?=[AN]\d)/,"")+(q?" · "+(q*n)+" peças":""));
 }
 let zxMulti=null;
 /* procura o quadradinho 2D (Data Matrix) na foto: primeiro o leitor do celular, depois o ZXing em pedaços da foto */
@@ -1835,7 +1857,7 @@ function dockFields(g,reading,idle){
 }
 function dockState(t,k){const e=$("dState");e.textContent=t;e.className="dstate "+(k||"")}
 let palAsked=true;
-function choosePal(p){
+function choosePal(p){try{cxFechar()}catch(e){}
   p=String(p).trim();if(!p)return;
   curPal=p;if(!extraPals.includes(p))extraPals.push(p);
   if(isClosed(TODAY,p)){checkpoint("reabrir palete "+p);delete palMeta.closed[lotKey(TODAY,p)];writePalMeta().catch(()=>{})}
@@ -1933,7 +1955,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104153317"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261104155956"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
