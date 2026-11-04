@@ -193,9 +193,11 @@ td.editcol{width:1%;padding:4px 8px}
 .gs.warn{color:#9A5B00;border-color:#F5B800;background:#FFF6D6}
 .tabs .tabbreak{flex-basis:100%;height:0}
 .tabs .ti{font-size:16px;margin-right:2px}
-.modotag{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:6px;font-size:12px;letter-spacing:.06em;background:#2563EB;color:#fff;vertical-align:2px}.modotag.nac{background:#2E9E5B}
-.modobar{display:flex;gap:8px;margin:0 0 12px}.modobar button{flex:1;height:48px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:800;font-size:15px;color:var(--muted)}.modobar button.on{border-color:#2563EB;background:#2563EB;color:#fff}.modobar button.on.nac{border-color:#2E9E5B;background:#2E9E5B}
-.tabs .tab-nac{border:2px solid #2E9E5B!important;color:#7BE0A3!important}.tabs .tab-nac[aria-selected="true"]{background:#2E9E5B;color:#fff!important}
+.modotag{display:inline-block;margin-left:8px;padding:2px 8px;border-radius:6px;font-size:12px;letter-spacing:.06em;background:#2563EB;color:#fff;vertical-align:2px}.modotag.nac{background:#fff;color:#111;border:1px solid #111}
+.modobar{display:flex;gap:8px;margin:0 0 12px}.modobar button{flex:1;height:48px;border-radius:10px;border:2px solid var(--line);background:var(--surface);font-weight:800;font-size:15px;color:var(--muted)}.modobar button.on{border-color:#2563EB;background:#2563EB;color:#fff}.modobar button.on.nac{border-color:#111;background:#fff;color:#111;box-shadow:0 0 0 3px #2E9E5B}
+.tabs .tab-nac{background:#fff!important;border:2px solid #fff!important;color:#111!important}.tabs .tab-nac[aria-selected="true"]{background:#fff!important;color:#111!important;box-shadow:0 0 0 3px #2E9E5B}
+body.modo-nac .ttable th:nth-child(4),body.modo-nac .ttable td:nth-child(4),body.modo-nac .mtable th:nth-child(4),body.modo-nac .mtable td:nth-child(4),body.modo-nac [data-c="pack"]{display:none}
+.conf{display:grid;gap:6px;margin:8px 0}.conf label{display:flex;align-items:center;gap:10px;padding:10px 12px;border:2px solid var(--line);border-radius:10px;cursor:pointer}.conf label.ok{border-color:#2E9E5B;background:rgba(46,158,91,.12)}.conf input{width:24px;height:24px;flex:none}.conf b{font-family:var(--mono)}.conf small{display:block;color:var(--muted)}
 .tabs .tab-ret{flex:1 1 0;display:inline-flex;align-items:center;justify-content:center;gap:6px;height:44px;border:2px solid #E5243B!important;color:#FF8A95!important;background:#1F2A36}
 .tabs .tab-ret svg{width:20px;height:20px;flex:none}
 .tabs .tab-ret[aria-selected="true"]{background:#E5243B;color:#fff!important}
@@ -1012,8 +1014,9 @@ function setModo(nac){
   if(typeof mtcNac!=="undefined"&&mtcNac!==nac){mtcNac=nac;if(mtcNewRaw){mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew}}
   modoUI();render();toast(nac?"🇧🇷 Agora você está na tarefa NAC (Nacionais)":"🌎 Agora você está na tarefa MTC");
 }
-function modoUI(){try{const fp=document.getElementById("dfPack");if(fp)fp.style.display=MODO_NAC?"none":""}catch(e){}
-const t=document.getElementById("modoTag");if(t){t.textContent=MODO_NAC?"NAC":"MTC";t.classList.toggle("nac",MODO_NAC)}
+function modoUI(){try{document.body.classList.toggle("modo-nac",MODO_NAC)}catch(e){}
+try{const fp=document.getElementById("dfPack");if(fp)fp.style.display=MODO_NAC?"none":""}catch(e){}
+const t=document.getElementById("modoTag");if(t){t.textContent=MODO_NAC?"🇧🇷 NAC":"MTC";t.classList.toggle("nac",MODO_NAC)}
   document.querySelectorAll("#modoBar button").forEach(b=>b.classList.toggle("on",(b.dataset.modo==="nac")===MODO_NAC))}
 function savePalPrefs(){try{localStorage.setItem(LS_KEY+"-pal",JSON.stringify({extra:extraPals,cur:curPal,day:TODAY,view}))}catch(e){}}
 const todayRows=p=>rows.filter(r=>r.dia===TODAY&&(p===undefined||(r.vals.palete||"")===p)).sort((a,b)=>(a.ord||0)-(b.ord||0));
@@ -1921,7 +1924,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104115949"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261104134937"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2313,11 +2316,12 @@ const packReal=k=>/^\d{6,}$/.test(k)&&!/^0+$/.test(k);
 function semDup(l){const vistos=new Set(),out=[];
   l.slice().sort((a,b)=>(b.at||0)-(a.at||0)||String(b.dia||"").localeCompare(String(a.dia||""))||(b.ord||0)-(a.ord||0)).forEach(r=>{const pk=xPack(r.vals.pack);if(packReal(pk)){const k=xPeca(r.vals.peca).replace(/\s+/g,"")+"|"+pk;if(vistos.has(k))return;vistos.add(k)}out.push(r)});
   return out.sort((a,b)=>String(a.dia||"").localeCompare(String(b.dia||""))||(a.ord||0)-(b.ord||0))}
+const semPackNac=aoa=>{if(!MODO_NAC||!aoa.length)return aoa;const i=aoa[0].indexOf("Pack Number");return i<0?aoa:aoa.map(r=>Array.isArray(r)&&r.length>i?r.filter((_,j)=>j!==i):r)};
 function enviarPallets(sel,via,ok){
   const wb=XLSX.utils.book_new(),d=new Date(),pd=n=>String(n).padStart(2,"0");let tot=0,tirou=0;
   const todos=semDup(ok.filter(r=>sel.includes(String(r.vals.palete))));
   for(const p of sel){const bruto=ok.filter(r=>String(r.vals.palete)===p).length;const l=todos.filter(r=>String(r.vals.palete)===p);tot+=l.length;tirou+=bruto-l.length;
-    const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number","Dia"],...l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack),r.dia?fmtDay(r.dia):""])]);
+    const ws=XLSX.utils.aoa_to_sheet(semPackNac([["Pallet","Número da peça","Quantidade","Pack Number","Dia"],...l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack),r.dia?fmtDay(r.dia):""])]));
     ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16},{wch:16}];XLSX.utils.book_append_sheet(wb,ws,("Pallet "+p+(MODO_NAC?" NAC":"")).slice(0,31))}
   const name="Miniload_"+(MODO_NAC?"NAC_":"")+"pallet"+(sel.length>1?"s_":"_")+sel.join("-").slice(0,40)+"_"+pd(d.getDate())+"-"+pd(d.getMonth()+1)+"_"+pd(d.getHours())+"h"+pd(d.getMinutes())+".xlsx";
   const buf=XLSX.write(wb,{bookType:"xlsx",type:"array"}),file=new File([buf],name,{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
@@ -2914,6 +2918,8 @@ function openSavePal(){
   openSheet('<h3>Salvar palete '+esc(cp)+'</h3><div class="sumgrid"><div><b>'+list.length+'</b><small>Etiquetas</small></div><div><b>'+(list.length-falt)+'</b><small>Completas</small></div><div><b>'+falt+'</b><small>Com campo faltando</small></div></div>'+
     (falt?'<p>Há linhas com campo faltando. Você pode salvar assim e corrigir depois em Feitos.</p>':'')+
     '<p>O palete vai para a aba Feitos e vira uma aba própria no Excel.</p>'+
+    (MODO_NAC?(()=>{const g=new Map();list.forEach(r=>{const k=String(r.vals.peca||"—").replace(/^P(?=[AN]\d)/,"");const x=g.get(k)||{cx:0,pc:0};x.cx++;x.pc+=parseInt(r.vals.qtd,10)||0;g.set(k,x)});
+      return '<p class="pstep"><span>✓</span> Confere a quantidade de caixas e vai ticando</p><div class="conf" id="spConf">'+[...g.entries()].map(([k,x])=>'<label><input type="checkbox"><span><b>'+esc(k)+'</b><small>'+x.cx+' caixa'+(x.cx>1?'s':'')+' · '+x.pc+' peças</small></span></label>').join("")+'</div><p class="hint" id="spConfMsg">Tique cada item depois de contar as caixas. O Salvar libera quando tudo estiver ticado.</p>'})():'')+
     '<div class="row-acts"><button class="btn primary" id="spNext">Salvar</button></div>'+
     '<div class="row-acts"><button class="btn" id="spXls">Salvar e baixar o Excel</button><button class="btn" id="spCancel">Cancelar</button></div>',
   ()=>{
@@ -2924,6 +2930,7 @@ function openSavePal(){
       toast("Palete "+cp+" salvo");await writePalMeta();
     };
     $("spCancel").onclick=closeSheet;
+    if($("spConf")){const bx=[...document.querySelectorAll("#spConf input")],upd=()=>{const n=bx.filter(x=>x.checked).length;bx.forEach(x=>x.closest("label").classList.toggle("ok",x.checked));$("spNext").disabled=$("spXls").disabled=n<bx.length;$("spConfMsg").textContent=n<bx.length?"Conferido "+n+" de "+bx.length+". Tique todos para salvar.":"Tudo conferido. Pode salvar."};bx.forEach(x=>x.addEventListener("change",upd));upd()}
     $("spNext").onclick=async()=>{closeSheet();await doSave()};
     $("spXls").onclick=async()=>{closeSheet();await doSave();doExport()};
   });
@@ -2940,7 +2947,7 @@ function render(){
   $("sTotal").textContent=total;$("sOk").textContent=ok;$("sPend").textContent=total-ok;$("sNew").textContent=nw;
   $("prog").style.width=total?(ok/total*100)+"%":"0";
 
-  $("thead").innerHTML="<tr><th>#</th><th>Status</th>"+cols.map(c=>"<th>"+esc(c.name)+(c.prefix?'<span class="pf">'+esc(c.prefix)+"</span>":"")+"</th>").join("")+"<th>Conferido</th><th>Editar</th></tr>";
+  $("thead").innerHTML="<tr><th>#</th><th>Status</th>"+cols.map(c=>"<th data-c=\""+esc(c.id)+"\">"+esc(c.name)+(c.prefix?'<span class="pf">'+esc(c.prefix)+"</span>":"")+"</th>").join("")+"<th>Conferido</th><th>Editar</th></tr>";
 
   const q=norm(query).replace(/ /g,"");
   let list=rows.filter(r=>{
@@ -3429,7 +3436,7 @@ async function doExport(soWhats){
   for(const px of palsX){
     const l=unicos.filter(r=>String(r.vals.palete||"")===px);
     const data=l.map(r=>[xPal(r),xPeca(r.vals.peca),/^\d+$/.test(r.vals.qtd||"")?Number(r.vals.qtd):(r.vals.qtd||""),xPack(r.vals.pack)]);
-    const ws=XLSX.utils.aoa_to_sheet([["Pallet","Número da peça","Quantidade","Pack Number"],...data,[],[CREDITO]]);
+    const ws=XLSX.utils.aoa_to_sheet(semPackNac([["Pallet","Número da peça","Quantidade","Pack Number"],...data,[],[CREDITO]]));
     ws["!cols"]=[{wch:10},{wch:20},{wch:12},{wch:16}];
     XLSX.utils.book_append_sheet(wb,ws,("Palete "+(px||"?")+(MODO_NAC?" NAC":"")).slice(0,31));
   }
