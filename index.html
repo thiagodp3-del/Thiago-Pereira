@@ -515,27 +515,25 @@ body[data-view="mtc"] #sForm,body[data-view="mtc"] #sRes{display:none!important}
 .bday .bdbar{height:6px;border-radius:3px;background:color-mix(in srgb,var(--line) 60%,transparent);overflow:hidden}.bday .bdbar i{display:block;height:100%;background:#E5243B}
 .bday.on{border-color:#1F5FAF;background:color-mix(in srgb,#1F5FAF 9%,var(--surface));box-shadow:0 0 0 2px color-mix(in srgb,#1F5FAF 25%,transparent)}
 /* faixa Terra · Céu · Mar */
-.tcm{width:100%;max-width:1100px;margin:6px auto 0;border-radius:14px;overflow:hidden;position:relative;height:120px;background:#111317}
-.tcm .sc{position:absolute;inset:0 0 24px;opacity:0;animation:tcmFade 15s infinite}
-.tcm .sc.s2{animation-delay:5s}.tcm .sc.s3{animation-delay:10s}
-@keyframes tcmFade{0%{opacity:0}3%{opacity:1}30%{opacity:1}34%{opacity:0}100%{opacity:0}}
-.tcm .mv{position:absolute;left:0;animation:tcmMove 5s linear infinite}
-@keyframes tcmMove{from{transform:translateX(-150px)}to{transform:translateX(min(1100px,100vw))}}
-.tcm .s1 .mv{bottom:8px}.tcm .s2 .mv{top:22px;animation-name:tcmFly}.tcm .s3 .mv{bottom:2px}
-.tcm .s2 .mv{animation-delay:5s}.tcm .s3 .mv{animation-delay:10s}.tcm .s1 .mv{animation-delay:0s}
-@keyframes tcmFly{from{transform:translate(-150px,26px)}to{transform:translate(min(1100px,100vw),-6px)}}
-.tcm .road{position:absolute;left:0;right:0;bottom:0;height:16px;background:#464C54}
-.tcm .road i{position:absolute;left:0;top:7px;width:200%;height:3px;background:repeating-linear-gradient(90deg,#F5B800 0 30px,transparent 30px 70px);animation:tcmRoad 1.2s linear infinite}
-@keyframes tcmRoad{to{transform:translateX(-70px)}}
-.tcm .wv{position:absolute;left:0;right:0;bottom:0;height:22px;background:linear-gradient(#1F5FAF,#0F3264)}
-.tcm .wv i{position:absolute;left:0;top:-4px;width:200%;height:8px;background:radial-gradient(circle at 10px 8px,transparent 8px,#1F5FAF 9px) 0 0/20px 8px repeat-x;animation:tcmRoad 2s linear infinite}
-.tcm .shipbob{animation:tcmBob 1.6s ease-in-out infinite alternate}@keyframes tcmBob{to{transform:translateY(3px)}}
-.tcm .wheel{transform-box:fill-box;transform-origin:center;animation:tcmSpin .5s linear infinite}@keyframes tcmSpin{to{transform:rotate(360deg)}}
-.tcm .tbar2{position:absolute;left:0;right:0;bottom:0;height:24px;display:flex;align-items:center;gap:14px;padding:0 12px;font:800 12px/1 var(--body);letter-spacing:.08em;color:#7D8894;background:#111317}
-.tcm .tbar2 span{animation:tcmLbl 15s infinite}.tcm .tbar2 span.l2{animation-delay:5s}.tcm .tbar2 span.l3{animation-delay:10s}
-@keyframes tcmLbl{0%,33%{color:#F5B800}34%,100%{color:#7D8894}}
-.tcm .tbar2 b{margin-left:auto;color:#ECEFF2;display:flex;align-items:center;gap:6px;letter-spacing:.04em}
-@media (prefers-reduced-motion:reduce){.tcm .sc,.tcm .mv,.tcm .road i,.tcm .wv i,.tcm .wheel,.tcm .shipbob,.tcm .tbar2 span{animation:none}.tcm .s1{opacity:1}.tcm .s1 .mv{transform:translateX(40%)}}
+.tcm{width:100%;max-width:1100px;margin:6px auto 0;border-radius:14px;overflow:hidden;position:relative;height:130px;background:linear-gradient(#F3A35C,#F8D7A0 65%,#E7C99A)}
+.tcm .sc{position:absolute;inset:0;opacity:0;animation:tcmFase 24s infinite}
+.tcm .sc.c{animation-delay:6s}.tcm .sc.m{animation-delay:12s}.tcm .sc.f{animation-delay:18s}
+@keyframes tcmFase{0%{opacity:0}2%{opacity:1}23%{opacity:1}25%{opacity:0}100%{opacity:0}}
+.tcm .mv{position:absolute;left:0;animation:tcmAnda 24s linear infinite}
+.tcm .c .mv{animation-delay:6s}.tcm .m .mv{animation-delay:12s}
+@keyframes tcmAnda{0%{transform:translateX(-110%)}25%{transform:translateX(min(1100px,100vw))}100%{transform:translateX(min(1100px,100vw))}}
+.tcm .c{background:linear-gradient(#E9824A,#F6C38A)}
+.tcm .sea{position:absolute;left:0;right:0;bottom:0;height:34px;background:linear-gradient(#3A5A86,#1F3556)}
+.tcm .f{background:linear-gradient(#2A1F1A,#14171C);color:#FFD27A;display:flex;align-items:center;justify-content:center}
+.tcm .f b{font:900 26px/1 var(--display,sans-serif);letter-spacing:.1em;animation:tcmFim 24s infinite;animation-delay:18s;opacity:0}
+@keyframes tcmFim{0%{transform:scale(.85);opacity:0}4%{transform:scale(1);opacity:1}20%{transform:scale(1);opacity:1}25%{transform:scale(1.04);opacity:0}100%{opacity:0}}
+.tcm .road{position:absolute;left:0;right:0;bottom:0;height:18px;background:#3D434B}
+.tcm .road i{position:absolute;left:0;top:8px;width:200%;height:3px;background:repeating-linear-gradient(90deg,#E9E3D2 0 26px,transparent 26px 60px);animation:tcmRolo 1s linear infinite}
+@keyframes tcmRolo{to{transform:translateX(-60px)}}
+.tcm .hills{position:absolute;left:0;right:0;bottom:16px;width:100%;height:46px}
+.tcm .speed{position:absolute;inset:30px 0 22px;background:repeating-linear-gradient(180deg,transparent 0 9px,rgba(255,255,255,.18) 9px 10px);-webkit-mask:linear-gradient(90deg,transparent,#000 30%,transparent 60%);mask:linear-gradient(90deg,transparent,#000 30%,transparent 60%);opacity:.5}
+.tcm .pisca{animation:tcmPis 1s steps(2) infinite}@keyframes tcmPis{50%{opacity:.1}}
+@media (prefers-reduced-motion:reduce){.tcm .sc,.tcm .mv,.tcm .road i,.tcm .f b{animation:none}.tcm .t{opacity:1}.tcm .t .mv{transform:translateX(20%)}}
 .boxseg{grid-template-columns:repeat(3,minmax(0,1fr))}
 .boxseg button{font-size:14px}
 .boxseg button[data-bf="deck"][aria-selected="true"]{border-color:#E5243B;background:#FDE7EA}
@@ -826,14 +824,104 @@ body.multi .mtable tbody tr{cursor:pointer}
     <div class="empty" id="empty" hidden></div>
   </div>
   </section>
-  <div class="tcm" aria-hidden="true">
-    <div class="sc s1" style="background:linear-gradient(#8CC4EE,#DDEFFB)"><div class="road"><i></i></div>
-      <svg class="mv" width="120" height="50" viewBox="0 0 120 50"><rect x="2" y="4" width="76" height="36" rx="4" fill="#ECEFF2" stroke="#14181D" stroke-width="2"/><text x="40" y="27" text-anchor="middle" font-size="11" font-weight="800" font-family="Barlow,sans-serif" fill="#14181D">MINILOAD</text><rect x="80" y="12" width="30" height="28" rx="5" fill="#1E2228"/><path d="M88 15h17l2 10H88z" fill="#8CBEE6"/><rect x="106" y="34" width="5" height="4" fill="#F5B800"/><g fill="#14181D"><circle class="wheel" cx="18" cy="42" r="7" stroke="#999" stroke-width="2" stroke-dasharray="4 3"/><circle class="wheel" cx="36" cy="42" r="7" stroke="#999" stroke-width="2" stroke-dasharray="4 3"/><circle class="wheel" cx="95" cy="42" r="7" stroke="#999" stroke-width="2" stroke-dasharray="4 3"/></g></svg></div>
-    <div class="sc s2" style="background:linear-gradient(#2A6EBE,#A9D3F2)"><svg style="position:absolute;left:12%;top:10px" width="70" height="28"><g fill="#fff"><circle cx="16" cy="16" r="12"/><circle cx="34" cy="12" r="14"/><circle cx="52" cy="17" r="11"/></g></svg><svg style="position:absolute;right:10%;top:40px" width="60" height="24"><g fill="#fff"><circle cx="14" cy="14" r="10"/><circle cx="30" cy="10" r="12"/><circle cx="45" cy="14" r="9"/></g></svg>
-      <svg class="mv" width="130" height="50" viewBox="0 0 130 50"><path d="M2 25h20" stroke="#fff" stroke-width="2" stroke-dasharray="3 4" opacity=".8"/><ellipse cx="72" cy="25" rx="45" ry="8" fill="#F5F7FA" stroke="#3C4650"/><path d="M62 25h20l-14 22h-10z" fill="#C8CED6"/><path d="M62 25h20l-12-21h-9z" fill="#D7DCE4"/><path d="M28 23h11l-6-17h-6z" fill="#F5B800"/><path d="M117 22l7 3-7 3z" fill="#F5F7FA"/><g fill="#5A78A0"><circle cx="86" cy="23" r="1.6"/><circle cx="92" cy="23" r="1.6"/><circle cx="98" cy="23" r="1.6"/><circle cx="104" cy="23" r="1.6"/></g></svg></div>
-    <div class="sc s3" style="background:linear-gradient(#FFBE78,#FAE1BE)"><svg style="position:absolute;left:46%;top:30px" width="60" height="40"><circle cx="30" cy="34" r="26" fill="#FF963C"/></svg><div class="wv"><i></i></div>
-      <svg class="mv" width="140" height="56" viewBox="0 0 140 56"><g class="shipbob"><path d="M4 36h126l-12 18H16z" fill="#1E2228"/><path d="M8 42h118" stroke="#C82832" stroke-width="2"/><g stroke="#14181D" stroke-width=".8"><rect x="12" y="24" width="14" height="12" fill="#E5243B"/><rect x="27" y="24" width="14" height="12" fill="#1F5FAF"/><rect x="42" y="24" width="14" height="12" fill="#F5B800"/><rect x="57" y="24" width="14" height="12" fill="#1C8648"/><rect x="72" y="24" width="14" height="12" fill="#ECEFF2"/><rect x="87" y="24" width="14" height="12" fill="#E5243B"/><rect x="19" y="12" width="14" height="12" fill="#F5B800"/><rect x="34" y="12" width="14" height="12" fill="#1C8648"/><rect x="49" y="12" width="14" height="12" fill="#E5243B"/><rect x="64" y="12" width="14" height="12" fill="#1F5FAF"/><rect x="79" y="12" width="14" height="12" fill="#F5B800"/></g><rect x="106" y="6" width="17" height="30" fill="#ECEFF2" stroke="#14181D"/><rect x="109" y="10" width="11" height="5" fill="#8CBEE6"/></g></svg></div>
-    <div class="tbar2"><span class="l1">TERRA</span><span class="l2">CÉU</span><span class="l3">MAR</span><b><svg width="16" height="16" viewBox="0 0 24 24" fill="#F5B800"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7L12 17.3 5.8 20.9l1.6-7L2 9.2l7.1-.6z"/></svg>Leitor Miniload · OPL</b></div>
+<div class="tcm" aria-hidden="true">
+    <svg width="0" height="0" style="position:absolute"><defs>
+<linearGradient id="tcgTrailer" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F5F6"/><stop offset="1" stop-color="#C9CED4"/></linearGradient>
+<linearGradient id="tcgCab" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B4652"/><stop offset="1" stop-color="#1D242C"/></linearGradient>
+<linearGradient id="tcgGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9FC4E3"/><stop offset="1" stop-color="#3F607E"/></linearGradient>
+<linearGradient id="tcgFus" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".6" stop-color="#E3E7EC"/><stop offset="1" stop-color="#AEB6BF"/></linearGradient>
+<linearGradient id="tcgHull" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#2B3440"/><stop offset=".62" stop-color="#1B222B"/><stop offset=".63" stop-color="#8E2A22"/><stop offset="1" stop-color="#6B1E18"/></linearGradient>
+<radialGradient id="tcgWheel"><stop offset="0" stop-color="#9AA3AD"/><stop offset=".45" stop-color="#555E68"/><stop offset=".5" stop-color="#16191D"/><stop offset="1" stop-color="#0B0D10"/></radialGradient>
+
+<linearGradient id="tcgBlk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3A414A"/><stop offset=".18" stop-color="#1B1F25"/><stop offset=".7" stop-color="#0E1014"/><stop offset="1" stop-color="#050608"/></linearGradient>
+<linearGradient id="tcgShine" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".16"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+<linearGradient id="tcgWin" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FB3D1"/><stop offset=".55" stop-color="#2E4357"/><stop offset="1" stop-color="#121A23"/></linearGradient>
+<linearGradient id="tcgChrome" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#F4F6F8"/><stop offset=".45" stop-color="#9AA3AD"/><stop offset=".55" stop-color="#5C646D"/><stop offset="1" stop-color="#D7DCE1"/></linearGradient>
+<radialGradient id="tcgRim"><stop offset="0" stop-color="#5A626B"/><stop offset="1" stop-color="#1F242A"/></radialGradient>
+<radialGradient id="tcgLamp"><stop offset="0" stop-color="#FFFFFF"/><stop offset=".5" stop-color="#FFF1C2"/><stop offset="1" stop-color="#FFC94D" stop-opacity="0"/></radialGradient>
+<symbol id="tctruck" viewBox="0 0 372 106">
+  <ellipse cx="186" cy="101" rx="178" ry="4" fill="#000" opacity=".3"/>
+  <!-- semirreboque -->
+  <rect x="4" y="8" width="238" height="66" rx="3" fill="url(#tcgBlk)" stroke="#2A3038" stroke-width="1"/>
+  <path d="M60 8h70L76 74H6z" fill="url(#tcgShine)"/>
+  <path d="M150 8h30L126 74H96z" fill="url(#tcgShine)" opacity=".6"/>
+  <rect x="4" y="8" width="7" height="66" fill="#15181C"/>
+  <path d="M4 68h238" stroke="#F5B800" stroke-width="2"/>
+  <text x="128" y="49" text-anchor="middle" font-family="Arial Narrow,Arial,sans-serif" font-weight="700" font-size="24" letter-spacing="1.5" fill="#F2F4F6">MINILOAD</text>
+  <rect x="8" y="74" width="232" height="6" fill="#1E2328"/>
+  <path d="M96 80h96v8H96z" fill="#14171B"/><path d="M96 80h96" stroke="#3A414A"/>
+  <rect x="226" y="80" width="4" height="10" fill="#2A3036"/>
+  <!-- cavalo: chassi -->
+  <rect x="234" y="76" width="126" height="8" fill="#101317"/>
+  <rect x="246" y="78" width="26" height="12" rx="5" fill="url(#tcgChrome)"/>
+  <!-- defletor -->
+  <path d="M268 22q2-12 16-12h34l-2 6h-44z" fill="#14181D"/>
+  <!-- cabine -->
+  <path d="M270 82V24q0-9 9-9h52q12 0 15 9l8 28q2 6 2 12v18z" fill="url(#tcgBlk)" stroke="#2B3139"/>
+  <path d="M282 16h48l-36 66h-14z" fill="url(#tcgShine)" opacity=".7"/>
+  <path d="M300 22h28q8 0 10 7l5 17h-43z" fill="url(#tcgWin)" stroke="#060708"/>
+  <path d="M302 24l14 0-12 20h-4z" fill="#fff" opacity=".18"/>
+  <path d="M296 22v56M296 50h52" stroke="#05070A" stroke-width="1.2"/>
+  <rect x="306" y="54" width="9" height="2" rx="1" fill="#79828C"/>
+  <path d="M276 22h18v24h-18z" fill="url(#tcgWin)" opacity=".55" stroke="#060708"/>
+  <path d="M352 30h6v18h-4z" fill="#0B0D10"/><path d="M346 30l8-2" stroke="#2A3038" stroke-width="2"/>
+  <path d="M270 70h86" stroke="#F5B800" stroke-width="2"/>
+  <rect x="300" y="78" width="14" height="3" fill="#596069"/><rect x="300" y="84" width="14" height="3" fill="#596069"/>
+  <path d="M346 60h12v14h-12z" fill="#0A0C0F"/>
+  <rect x="349" y="62" width="9" height="5" rx="2" fill="#FFF6DA"/>
+  <circle cx="362" cy="64" r="12" fill="url(#tcgLamp)" opacity=".85"/>
+  <rect x="352" y="76" width="10" height="6" rx="1" fill="#16191E"/>
+  <circle cx="352" cy="74" r="1.6" fill="#FF8A1F"/>
+  <rect x="274" y="10" width="4" height="4" rx="1" fill="#FFB020"/><rect x="284" y="9" width="4" height="4" rx="1" fill="#FFB020"/>
+  <g><circle cx="36" cy="88" r="13" fill="#0B0D10"/><circle cx="36" cy="88" r="11.5" fill="#1A1E23"/>
+<g><circle cx="36" cy="88" r="8" fill="url(#tcgRim)"/><path d="M29 88h14M36 81v14M31 83l10 10M31 93l10 -10" stroke="#2B3138" stroke-width="1.4"/><circle cx="36" cy="88" r="2.6" fill="#C9CFD6"/>
+<animateTransform attributeName="transform" type="rotate" from="0 36 88" to="360 36 88" dur=".5s" repeatCount="indefinite"/></g></g><g><circle cx="64" cy="88" r="13" fill="#0B0D10"/><circle cx="64" cy="88" r="11.5" fill="#1A1E23"/>
+<g><circle cx="64" cy="88" r="8" fill="url(#tcgRim)"/><path d="M57 88h14M64 81v14M59 83l10 10M59 93l10 -10" stroke="#2B3138" stroke-width="1.4"/><circle cx="64" cy="88" r="2.6" fill="#C9CFD6"/>
+<animateTransform attributeName="transform" type="rotate" from="0 64 88" to="360 64 88" dur=".5s" repeatCount="indefinite"/></g></g><g><circle cx="92" cy="88" r="13" fill="#0B0D10"/><circle cx="92" cy="88" r="11.5" fill="#1A1E23"/>
+<g><circle cx="92" cy="88" r="8" fill="url(#tcgRim)"/><path d="M85 88h14M92 81v14M87 83l10 10M87 93l10 -10" stroke="#2B3138" stroke-width="1.4"/><circle cx="92" cy="88" r="2.6" fill="#C9CFD6"/>
+<animateTransform attributeName="transform" type="rotate" from="0 92 88" to="360 92 88" dur=".5s" repeatCount="indefinite"/></g></g><g><circle cx="246" cy="88" r="13" fill="#0B0D10"/><circle cx="246" cy="88" r="11.5" fill="#1A1E23"/>
+<g><circle cx="246" cy="88" r="8" fill="url(#tcgRim)"/><path d="M239 88h14M246 81v14M241 83l10 10M241 93l10 -10" stroke="#2B3138" stroke-width="1.4"/><circle cx="246" cy="88" r="2.6" fill="#C9CFD6"/>
+<animateTransform attributeName="transform" type="rotate" from="0 246 88" to="360 246 88" dur=".5s" repeatCount="indefinite"/></g></g><g><circle cx="274" cy="88" r="13" fill="#0B0D10"/><circle cx="274" cy="88" r="11.5" fill="#1A1E23"/>
+<g><circle cx="274" cy="88" r="8" fill="url(#tcgRim)"/><path d="M267 88h14M274 81v14M269 83l10 10M269 93l10 -10" stroke="#2B3138" stroke-width="1.4"/><circle cx="274" cy="88" r="2.6" fill="#C9CFD6"/>
+<animateTransform attributeName="transform" type="rotate" from="0 274 88" to="360 274 88" dur=".5s" repeatCount="indefinite"/></g></g><g><circle cx="334" cy="88" r="13" fill="#0B0D10"/><circle cx="334" cy="88" r="11.5" fill="#1A1E23"/>
+<g><circle cx="334" cy="88" r="8" fill="url(#tcgRim)"/><path d="M327 88h14M334 81v14M329 83l10 10M329 93l10 -10" stroke="#2B3138" stroke-width="1.4"/><circle cx="334" cy="88" r="2.6" fill="#C9CFD6"/>
+<animateTransform attributeName="transform" type="rotate" from="0 334 88" to="360 334 88" dur=".5s" repeatCount="indefinite"/></g></g>
+</symbol>
+
+<symbol id="tcplane" viewBox="0 0 300 100">
+  <path d="M20 52q-6-2-2-8l22-30h16l6 30z" fill="#D9DEE4"/>
+  <path d="M24 44l-4-30h14l14 28z" fill="#1F4E8C"/>
+  <path d="M14 56h40l4 6H22z" fill="#C3CAD2"/>
+  <path d="M30 44h210q30 0 44 10q4 4-2 8q-14 8-44 8H40q-16 0-22-10q-2-6 12-16z" fill="url(#tcgFus)" stroke="#A3ACB6" stroke-width=".8"/>
+  <path d="M262 50q12 2 20 6l-6 2q-8-4-16-4z" fill="#22303D"/>
+  <g fill="#3E5A75">
+    <circle cx="70" cy="52" r="2.2"/><circle cx="80" cy="52" r="2.2"/><circle cx="90" cy="52" r="2.2"/><circle cx="100" cy="52" r="2.2"/><circle cx="110" cy="52" r="2.2"/><circle cx="120" cy="52" r="2.2"/><circle cx="130" cy="52" r="2.2"/><circle cx="140" cy="52" r="2.2"/><circle cx="150" cy="52" r="2.2"/><circle cx="160" cy="52" r="2.2"/><circle cx="170" cy="52" r="2.2"/><circle cx="180" cy="52" r="2.2"/><circle cx="190" cy="52" r="2.2"/><circle cx="200" cy="52" r="2.2"/><circle cx="210" cy="52" r="2.2"/><circle cx="220" cy="52" r="2.2"/><circle cx="230" cy="52" r="2.2"/></g>
+  <path d="M40 62h236" stroke="#1F4E8C" stroke-width="2"/>
+  <path d="M120 62l60 0l-50 30h-18z" fill="#B7C0CA"/>
+  <path d="M112 62l24-2l-20 14z" fill="#9AA4AF"/>
+  <rect x="134" y="70" width="34" height="12" rx="6" fill="#C9D0D8" stroke="#8E98A3"/>
+  <ellipse cx="166" cy="76" rx="3" ry="6" fill="#30363D"/>
+  <circle cx="22" cy="18" r="2" fill="#FF3B3B" class="pisca"/>
+</symbol>
+
+<symbol id="tcship" viewBox="0 0 340 110">
+  <path d="M6 66h320l-18 34H30z" fill="url(#tcgHull)"/>
+  <path d="M6 66h320" stroke="#E9EEF3" stroke-width="2"/>
+  <g stroke="#0E1216" stroke-width=".6">
+    <rect x="40" y="54" width="22" height="12" fill="#C0392B"/><rect x="62" y="54" width="22" height="12" fill="#1F6FB2"/><rect x="84" y="54" width="22" height="12" fill="#E2A11B"/><rect x="106" y="54" width="22" height="12" fill="#2E8B57"/><rect x="128" y="54" width="22" height="12" fill="#7F8C8D"/><rect x="150" y="54" width="22" height="12" fill="#C0392B"/><rect x="172" y="54" width="22" height="12" fill="#1F6FB2"/><rect x="194" y="54" width="22" height="12" fill="#E2A11B"/><rect x="216" y="54" width="22" height="12" fill="#2E8B57"/>
+    <rect x="40" y="42" width="22" height="12" fill="#1F6FB2"/><rect x="62" y="42" width="22" height="12" fill="#E2A11B"/><rect x="84" y="42" width="22" height="12" fill="#C0392B"/><rect x="106" y="42" width="22" height="12" fill="#7F8C8D"/><rect x="128" y="42" width="22" height="12" fill="#2E8B57"/><rect x="150" y="42" width="22" height="12" fill="#1F6FB2"/><rect x="172" y="42" width="22" height="12" fill="#C0392B"/><rect x="194" y="42" width="22" height="12" fill="#7F8C8D"/>
+    <rect x="62" y="30" width="22" height="12" fill="#2E8B57"/><rect x="84" y="30" width="22" height="12" fill="#1F6FB2"/><rect x="106" y="30" width="22" height="12" fill="#E2A11B"/><rect x="128" y="30" width="22" height="12" fill="#C0392B"/><rect x="150" y="30" width="22" height="12" fill="#7F8C8D"/></g>
+  <path d="M250 66V30h44v36z" fill="#F1F3F5" stroke="#AEB6BF"/>
+  <path d="M256 22h34v8h-34z" fill="#E3E7EB" stroke="#AEB6BF"/>
+  <g fill="#2D4A66"><rect x="256" y="36" width="8" height="5"/><rect x="268" y="36" width="8" height="5"/><rect x="280" y="36" width="8" height="5"/><rect x="256" y="48" width="8" height="5"/><rect x="268" y="48" width="8" height="5"/><rect x="280" y="48" width="8" height="5"/><rect x="258" y="24" width="30" height="4"/></g>
+  <path d="M300 30h12l-2 36h-10z" fill="#C9CED4"/><rect x="300" y="26" width="12" height="6" fill="#B03A2E"/>
+  <path d="M270 22v-10M270 12h10" stroke="#5D6873" stroke-width="1.5"/>
+</symbol>
+</defs></svg>
+    <div class="sc t"><svg class="hills" viewBox="0 0 400 60" preserveAspectRatio="none"><path d="M0 40Q60 10 120 32T250 26T400 30V60H0z" fill="#B8875A"/><path d="M0 50Q90 30 170 46T400 42V60H0z" fill="#8E6748"/></svg><div class="speed"></div><div class="road"><i></i></div><svg class="mv" style="bottom:4px" width="320" height="92"><use href="#tctruck"/></svg></div>
+    <div class="sc c"><svg class="mv" style="top:16px" width="260" height="88"><use href="#tcplane"/></svg></div>
+    <div class="sc m"><div class="sea"></div><svg class="mv" style="bottom:4px" width="270" height="88"><use href="#tcship"/></svg></div>
+    <div class="sc f"><b>MINILOAD</b></div>
   </div>
 </main>
 
@@ -1973,7 +2061,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104165259"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261104181323"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
