@@ -1921,7 +1921,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104101723"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261104115949"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -3118,13 +3118,14 @@ function openCols(){
 $("colsBtn").addEventListener("click",openCols);
 
 function openMore(){
-  openSheet('<h3>Mais opções</h3>'+(ses?'<p class="hint" style="margin:0">Conectado como <b>'+esc(ses.nome)+'</b>'+(ses.perfil==="admin"?" (administrador)":ses.perfil==="consulta"?" (só consulta)":"")+'</p><div class="row-acts"><button class="btn" id="mSair" style="flex:1">Sair (pedir a senha de novo)</button></div>':'<div class="row-acts"><button class="btn primary" id="mEntrar" style="flex:1">Entrar com usuário e senha</button></div>')+(IS_TEAM&&podeAdmin()?'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1">📋 Atualizar pallets '+(mtcNac?'NACIONAIS':'da lista MTC')+' (colar texto)</button></div>':'')+(IS_TEAM?'':'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1;background:#25D366;border-color:#1DA851;color:#0B2E17;font-weight:800">Colar mensagens do WhatsApp (pallets e retiradas)</button></div>')+'<div class="row-acts"><button class="btn" id="mOld" style="flex:1">Ver lista antiga (25/10) · oculta</button></div>'+'<div class="row-acts"><button class="btn primary" id="mPaste">Colar paletes recebidos</button></div><p class="hint">Cole o texto que a equipe mandou pelo WhatsApp (ou copiado para o Excel). Cada palete entra como salvo e vira uma aba no Excel.</p><div class="row-acts"><button class="btn" id="mGal">Ler fotos da galeria</button></div><p class="hint">Escolha várias fotos de etiquetas de uma vez. Cada uma vira uma linha (ou confere a linha do mesmo pack).</p><div class="row-acts"><button class="btn" id="mImport">Importar Excel</button></div><p class="hint">A importação lê a primeira aba. Cabeçalhos como Item, Quantidade e Pack Number caem nas colunas certas; linhas "palet 2" marcam o palete dos itens seguintes.</p><div class="row-acts"><button class="btn" id="mReset">Zerar conferência</button></div><p class="hint">Volta todos os itens para Pendente e apaga as linhas novas. Use antes de uma recontagem.</p><div class="row-acts"><button class="btn danger" id="mWipe">Apagar a lista inteira</button></div><div class="row-acts"><button class="btn" id="mClose">Fechar</button></div>',
+  openSheet('<h3>Mais opções</h3>'+(ses?'<p class="hint" style="margin:0">Conectado como <b>'+esc(ses.nome)+'</b>'+(ses.perfil==="admin"?" (administrador)":ses.perfil==="consulta"?" (só consulta)":"")+'</p><div class="row-acts"><button class="btn" id="mSair" style="flex:1">Sair (pedir a senha de novo)</button></div>':'<div class="row-acts"><button class="btn primary" id="mEntrar" style="flex:1">Entrar com usuário e senha</button></div>')+(IS_TEAM&&podeAdmin()?'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1">📋 Atualizar pallets '+(mtcNac?'NACIONAIS':'da lista MTC')+' (colar texto)</button></div><div class="row-acts"><button class="btn" id="mAdd" style="flex:1">➕ Adicionar um item na lista '+(mtcNac?'NAC':'MTC')+'</button></div>':'')+(IS_TEAM?'':'<div class="row-acts"><button class="btn primary" id="mZap" style="flex:1;background:#25D366;border-color:#1DA851;color:#0B2E17;font-weight:800">Colar mensagens do WhatsApp (pallets e retiradas)</button></div>')+'<div class="row-acts"><button class="btn" id="mOld" style="flex:1">Ver lista antiga (25/10) · oculta</button></div>'+'<div class="row-acts"><button class="btn primary" id="mPaste">Colar paletes recebidos</button></div><p class="hint">Cole o texto que a equipe mandou pelo WhatsApp (ou copiado para o Excel). Cada palete entra como salvo e vira uma aba no Excel.</p><div class="row-acts"><button class="btn" id="mGal">Ler fotos da galeria</button></div><p class="hint">Escolha várias fotos de etiquetas de uma vez. Cada uma vira uma linha (ou confere a linha do mesmo pack).</p><div class="row-acts"><button class="btn" id="mImport">Importar Excel</button></div><p class="hint">A importação lê a primeira aba. Cabeçalhos como Item, Quantidade e Pack Number caem nas colunas certas; linhas "palet 2" marcam o palete dos itens seguintes.</p><div class="row-acts"><button class="btn" id="mReset">Zerar conferência</button></div><p class="hint">Volta todos os itens para Pendente e apaga as linhas novas. Use antes de uma recontagem.</p><div class="row-acts"><button class="btn danger" id="mWipe">Apagar a lista inteira</button></div><div class="row-acts"><button class="btn" id="mClose">Fechar</button></div>',
   ()=>{
     $("mClose").onclick=closeSheet;
     if($("mSair"))$("mSair").onclick=()=>{closeSheet();confirmDel("Sair deste celular? Vai pedir usuário e senha de novo.",()=>logout("Você saiu. Digite usuário e senha para entrar."),"Sim, sair")};
     if($("mEntrar"))$("mEntrar").onclick=()=>{closeSheet();lockShow()};
     if(!mtcOld&&$("mOld"))$("mOld").hidden=true;
     if($("mZap"))$("mZap").onclick=()=>{closeSheet();openZapSheet()};
+    if($("mAdd"))$("mAdd").onclick=()=>{closeSheet();openAddItem()};
     $("mOld").onclick=()=>{closeSheet();setMtcSel("old");setView("mtc")};
     $("mGal").onclick=()=>{closeSheet();$("galFile").value="";$("galFile").click()};
     $("mPaste").onclick=()=>{closeSheet();openPasteSheet()};
@@ -3309,6 +3310,33 @@ function parseRetiradas(text){
 let colarPend="";try{const h=location.hash||"";if(h.indexOf("#colar=")===0){colarPend=decodeURIComponent(h.slice(7));history.replaceState(null,"",location.pathname+location.search)}}catch(e){}
 function colarTenta(){if(!colarPend||!podeAdmin()||(IS_TEAM&&!ses))return;const t=colarPend;colarPend="";openZapSheet(t)}
 setInterval(colarTenta,1500);
+/* Admin: acrescenta uma linha na lista (MTC ou NAC) sem mexer no resto; sobe para a planilha */
+function openAddItem(){
+  if(!podeAdmin()){semPermissao();return}
+  openSheet('<h3>➕ Adicionar item · '+(mtcNac?'🇧🇷 NAC':'🌎 MTC')+'</h3><form class="manf" id="aiF" autocomplete="off">'+
+    '<label>Pallet<input id="aiPal" inputmode="numeric" placeholder="Ex.: 5"></label>'+
+    '<label>Número do item <small>com o código de cor, se tiver (ex.: A0014461214 001)</small><input id="aiItem" autocapitalize="characters" spellcheck="false" style="text-transform:uppercase"></label>'+
+    '<label>Quantidade<input id="aiQtd" inputmode="numeric"></label>'+
+    '<label>Pack number <small>(se tiver)</small><input id="aiPack" inputmode="numeric"></label>'+
+    '<p class="err" id="aiErr"></p><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Adicionar</button><button class="btn" type="button" id="aiNo" style="flex:1">Cancelar</button></div></form>',()=>{
+    ["aiItem","aiQtd","aiPack"].forEach(kbWire);$("aiNo").onclick=closeSheet;setTimeout(()=>$("aiPal").focus(),50);
+    $("aiF").addEventListener("submit",e=>{e.preventDefault();
+      let pal=String($("aiPal").value||"").replace(/\D/g,"");const it0=String($("aiItem").value||"").toUpperCase().trim().replace(/^P(?=[AN][\d\s\-\/.])/,""),itc=it0.replace(/[\s\-\/.]/g,"");
+      const item=/^A\d{10}\d{3,4}$/.test(itc)?itc.slice(0,11)+" "+itc.slice(11):/^[AN]\d{10,12}$/.test(itc)?itc:it0.replace(/[-\/]/g," ").replace(/\s+/g," ");
+      const qtd=String($("aiQtd").value||"").replace(/\D/g,""),pack=String($("aiPack").value||"").replace(/\D/g,"");
+      if(!pal){$("aiErr").textContent="Falta o número do pallet.";return}if(!item){$("aiErr").textContent="Falta o número do item.";return}if(!qtd){$("aiErr").textContent="Falta a quantidade.";return}
+      pal=String(parseInt(pal,10));if(mtcNac)pal="N"+pal;
+      const raw=JSON.parse(JSON.stringify(mtcNewRaw||{nome:"Lista",rows:[]}));raw.rows=raw.rows||[];
+      if(pack&&raw.rows.some(r=>String(r[3])===pal&&String(r[2])===pack&&String(r[0]).replace(/\s/g,"")===item.replace(/\s/g,""))){$("aiErr").textContent="Esse item com esse pack já está nesse pallet.";return}
+      const dt=new Date(),z=n=>String(n).padStart(2,"0");
+      raw.rows.push([item,qtd,pack,pal,"incluído "+z(dt.getDate())+"/"+z(dt.getMonth()+1)]);
+      raw.importadoEm=dt.getFullYear()+"-"+z(dt.getMonth()+1)+"-"+z(dt.getDate())+" "+z(dt.getHours())+":"+z(dt.getMinutes());delete raw.soma;delete raw.n;
+      try{localStorage.setItem(MTC_LS,JSON.stringify(raw))}catch(x){}
+      mtcNewRaw=raw;mtcNew=mtcFrom(raw);if(mtcSel==="new")mtc=mtcNew;pendAdd([pal]);closeSheet();render();beep(true);
+      toast("Adicionado no "+palLbl(pal)+": "+item+" · qtd "+qtd);gsListaEnviada="";gsPushLista();
+    });
+  });
+}
 function openZapSheet(pre){
   openSheet('<h3>Colar mensagens do WhatsApp'+(mtcNac?' · <span style="color:#2E9E5B">NACIONAIS</span>':' · MTC')+'</h3><p>Cole aqui as mensagens que a equipe mandou: <b>pallets</b> e <b>retiradas</b>, pode ser tudo junto. O app atualiza a lista '+(mtcNac?'<b>de Itens Nacionais</b> (não mexe na MTC)':'<b>MTC</b> (não mexe na Nacional)')+'.</p>'+
     '<textarea id="zIn" rows="9" style="width:100%;font-family:var(--mono);font-size:13px;border:2px solid var(--line);border-radius:8px;padding:8px" placeholder="Cole aqui…"></textarea>'+
