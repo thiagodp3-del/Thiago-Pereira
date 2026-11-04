@@ -1956,7 +1956,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104162704"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261104163941"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2539,11 +2539,13 @@ function mtcQuery(raw){
   const pm=t.match(/^(?:PALLET|PALETE|PALET|P)?\s*(N)?\s*(\d{1,3})(?:\s*(?:NACIONAL|NAC))?$/);
   if(pm)return {pal:((pm[1]||mtcNac)?"N":"")+String(parseInt(pm[2],10))}; // na aba NAC os pallets são N1, N2…
   if(/^SEM\s+PALLET$/.test(t))return {pal:""};
+  if(/^TODOS(\s+OS\s+ITENS)?$/.test(t))return {all:true};
   const q=skey(raw);return q.length>=3?{qs:qVariants(q)}:null;
 }
 function mtcFind(raw){
   if(!mtc)return [];
   const Q=mtcQuery(raw);if(!Q)return [];
+  if(Q.all)return mtc.rows.filter(r=>!isRet(r));
   if(Q.pal!==undefined){const g=palGrp(Q.pal);return mtc.rows.filter(r=>g.includes(r.pal)&&!isRet(r))}
   return mtc.rows.filter(r=>mtcMode==="pack"?hit(r.pack,Q.qs)>=0:hit(r.item,Q.qs)>=0); // inclui as já retiradas: aparecem em vermelho
 }
@@ -2658,13 +2660,14 @@ function renderMtc(){
   const shown=pqs?found.filter(r=>hit(r.item,pqs)>=0||hit(r.pack,pqs)>=0):found;
   $("mtcBack").hidden=!Q;if(Q)palSel.clear();renderSelBar();
   // sem pesquisa: mostra os pallets para tocar
-  $("mtcPals").innerHTML=Q?"":(()=>{const vist=new Set();return Object.keys(pals).sort((a,b)=>a-b).filter(p=>{if(vist.has(p))return false;palGrp(p).forEach(x=>vist.add(x));return true}).map(p=>{const g=palGrp(p),n=g.reduce((t,x)=>t+(pals[x]||0),0);const bt='<button type="button" data-mpal="'+esc(p)+'">'+esc(palLbl(p))+" <small>("+n+")</small>"+(palObs(p)?'<small class="pobs">'+esc(palObs(p))+'</small>':"")+"</button>";
+  $("mtcPals").innerHTML=Q?"":'<button type="button" data-mpal="*" style="font-weight:800">📋 Todos os itens <small>('+mtc.rows.filter(r=>!isRet(r)).length+')</small></button>'+(()=>{const vist=new Set();return Object.keys(pals).sort((a,b)=>(parseInt(String(a).replace(/\D/g,""),10)||0)-(parseInt(String(b).replace(/\D/g,""),10)||0)).filter(p=>{if(vist.has(p))return false;palGrp(p).forEach(x=>vist.add(x));return true}).map(p=>{const g=palGrp(p),n=g.reduce((t,x)=>t+(pals[x]||0),0);const bt='<button type="button" data-mpal="'+esc(p)+'">'+esc(palLbl(p))+" <small>("+n+")</small>"+(palObs(p)?'<small class="pobs">'+esc(palObs(p))+'</small>':"")+"</button>";
   return podeAdmin()?'<span class="pchip'+(palSel.has(p)?" on":"")+'"><label><input type="checkbox" data-psel="'+esc(p)+'" aria-label="Selecionar '+esc(palLbl(p))+'"'+(palSel.has(p)?" checked":"")+'></label>'+bt+'</span>':bt}).join("")})()+(sem?'<button type="button" data-mpal="">Sem pallet <small>('+sem+")</small></button>":"");
   // resumo: por peça (total de peças, packs e em quais pallets) ou do pallet pesquisado
   let sum="";
   if(Q&&found.length){
     const fmt=n=>n.toLocaleString("pt-BR");
-    if(Q.pal!==undefined){
+    if(Q.all){const tot=found.reduce((t,r)=>t+(+r.qtd||0),0);sum='<div class="mcard"><span class="big">📋 Todos os itens'+(mtcNac?' · 🇧🇷 NAC':' · 🌎 MTC')+'</span><span class="sub">'+found.length+' caixas · '+new Set(found.map(r=>r.item)).size+' itens · '+fmt(tot)+' peças · '+new Set(found.map(r=>r.pal)).size+' pallets</span></div>'}
+    else if(Q.pal!==undefined){
       const tot=found.reduce((t,r)=>t+(+r.qtd||0),0),itens=new Set(found.map(r=>r.item)).size;
       const nret=mtc.rows.filter(r=>palGrp(Q.pal).includes(r.pal)&&isRet(r)).length;
       sum='<div class="mcard"><span class="big">'+esc(palLbl(Q.pal))+'</span>'+(Q.pal?'<span class="obsl">📍 Onde está: <b>'+(palObs(Q.pal)?esc(palObs(Q.pal)):'<i style="font-weight:400">não informado</i>')+'</b> <button type="button" class="btn obsbtn" data-obs="'+esc(Q.pal)+'">✏️ '+(palObs(Q.pal)?'Mudar':'Informar')+'</button></span>':'')+'<span class="sub">'+found.length+" linhas · "+itens+" peças diferentes · "+fmt(tot)+" peças no total"+(nret?' · <b style="color:#B42318">'+nret+" retirada"+(nret>1?"s":"")+' (veja na aba Retiradas)</b>':"")+'</span><span class="sub">Tirou uma caixa? Marque o <b>quadradinho</b> da linha e informe quem retirou e quem autorizou. A caixa sai da lista e vai para a aba <b>Retiradas</b>.</span></div>';
@@ -2878,7 +2881,7 @@ let mpT;$("mtcPalIn").addEventListener("input",()=>{clearTimeout(mpT);mpT=setTim
 $("mtcPalForm").addEventListener("submit",e=>{e.preventDefault();renderMtc();$("mtcPalIn").blur()});
 $("mtcPalClear").addEventListener("click",()=>{$("mtcPalIn").value="";renderMtc();$("mtcPalIn").focus()});
 $("mtcPals").addEventListener("change",e=>{const c=e.target.closest("[data-psel]");if(!c)return;c.checked?palSel.add(c.dataset.psel):palSel.delete(c.dataset.psel);c.closest(".pchip").classList.toggle("on",c.checked);renderSelBar()});
-$("mtcPals").addEventListener("click",e=>{if(e.target.closest("label"))return;const b=e.target.closest("[data-mpal]");if(!b)return;$("mtcPalIn").value="";$("mtcIn").value=b.dataset.mpal?"Pallet "+b.dataset.mpal:"Sem pallet";renderMtc();window.scrollTo(0,0)});
+$("mtcPals").addEventListener("click",e=>{if(e.target.closest("label"))return;const b=e.target.closest("[data-mpal]");if(!b)return;$("mtcPalIn").value="";$("mtcIn").value=b.dataset.mpal==="*"?"Todos os itens":b.dataset.mpal?"Pallet "+b.dataset.mpal:"Sem pallet";renderMtc();window.scrollTo(0,0)});
 let sLast=null;
 function runSearch(raw,label){
   const q=skey(raw);
