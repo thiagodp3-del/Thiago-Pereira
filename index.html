@@ -2061,7 +2061,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261104181323"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261105100939"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2652,7 +2652,7 @@ function mtcFind(raw){
   const Q=mtcQuery(raw);if(!Q)return [];
   if(Q.all)return mtc.rows.filter(r=>!isRet(r));
   if(Q.pal!==undefined){const g=palGrp(Q.pal);return mtc.rows.filter(r=>g.includes(r.pal)&&!isRet(r))}
-  return mtc.rows.filter(r=>mtcMode==="pack"?hit(r.pack,Q.qs)>=0:hit(r.item,Q.qs)>=0); // inclui as já retiradas: aparecem em vermelho
+  return mtc.rows.filter(r=>!isRet(r)&&(mtcMode==="pack"?hit(r.pack,Q.qs)>=0:hit(r.item,Q.qs)>=0)); // retirada sai da lista (fica só na aba Retiradas)
 }
 function appWhere(pack){
   // pack lido no app (qualquer dia)? mostra onde
@@ -2769,7 +2769,8 @@ function renderMtc(){
   return podeAdmin()?'<span class="pchip'+(palSel.has(p)?" on":"")+'"><label><input type="checkbox" data-psel="'+esc(p)+'" aria-label="Selecionar '+esc(palLbl(p))+'"'+(palSel.has(p)?" checked":"")+'></label>'+bt+'</span>':bt}).join("")})()+(sem?'<button type="button" data-mpal="">Sem pallet <small>('+sem+")</small></button>":"");
   // resumo: por peça (total de peças, packs e em quais pallets) ou do pallet pesquisado
   let sum="";
-  if(Q&&found.length){
+  const temRet=!!(Q&&Q.qs&&!found.length&&mtc.rows.some(r=>isRet(r)&&(mtcMode==="pack"?hit(r.pack,Q.qs)>=0:hit(r.item,Q.qs)>=0)));
+  if(Q&&(found.length||temRet)){
     const fmt=n=>n.toLocaleString("pt-BR");
     if(Q.all){const tot=found.reduce((t,r)=>t+(+r.qtd||0),0);sum='<div class="mcard"><span class="big">📋 Todos os itens'+(mtcNac?' · 🇧🇷 NAC':' · 🌎 MTC')+'</span><span class="sub">'+found.length+' caixas · '+new Set(found.map(r=>r.item)).size+' itens · '+fmt(tot)+' peças · '+new Set(found.map(r=>r.pal)).size+' pallets</span></div>'}
     else if(Q.pal!==undefined){
@@ -2777,12 +2778,12 @@ function renderMtc(){
       const nret=mtc.rows.filter(r=>palGrp(Q.pal).includes(r.pal)&&isRet(r)).length;
       sum='<div class="mcard"><span class="big">'+esc(palLbl(Q.pal))+'</span>'+(Q.pal?'<span class="obsl">📍 Onde está: <b>'+(palObs(Q.pal)?esc(palObs(Q.pal)):'<i style="font-weight:400">não informado</i>')+'</b> <button type="button" class="btn obsbtn" data-obs="'+esc(Q.pal)+'">✏️ '+(palObs(Q.pal)?'Mudar':'Informar')+'</button></span>':'')+'<span class="sub">'+found.length+" linhas · "+itens+" peças diferentes · "+fmt(tot)+" peças no total"+(nret?' · <b style="color:#B42318">'+nret+" retirada"+(nret>1?"s":"")+' (veja na aba Retiradas)</b>':"")+'</span><span class="sub">Tirou uma caixa? Marque o <b>quadradinho</b> da linha e informe quem retirou e quem autorizou. A caixa sai da lista e vai para a aba <b>Retiradas</b>.</span></div>';
     }else{
-      const by={};found.forEach(r=>{(by[r.item]=by[r.item]||[]).push(r)});
+      const by={};mtc.rows.filter(r=>mtcMode==="pack"?hit(r.pack,Q.qs)>=0:hit(r.item,Q.qs)>=0).forEach(r=>{(by[r.item]=by[r.item]||[]).push(r)});
       sum=Object.entries(by).slice(0,8).map(([it,L0])=>{
         const l=L0.filter(r=>!isRet(r)),rt=L0.filter(isRet),tot=l.reduce((t,r)=>t+(+r.qtd||0),0),ps=[...new Set(l.map(r=>r.pal||"sem pallet"))];
         const onde=p=>{if(p==="sem pallet")return "Sem pallet";const g=palGrp(p);return "Pallet "+esc(pN(p))+(g.length>1?' <small>(junto com '+esc(palJunta(g.filter(x=>x!==p)))+')</small>':"")+(palObs(p)?' <small>📍 '+esc(palObs(p))+'</small>':"")};
         return '<div class="mcard"><b>'+hl(it,Q.qs)+(L0.some(r=>r.box)?'<span class="btag">BOX</span>':'')+'</b>'+(l.length?'<span class="big">'+ps.map(onde).join(" · ")+'</span><span class="sub">'+l.length+" pack"+(l.length>1?"s":"")+" no estoque · "+fmt(tot)+" peças</span>":'<span class="big" style="color:var(--ds-r)">Nada no estoque</span>')+
-          (rt.length?'<span class="sub" style="color:var(--ds-r);font-weight:700">'+rt.length+" já retirada"+(rt.length>1?"s":"")+" (em vermelho na lista)</span>":"")+"</div>";
+          (rt.length?'<span class="sub" style="color:var(--ds-r);font-weight:700">'+rt.length+" já retirada"+(rt.length>1?"s":"")+" (estão na aba Retiradas)</span>":"")+"</div>";
       }).join("");
     }
   }else if(Q){
