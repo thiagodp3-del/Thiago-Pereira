@@ -2061,7 +2061,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261106071400"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261106091039"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2579,6 +2579,8 @@ async function mtcExportAll(){
 let mtcBox=false,mtcRet=false;const BOX_LS="leitor-miniload-box-"+LST;
 let boxFiltro="todas";try{boxFiltro=localStorage.getItem("leitor-miniload-boxfiltro")||"todas"}catch(e){}
 const boxBase=v=>String(v||"").toUpperCase().trim().split(/\s+/)[0];
+// caixa que já tinha sido retirada ANTES do dia do box não é box (não entra na lista nem conta como decantada)
+function boxAntes(r){if(!isRet(r))return false;const m=retMark(r);if(!m||!m.at)return false;const ds=(r.boxd||[]).filter(x=>/^\d{4}-\d\d-\d\d$/.test(x)).sort();if(!ds.length)return false;const q=ds[0].split("-");return m.at<new Date(+q[0],+q[1]-1,+q[2]).getTime()}
 function boxAplica(raw,set,dia){if(!raw||!Array.isArray(raw.rows))return 0;dia=dia||"anterior";let n=0;raw.rows.forEach(r=>{if(isNacP(r[3])||!set.has(boxBase(r[0])))return;const L=boxDiasDe(r[7]);if(!L.includes(dia))L.push(dia);while(r.length<7)r.push("");r[7]=L.join(",");n++});return n}
 function boxGuardado(){let o={};try{o=JSON.parse(localStorage.getItem(BOX_LS)||"{}")||{}}catch(e){}if(Array.isArray(o))o=o.length?{anterior:o}:{};return o}
 const boxDiaTxt=d=>d==="anterior"?"carregado antes (sem data)":/^\d{4}-\d\d-\d\d$/.test(d)?d.split("-").reverse().join("/"):d;
@@ -2598,7 +2600,7 @@ function boxConfronto(set,linhas){
   const diaC=boxDia&&boxDia!=="todos"?boxDia:"";
   if(!set){const o=boxGuardado();const bx=diaC?(o[diaC]||[]):[].concat(...Object.values(o));set=new Set(bx.length?bx:mtc.rows.filter(r=>r.box&&(!diaC||r.boxd.includes(diaC))).map(r=>boxBase(r.item)))}
   const num=v=>/^\d+$/.test(String(v||""))?Number(v):(v||"");
-  const R=mtc.rows.filter(r=>set.has(boxBase(r.item)));
+  const R=mtc.rows.filter(r=>set.has(boxBase(r.item))&&!boxAntes(r));
   const viv=R.filter(r=>!isRet(r)).sort((a,b)=>(+a.pal||9999)-(+b.pal||9999)||a.item.localeCompare(b.item));
   const dec=R.filter(isRet).sort((a,b)=>a.item.localeCompare(b.item));
   const tem=new Set(mtc.rows.map(r=>boxBase(r.item)));
@@ -2832,7 +2834,7 @@ function renderBox(){
   const raw=$("mtcIn").value,q=skey(raw),qs=q.length>=2?qVariants(q):null;
   $("mtcPalForm").hidden=true;$("mtcBack").hidden=!qs;$("dash").hidden=true;$("mtcPals").innerHTML="";
   $("mtcIn").placeholder="Peça ou pack do BOX";
-  const BA=mtc.rows.filter(r=>r.box);
+  const BA=mtc.rows.filter(r=>r.box&&!boxAntes(r));
   const dias=[...new Set([].concat(...BA.map(r=>r.boxd)))].sort((a,b)=>(a==="anterior")-(b==="anterior")||b.localeCompare(a));
   if(boxDia!=="todos"&&!dias.includes(boxDia))boxDia=dias[0]||"todos";
   const B=boxDia==="todos"?BA:BA.filter(r=>r.boxd.includes(boxDia)),viv=B.filter(r=>!isRet(r));
