@@ -502,6 +502,13 @@ body[data-view="mtc"] #sForm,body[data-view="mtc"] #sRes{display:none!important}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--ds-a:#4F8AD9;--ds-r:#E04A44}}
 :root[data-theme="dark"]{--ds-a:#4F8AD9;--ds-r:#E04A44}
 .dash{display:grid;gap:12px;margin-top:10px}
+.dcomp .dcl{display:grid;grid-template-columns:auto auto auto 1fr;gap:4px 10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.dcomp .dn{grid-column:1/-1;font-weight:800;font-size:14px}
+.dcomp .dv{display:flex;flex-direction:column}.dcomp .dv small{font-size:11px;color:var(--muted)}.dcomp .dv b{font-family:var(--display);font-size:26px;line-height:1}
+.dcomp .da{color:var(--muted);font-size:20px}
+.dcomp .dd{grid-column:1/-1;font-size:13.5px;padding:6px 10px;border-radius:8px;background:color-mix(in srgb,var(--line) 35%,transparent)}
+.dcomp .dd.dw{background:#E7F6EC;color:#14532D}.dcomp .dd.up{background:#FDE7EA;color:#8A1020}
+
 .dash>h2{margin:0;font-family:var(--display);font-size:24px;letter-spacing:.03em;text-transform:uppercase;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
 .dash>h2 small{font-family:var(--body);font-size:13px;letter-spacing:0;text-transform:none;color:var(--muted);font-weight:500}
 .tabs .tab-box{border-color:#1F5FAF;color:#4F8AD9}.tabs .tab-box[aria-selected="true"]{background:#1F5FAF;color:#fff}
@@ -938,7 +945,7 @@ body.multi .mtable tbody tr{cursor:pointer}
 <footer class="foot">
   <button type="button" class="credit gut" id="credit" aria-label="Sobre o Leitor Miniload">Leitor Miniload · Desenvolvido por <b>Thiago Pereira</b></button>
   <div class="foot-in gut">
-    <button class="btn" id="undoBtn" aria-label="Voltar (desfazer)" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span class="lbl">Voltar</span></button>
+    <button class="btn" id="undoBtn" aria-label="Voltar" disabled><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg><span class="lbl">Voltar</span></button>
     <button class="btn primary" id="savePal" data-only="hoje"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Salvar palete</button>
     <button class="btn primary" id="exportBtn" data-only="feitos">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
@@ -1080,7 +1087,7 @@ function checkpoint(label){
   updUndo();
 }
 function undoPush(label,fn){undoStack.push({label,fn});if(undoStack.length>40)undoStack.shift();updUndo()}
-function updUndo(){const b=$("undoBtn");if(b){b.disabled=!undoStack.length;b.title=undoStack.length?"Desfazer: "+undoStack[undoStack.length-1].label:"Nada para desfazer"}}
+function updUndo(){const b=$("undoBtn");if(b){const nv=typeof navStack!=="undefined"&&navStack.length;b.disabled=!undoStack.length&&!nv;b.title=(view==="hoje"&&undoStack.length)||!nv?(undoStack.length?"Desfazer: "+undoStack[undoStack.length-1].label:"Nada para voltar"):"Voltar para a tela anterior"}}
 async function undo(){
   const snap=undoStack.pop();updUndo();if(!snap){toast("Nada para desfazer");return}
   if(snap.fn){try{await snap.fn()}catch(e){}toast("Desfeito: "+snap.label);return}
@@ -1374,7 +1381,7 @@ $("shootBtn").addEventListener("click",()=>{if(!currentPal()){toast("Escolha o p
 $("xlsHoje").addEventListener("click",()=>doExport());
 $("waBtn").addEventListener("click",()=>quickMail());
 $("savePal").addEventListener("click",openSavePal);
-$("undoBtn").addEventListener("click",undo);
+$("undoBtn").addEventListener("click",()=>{if(view==="hoje"&&undoStack.length){undo();return}if(navStack.length){history.back();return}if(undoStack.length)undo()});
 document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="z"&&!(e.target.closest&&e.target.closest("input,select,textarea"))){e.preventDefault();undo()}});
 const IN_CLAUDE=!!(window.claude&&window.claude.use);
 function photoFallback(why){
@@ -2061,7 +2068,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261106091039"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261106102545"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2883,6 +2890,22 @@ function renderDash(){
      '<circle cx="66" cy="66" r="52" fill="none" stroke="var(--ds-a)" stroke-width="18" stroke-dasharray="'+dv.toFixed(1)+' '+(C-dv+0.01).toFixed(1)+'" transform="rotate(-90 66 66)" data-tip="No estoque: '+fmt(viv.length)+' caixas ('+pctV+'%)"/>'+
      '<text x="66" y="66" text-anchor="middle" font-family="var(--display)" font-size="30" font-weight="700" fill="var(--ink)">'+pctV+'%</text><text x="66" y="86" text-anchor="middle" font-size="11" fill="var(--muted)">no estoque</text></svg>'+
      '<div class="dleg"><span><i style="background:var(--ds-a)"></i>No estoque · <b>'+fmt(viv.length)+'</b> caixas</span><span><i style="background:var(--ds-r)"></i>Retiradas · <b>'+fmt(ret.length)+'</b> caixas</span><span style="color:var(--muted)">'+fmt(viv.reduce((t,r)=>t+qn(r),0))+' peças no estoque</span></div></div></div>'}
+  // ===== do início até agora (comparativo) =====
+  {const pcI=R.reduce((t,r)=>t+qn(r),0),pcA=viv.reduce((t,r)=>t+qn(r),0);
+   const rs0=ret.map(r=>mk(r).at).filter(Boolean);const ini=new Date(CORTE||(rs0.length?Math.min(...rs0):Date.now())),iniTxt=pd(ini.getDate())+"/"+pd(ini.getMonth()+1);
+   const linha=(nome,a0,a1,un)=>{const df=a0-a1,pc=a0?Math.round(df*100/a0):0;
+     return '<div class="dcl"><span class="dn">'+nome+'</span><span class="dv"><small>Início</small><b>'+fmt(a0)+'</b></span><span class="da">→</span><span class="dv"><small>Agora</small><b>'+fmt(a1)+'</b></span><span class="dd '+(df>0?'dw':df<0?'up':'')+'">'+(df>0?'Diminuiu <b>'+fmt(df)+'</b> '+un+' · −'+pc+'%':df<0?'Aumentou <b>'+fmt(-df)+'</b> '+un+' · +'+(-pc)+'%':'Sem mudança')+'</span></div>'};
+   const rs=ret.map(r=>mk(r).at).filter(Boolean);
+   let x='<div class="dcard dcomp"><h3>Do início até agora</h3><p class="dsub">Contagem começou em '+iniTxt+' · '+fmt(R.length)+' caixas entraram na lista</p>'+
+     linha("Caixas",R.length,viv.length,"caixas")+linha("Peças",pcI,pcA,"peças")+linha("Pallets com caixas",nPal,nPalViv,"pallets");
+   // estoque no fim de cada dia, do início até hoje
+   const d0=new Date(ini);d0.setHours(0,0,0,0);const serie=[];
+   for(let d=new Date(d0);d.getTime()<=Date.now();d.setDate(d.getDate()+1)){const fim=new Date(d);fim.setHours(23,59,59,999);const sai=rs.filter(t=>t<=fim.getTime()).length;serie.push([dk(d.getTime()),R.length-sai])}
+   if(serie.length>14)serie.splice(0,serie.length-14);
+   const mx=Math.max(1,R.length);
+   x+='<p class="dsub" style="margin-top:10px">Caixas no estoque no fim de cada dia</p><div class="dcols">'+serie.map(([l,v],i)=>{const ant=i?serie[i-1][1]:R.length,dif=ant-v;return '<button type="button" class="dcol" data-tip="'+esc(l)+': '+fmt(v)+' caixas'+(dif>0?' · saíram '+fmt(dif):'')+'"><em>'+fmt(v)+'</em><i style="height:'+Math.max(3,Math.round(v*100/mx))+'%;background:var(--ds-a)"></i></button>'}).join("")+'</div><div class="dxl">'+serie.map(([l])=>'<span>'+(l===hoje?"hoje":esc(l))+'</span>').join("")+'</div>';
+   const bA=R.filter(r=>r.box&&!boxAntes(r));if(bA.length){const bv=bA.filter(r=>!isRet(r)).length;x+=linha("BOX para decantar",bA.length,bv,"caixas")}
+   h+=x+'</div>'}
   const iBox=h.length;
   // colunas por dia
   const cols=(title,sub,data,cor,unid)=>{const mx=Math.max(1,...data.map(d=>d[1]));
@@ -3061,6 +3084,20 @@ function openRetMenu(){
   });
 }
 document.querySelectorAll(".tabs button").forEach(b=>b.addEventListener("click",()=>{if(b.dataset.retm){openRetMenu();return}if(b.dataset.v==="mtc")mtcRet=false;if(b.dataset.v==="mtc"){mtcBox=b.dataset.box==="1";const nn=b.dataset.nac==="1";if(nn!==MODO_NAC)setModo(nn);if(nn!==mtcNac){mtcNac=nn;palSel.clear();$("mtcIn").value="";$("mtcPalIn").value="";if(mtcNewRaw){mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew}}$("mtcIn").value="";$("mtcPalIn").value=""}setView(b.dataset.v)}));
+/* ===== Voltar: volta uma tela de cada vez (botão Voltar e o voltar do celular) ===== */
+let navStack=[],navCur=null,navBusy=false,navT=0;
+const navSnap=()=>({view,ret:!!mtcRet,box:!!mtcBox,nac:!!mtcNac,q:($("mtcIn").value||"").trim(),pal:($("mtcPalIn").value||"").trim()});
+const navEq=(a,b)=>a&&b&&a.view===b.view&&a.ret===b.ret&&a.box===b.box&&a.nac===b.nac&&a.q===b.q&&a.pal===b.pal;
+function navMark(){if(navBusy)return;clearTimeout(navT);navT=setTimeout(()=>{if(navBusy)return;const s=navSnap();if(!navCur){navCur=s;return}if(navEq(s,navCur))return;navStack.push(navCur);if(navStack.length>60)navStack.shift();navCur=s;try{history.pushState({nav:navStack.length},"")}catch(e){}updUndo()},700)}
+function navApply(s){navBusy=true;try{
+  mtcRet=s.ret;mtcBox=s.box;
+  if(s.nac!==mtcNac){if(s.nac!==MODO_NAC)setModo(s.nac);mtcNac=s.nac;palSel.clear();if(mtcNewRaw){mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew}}
+  $("mtcIn").value=s.q;$("mtcPalIn").value=s.pal;setView(s.view)}finally{setTimeout(()=>{navBusy=false},0)}}
+function navBack(){clearTimeout(navT);if(!navStack.length)return false;try{closeSheet()}catch(e){}navCur=navStack.pop();navApply(navCur);updUndo();return true}
+window.addEventListener("popstate",()=>{navBack()});
+{const _rm=renderMtc;renderMtc=function(){const x=_rm.apply(this,arguments);navMark();return x}}
+{const _sv=setView;setView=function(){const x=_sv.apply(this,arguments);navMark();return x}}
+setTimeout(()=>{navCur=navSnap()},0);
 document.querySelectorAll("#modoBar button").forEach(b=>b.addEventListener("click",()=>setModo(b.dataset.modo==="nac")));modoUI();
 /* salvar palete: sai da tela de hoje e vai para Feitos */
 function openSavePal(){
@@ -3651,7 +3688,7 @@ $("retBody").addEventListener("click",e=>{const b=e.target.closest("[data-rundo]
   const r=mtc.rows.find(x=>(x.pal||"")===(k[0]||"")&&x.item===k[1]&&(x.pack||"")===(k[2]||""));if(!r)return;
   devolver(r);
 });
-$("mtcBack").onclick=()=>{$("mtcIn").value="";renderMtc();window.scrollTo({top:0,behavior:"smooth"})};
+$("mtcBack").onclick=()=>{if(navStack.length){history.back();return}$("mtcIn").value="";renderMtc();window.scrollTo({top:0,behavior:"smooth"})};
 $("mtcBody").addEventListener("click",e=>{if(document.body.classList.contains("soVer")&&e.target.closest("td.ck")){e.preventDefault();toast("Para retirar, use o menu 📤 Retirada");return}if(multiOn){const tr=e.target.closest("tr[data-ret]");if(!tr||!mtc)return;e.preventDefault();let k;try{k=JSON.parse(tr.dataset.ret)}catch(x){return}const r=mtc.rows.find(x=>(x.pal||"")===(k[0]||"")&&x.item===k[1]&&(x.pack||"")===(k[2]||""));if(!r)return;if(isRet(r)){toast("Esse item já foi retirado.");return}const key=retKey(r);if(multiSel.has(key))multiSel.delete(key);else multiSel.set(key,r);tr.classList.toggle("msel",multiSel.has(key));tr.classList.remove("verde");multiUpd(true);return}if(!e.target.closest("td.ck"))return;e.preventDefault();const tr=e.target.closest("tr[data-ret]");if(!tr||!mtc)return;let k;try{k=JSON.parse(tr.dataset.ret)}catch(x){return}
   const r=mtc.rows.find(x=>(x.pal||"")===(k[0]||"")&&x.item===k[1]&&(x.pack||"")===(k[2]||""));if(r)retToggle(r)});
 $("mSelNew").onclick=()=>setMtcSel("new");
