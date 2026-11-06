@@ -2061,7 +2061,7 @@ const mtcFrom=d=>d&&Array.isArray(d.rows)?{nome:mtcNac?"Itens Nacionais":(d.nome
 const MTC_OLD=null;
 const mtcOld=mtcFrom(MTC_OLD);let mtcNew=null,mtcSel="new";
 const IS_TEAM=true;
-const APP_BUILD="20261105100939"; // o empacotador troca pela data da versão // o link da equipe troca para true
+const APP_BUILD="20261106071400"; // o empacotador troca pela data da versão // o link da equipe troca para true
 let mtcNewRaw=null;
 const MTC_LS="leitor-miniload-lista-pecas";
 mtcNew=mtcFrom(MTC_EMBED);mtcNewRaw=MTC_EMBED;
@@ -2621,9 +2621,12 @@ function boxConfronto(set,linhas){
 }
 async function boxCarregar(f){
   if(!f)return;if(!window.XLSX){toast("Leitor de Excel não carregou");return}
-  try{const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];const A=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
-    const set=new Set();A.forEach(l=>{const v=boxBase(l&&l[0]);if(/^[A-Z]\d{6,}/.test(v))set.add(v)});
-    if(!set.size){toast("Não achei itens na primeira coluna");return}
+  try{const wb=XLSX.read(await f.arrayBuffer(),{type:"array"});const ws=wb.Sheets[wb.SheetNames[0]];let A=XLSX.utils.sheet_to_json(ws,{header:1,raw:false});
+    // CSV do Miniload vem com ";" e o item na coluna "Article"
+    if(/\.csv$/i.test(f.name||"")){const tx=await f.text();const sep=(tx.split(/\r?\n/)[0].match(/;/g)||[]).length>(tx.split(/\r?\n/)[0].match(/,/g)||[]).length?";":",";A=tx.split(/\r?\n/).filter(l=>l.trim()).map(l=>l.split(sep).map(x=>x.replace(/^"|"$/g,"")))}
+    let col=0;for(const l of A.slice(0,5)){const i=(l||[]).findIndex(x=>/^(article|artigo|item|material|pe[cç]a|part ?number)$/i.test(String(x||"").trim()));if(i>=0){col=i;break}}
+    const set=new Set();A.forEach(l=>{const v=boxBase(l&&l[col]);if(/^[A-Z]\d{6,}/.test(v))set.add(v)});
+    if(!set.size){toast("Não achei os itens (coluna Article ou a primeira coluna)");return}
     if(!mtcNewRaw){toast("Carregue a lista MTC primeiro");return}
     const hj=new Date(),q2=x=>String(x).padStart(2,"0"),hjs=hj.getFullYear()+"-"+q2(hj.getMonth()+1)+"-"+q2(hj.getDate());
     const dia=await new Promise(ok=>{openSheet('<h3>📦 BOX de qual dia?</h3><p>'+set.size+' itens nesta lista. Escolha o dia deste box.</p><form class="manf" id="bdF"><label>Dia do box<input id="bdIn" type="date" value="'+hjs+'" style="text-transform:none"></label><div class="row-acts"><button class="btn primary" type="submit" style="flex:1">Carregar box deste dia</button><button class="btn" type="button" id="bdNo">Cancelar</button></div></form>',()=>{
@@ -2635,7 +2638,7 @@ async function boxCarregar(f){
     try{localStorage.setItem(MTC_LS,JSON.stringify(mtcNewRaw))}catch(e){}
     mtcNew=mtcFrom(mtcNewRaw);if(mtcSel==="new")mtc=mtcNew;render();gsPushLista();beep(true);
     toast("BOX do dia "+boxDiaTxt(dia)+": "+set.size+" itens · "+n+" caixas marcadas · baixando o confronto…");
-    setTimeout(()=>boxConfronto(set,A),400);
+    setTimeout(()=>boxConfronto(set,col?A.map(l=>[(l||[])[col]]):A),400);
   }catch(e){toast("Não consegui ler esse arquivo")}
 }
 let mtcMode="peca";try{mtcMode=localStorage.getItem("leitor-miniload-mtc-modo")==="pack"?"pack":"peca"}catch(e){}
